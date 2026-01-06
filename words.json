@@ -1,0 +1,1472 @@
+[
+  {
+    "day": 1,
+    "en": "sport",
+    "zh": "体育运动",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "jump",
+    "zh": "跳",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "high",
+    "zh": "高",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "far",
+    "zh": "远",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "ping-pong",
+    "zh": "乒乓球",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "volleyball",
+    "zh": "排球",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "across",
+    "zh": "穿过",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "play sports",
+    "zh": "做运动",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 1,
+    "en": "jump high",
+    "zh": "跳得高",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 1,
+    "en": "jump far",
+    "zh": "跳得远",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 2,
+    "en": "hope",
+    "zh": "希望",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "lose",
+    "zh": "缺失",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "because",
+    "zh": "因为",
+    "pos": "conj.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "cancer",
+    "zh": "癌症",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "money",
+    "zh": "钱",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "hard",
+    "zh": "困难的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "kind",
+    "zh": "亲切的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "run fast",
+    "zh": "跑得快",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 2,
+    "en": "swim fast",
+    "zh": "游得快",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 2,
+    "en": "play ping-pong",
+    "zh": "打乒乓球",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 3,
+    "en": "keep",
+    "zh": "持续",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "month",
+    "zh": "一个月",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "ill",
+    "zh": "生病的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "year",
+    "zh": "年",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "remember",
+    "zh": "纪念",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "fail",
+    "zh": "失败",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "give",
+    "zh": "给予",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "play football",
+    "zh": "踢足球",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 3,
+    "en": "play basketball",
+    "zh": "打篮球",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 3,
+    "en": "at first",
+    "zh": "起初",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 4,
+    "en": "try",
+    "zh": "尝试",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "star",
+    "zh": "明星",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "ability",
+    "zh": "才能",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "player",
+    "zh": "运动员",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "wash",
+    "zh": "洗",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "dish",
+    "zh": "盘子",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "feed",
+    "zh": "喂养",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "because of sb/sth",
+    "zh": "因为某人/某事物",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 4,
+    "en": "Sports Day",
+    "zh": "运动会",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 4,
+    "en": "keep doing sth",
+    "zh": "持续做某事",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 5,
+    "en": "sweep",
+    "zh": "打扫",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "floor",
+    "zh": "地板",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "rubbish",
+    "zh": "垃圾",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "chore",
+    "zh": "家庭杂务",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "to-do-list",
+    "zh": "待办清单",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "may",
+    "zh": "可以",
+    "pos": "",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "outside",
+    "zh": "在室外",
+    "pos": "prep.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "give up",
+    "zh": "放弃某事",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 5,
+    "en": "work hard",
+    "zh": "努力",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 5,
+    "en": "try your best",
+    "zh": "尽你所能",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "tidy",
+    "zh": "整理",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 6,
+    "en": "easy",
+    "zh": "容易的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 6,
+    "en": "clean",
+    "zh": "弄干净",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 6,
+    "en": "job",
+    "zh": "工作，任务",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 6,
+    "en": "dirty",
+    "zh": "脏的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 6,
+    "en": "desk",
+    "zh": "书桌",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 6,
+    "en": "wall",
+    "zh": "墙",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 6,
+    "en": "to-do list",
+    "zh": "待办清单",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "good job",
+    "zh": "干得好，真不错",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "take out the rubbish",
+    "zh": "丢垃圾",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 7,
+    "en": "again",
+    "zh": "再一次",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "also",
+    "zh": "还",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "sunshine",
+    "zh": "阳光",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "sometimes",
+    "zh": "有时",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "feel",
+    "zh": "感受到",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "tired",
+    "zh": "疲惫的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "helpful",
+    "zh": "乐于助人的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "pick the apples",
+    "zh": "摘苹果",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 7,
+    "en": "milk the cow",
+    "zh": "挤牛奶",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 7,
+    "en": "warm up",
+    "zh": "（使）变暖",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 8,
+    "en": "warm",
+    "zh": "温暖",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "water",
+    "zh": "浇水；水",
+    "pos": "v./n.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "yard",
+    "zh": "院子",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "helper",
+    "zh": "帮手",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "pick",
+    "zh": "采",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "pig",
+    "zh": "猪",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "cow",
+    "zh": "奶牛",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "tidy the room",
+    "zh": "打扫房间",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 8,
+    "en": "feed the dog",
+    "zh": "喂狗",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 8,
+    "en": "get the eggs",
+    "zh": "收集鸡蛋",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 9,
+    "en": "cut",
+    "zh": "修剪",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "grass",
+    "zh": "草",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "weather",
+    "zh": "天气",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "sunny",
+    "zh": "阳光充足的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "cloud",
+    "zh": "云",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "cloudy",
+    "zh": "多云的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "by",
+    "zh": "经过",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "on the farm",
+    "zh": "在农场",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 9,
+    "en": "well done",
+    "zh": "干得好",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 9,
+    "en": "wash the dishes",
+    "zh": "洗盘子",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 10,
+    "en": "wind",
+    "zh": "风",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "windy",
+    "zh": "多风的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "blow",
+    "zh": "吹",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "rain",
+    "zh": "雨",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "rainy",
+    "zh": "多雨的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "snow",
+    "zh": "雪",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "snowy",
+    "zh": "有雪的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "cut the grass",
+    "zh": "割草",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 10,
+    "en": "do chores",
+    "zh": "做家务",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 10,
+    "en": "make the bed",
+    "zh": "整理床",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 11,
+    "en": "any",
+    "zh": "任何一个",
+    "pos": "",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "cold",
+    "zh": "冷的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "or",
+    "zh": "或者",
+    "pos": "conj.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "enjoy",
+    "zh": "享受",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "umbrella",
+    "zh": "伞",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "diary",
+    "zh": "日记",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "grass",
+    "zh": "草，草地",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "water the vegetables",
+    "zh": "给蔬菜浇水",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 11,
+    "en": "clean/sweep the floor",
+    "zh": "清扫地板",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 11,
+    "en": "go by",
+    "zh": "经过",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "teacher",
+    "zh": "老师",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 12,
+    "en": "taste",
+    "zh": "有...味道",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 12,
+    "en": "ice cream",
+    "zh": "冰激凌",
+    "pos": "n.",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "real",
+    "zh": "真的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 12,
+    "en": "later",
+    "zh": "之后",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 12,
+    "en": "surprise",
+    "zh": "惊喜",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 12,
+    "en": "coat",
+    "zh": "外套",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 12,
+    "en": "blow around",
+    "zh": "（风）四处吹",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "go out to play",
+    "zh": "出去玩",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "go home",
+    "zh": "回家",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 13,
+    "en": "turn",
+    "zh": "转身",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "report",
+    "zh": "报道",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "season",
+    "zh": "季节",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "spring",
+    "zh": "春天",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "summer",
+    "zh": "夏天",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "autumn",
+    "zh": "秋天",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "winter",
+    "zh": "冬天",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "snowy day",
+    "zh": "下雪天",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 13,
+    "en": "turn off",
+    "zh": "关掉",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 13,
+    "en": "turn on",
+    "zh": "打开",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 14,
+    "en": "favourite",
+    "zh": "最喜欢的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "birthday",
+    "zh": "生日",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "fly",
+    "zh": "放飞",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "share",
+    "zh": "分享",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "snowstorm",
+    "zh": "雪暴",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "beach",
+    "zh": "海滩",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "sea",
+    "zh": "海",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "weather report",
+    "zh": "天气预报",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 14,
+    "en": "fly kites",
+    "zh": "放风筝",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 14,
+    "en": "eat ice cream",
+    "zh": "吃冰激凌",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "equator",
+    "zh": "赤道",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "round",
+    "zh": "到处",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "quite",
+    "zh": "非常",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "join",
+    "zh": "加入",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "bus",
+    "zh": "公交车",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "car",
+    "zh": "汽车",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "train",
+    "zh": "火车",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "in summer",
+    "zh": "在夏天",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "share...with...",
+    "zh": "和...分享...",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "wait for",
+    "zh": "等待",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 16,
+    "en": "city",
+    "zh": "城市",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "town",
+    "zh": "城镇",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "ship",
+    "zh": "船",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "plane",
+    "zh": "飞机",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "sky",
+    "zh": "天空",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "place",
+    "zh": "地方",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "near",
+    "zh": "近的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "go to the beach",
+    "zh": "去海滩",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 16,
+    "en": "all year around",
+    "zh": "全年",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 16,
+    "en": "from......to......",
+    "zh": "从...到...",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 17,
+    "en": "far",
+    "zh": "远的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "travel",
+    "zh": "旅行",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "way",
+    "zh": "方式",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "picnic",
+    "zh": "野餐",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "wear",
+    "zh": "穿",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "minute",
+    "zh": "分钟",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "live",
+    "zh": "居住",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "get ready",
+    "zh": "做好准备",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 17,
+    "en": "by car",
+    "zh": "乘汽车",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 17,
+    "en": "by train",
+    "zh": "乘火车",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "truck",
+    "zh": "卡车",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "bike",
+    "zh": "自行车",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "subway",
+    "zh": "地铁",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "wheel",
+    "zh": "轮子",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "left",
+    "zh": "向左；右边",
+    "pos": "adv./n.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "straight",
+    "zh": "笔直地",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "library",
+    "zh": "图书馆",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "on foot",
+    "zh": "步行",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "on a plane",
+    "zh": "在飞机上",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "far away",
+    "zh": "遥远的",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 19,
+    "en": "cinema",
+    "zh": "电影院",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "supermarket",
+    "zh": "超市",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "hospital",
+    "zh": "医院",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "centre",
+    "zh": "中间",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "tomorrow",
+    "zh": "明天",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "woman",
+    "zh": "女性",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "wish",
+    "zh": "愿望",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "come from",
+    "zh": "来自",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 19,
+    "en": "go out",
+    "zh": "外出",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 19,
+    "en": "sports centre",
+    "zh": "体育中心",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 20,
+    "en": "own",
+    "zh": "自己的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "cross",
+    "zh": "横穿",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "careful",
+    "zh": "谨慎的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "step",
+    "zh": "步",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "safe",
+    "zh": "安全的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "right",
+    "zh": "向右；右边",
+    "pos": "adv./n.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "museum",
+    "zh": "博物馆",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "find out",
+    "zh": "查明，弄清",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 20,
+    "en": "get/go around",
+    "zh": "四处走动",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 20,
+    "en": "be careful",
+    "zh": "当心，小心",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 21,
+    "en": "tram",
+    "zh": "电车",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 21,
+    "en": "walk",
+    "zh": "步行",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 21,
+    "en": "ill",
+    "zh": "生病的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 21,
+    "en": "come true",
+    "zh": "实现",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 21,
+    "en": "fly a kite",
+    "zh": "放风筝",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 21,
+    "en": "make a wish",
+    "zh": "许愿",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 21,
+    "en": "on her own",
+    "zh": "靠她自己",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 21,
+    "en": "on my own",
+    "zh": "靠我自己",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 21,
+    "en": "play in the snow",
+    "zh": "在雪地里玩耍",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 21,
+    "en": "give up",
+    "zh": "放弃",
+    "pos": "",
+    "kind": "phrase"
+  }
+]

@@ -1,0 +1,300 @@
+Spelling Training Modes Specification
+
+（Stage 2 扩展拼写训练说明）
+
+1. 总体说明
+
+Stage 2（Spelling Training）不再是单一拼写玩法，而是一个 拼写训练池（Spelling Pool）。
+系统根据词条状态（新词 / 历史错词 / 顽固错词）动态选择训练模式。
+
+核心目标
+
+强化 字母顺序、音素-拼写映射、错误感知
+
+针对不同错误类型使用不同训练模式
+
+避免一次性高难度造成挫败
+
+2. 词条状态定义（Word State）
+
+每个词条需维护以下字段：
+
+wrongCount：累计错误次数
+
+consecutiveWrong：连续错误次数
+
+consecutiveCorrect：连续正确次数
+
+lastWrongType：最近一次错误类型（optional）
+
+词条状态分类
+状态	条件
+NEW	首次出现
+REVIEW	wrongCount ≥ 1
+HARD	consecutiveWrong ≥ 3
+3. Stage 2 模式调度规则
+基本规则
+
+Stage 2 每日选 2 种拼写模式
+
+每种模式 3–5 题
+
+题目来源：
+
+当天新词
+
+历史 REVIEW 词
+
+HARD 词优先
+
+闪现拼写（Flash Spelling）特殊规则
+
+仅对 HARD 词条启用
+
+不参与普通随机抽取
+
+每日最多出现 2 次
+
+4. 拼写训练模式定义
+
+以下模式均属于 Stage 2，通过 modeType 区分。
+
+Mode 1：Missing Letter (Cloze Spelling)
+modeType
+missing_letter
+
+适用词条
+
+NEW
+
+REVIEW
+
+玩法说明
+
+显示完整单词结构
+
+随机挖掉 1–2 个关键字母
+
+提供 3–5 个字母选项（含干扰）
+
+示例
+c _ n t r e
+Options: [e, a, o, i]
+
+判定规则
+
+全部补对 → correct
+
+任一错误 → wrong
+
+Mode 2：Letter Order Trap
+modeType
+letter_order
+
+适用词条
+
+REVIEW
+
+HARD
+
+玩法说明
+
+提供完整字母集合
+
+字母顺序完全打乱
+
+玩家按顺序选择字母组成单词
+
+示例
+Target: centre
+Letters: [r, e, c, t, n, e]
+
+判定规则
+
+选错一个字母 → 本题失败
+
+失败后可重试一次
+
+Mode 3：Real vs Fake Spelling
+modeType
+real_vs_fake
+
+适用词条
+
+REVIEW
+
+HARD
+
+玩法说明
+
+同时显示 3–4 个拼写选项
+
+仅 1 个为正确拼写，其余为常见错误拼写
+
+示例
+centre
+centar
+conter
+centur
+
+判定规则
+
+选中正确拼写 → correct
+
+否则 → wrong
+
+Mode 4：Phoneme Selection
+modeType
+phoneme_select
+
+适用词条
+
+REVIEW
+
+HARD
+
+玩法说明
+
+播放单词音频
+
+显示音素/音节块按钮
+
+玩家按顺序选择正确音素组合
+
+示例
+favourite
+Correct: [fav, our, ite]
+Distractors: [far, vor, it, ate]
+
+判定规则
+
+音素顺序完全正确 → correct
+
+否则 → wrong
+
+Mode 5：Fix the Wrong Spelling
+modeType
+fix_wrong
+
+适用词条
+
+REVIEW
+
+HARD
+
+玩法说明
+
+系统提供一个错误拼写版本
+
+玩家需：
+
+选中错误字母
+
+选择正确替换
+
+示例
+❌ centar
+→ tap 'a', replace with 'e'
+
+判定规则
+
+修复后等于正确拼写 → correct
+
+否则 → wrong
+
+Mode 6：Flash Spelling (Hard Words Only)
+modeType
+flash_spelling
+
+启用条件（必须全部满足）
+
+consecutiveWrong >= 3
+
+词条状态 = HARD
+
+玩法说明
+
+完整单词显示 flashDuration（默认 1500–2000ms）
+
+单词消失
+
+玩家拼写单词
+
+难度控制
+
+简单：提供字母块
+
+困难：只提供首字母 + 空位
+
+使用限制
+
+每日最多 2 次
+
+不可连续两题出现
+
+5. 错误记录与反馈
+错误记录
+
+每道拼写题结束需更新：
+
+wrongCount
+
+consecutiveWrong / consecutiveCorrect
+
+lastWrongType = modeType
+
+状态更新规则
+
+correct：
+
+consecutiveCorrect += 1
+
+consecutiveWrong = 0
+
+wrong：
+
+wrongCount += 1
+
+consecutiveWrong += 1
+
+consecutiveCorrect = 0
+
+6. 模式权重建议（可配置）
+modeType	权重
+missing_letter	3
+letter_order	2
+real_vs_fake	2
+phoneme_select	2
+fix_wrong	2
+flash_spelling	0（条件触发）
+7. 设计约束（重要）
+
+Stage 2 不出现中文提示
+
+单次拼写失败不超过 2 次重试
+
+所有模式统一返回：
+
+{ result: correct | wrong, modeType, wordId }
+
+8. 实现优先级建议
+
+Missing Letter
+
+Letter Order
+
+Real vs Fake
+
+Fix Wrong
+
+Phoneme Select
+
+Flash Spelling（最后实现）
+
+9. 设计意图说明（给未来维护者）
+
+本 Stage 的设计目标不是“让孩子一次性拼对”，
+而是 让错误模式被暴露、被识别、被反复修正。
+
+Flash Spelling 属于高压训练，仅用于顽固错误词，
+避免对普通词条造成不必要挫败。

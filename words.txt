@@ -1,0 +1,43 @@
+				
+Day 1	sport（n.体育运动）	jump（v.跳）	high（adj.高）	far（adv.远）	ping-pong（n.乒乓球）
+	volleyball（n.排球）	across（adv.穿过）	play sports（做运动）	jump high（跳得高）	jump far（跳得远）
+Day 2	hope（n.希望）	lose（v.缺失）	because（conj.因为）	cancer（n.癌症）	money（n.钱）
+	hard（adj.困难的）	kind（adj.亲切的）	run fast（跑得快）	swim fast（游得快）	play ping-pong（打乒乓球）
+Day 3	keep（v.持续）	month（n.一个月）	ill（adj.生病的）	year（n.年）	remember（v.纪念）
+	fail（v.失败）	give（v.给予）	play football（踢足球）	play basketball（打篮球）	at first（起初）
+Day 4	try（v.尝试）	star（n.明星）	ability（n.才能）	player（n.运动员）	wash（v.洗）
+	dish（n.盘子）	feed（v.喂养）	because of sb/sth（因为某人/某事物）	Sports Day（运动会）	keep doing sth（持续做某事）
+Day 5	sweep（v.打扫）	floor（n.地板）	rubbish（n.垃圾）	chore（n.家庭杂务）	to-do-list（n.待办清单）
+	may（可以）	outside（prep.在室外）	give up（放弃某事）	work hard（努力）	try your best（尽你所能）
+Day 6	tidy（v.整理）	easy（adj.容易的）	clean（v.弄干净）	job（n.工作，任务）	dirty（adj.脏的）
+	desk（n.书桌）	wall（n.墙）	to-do list（待办清单）	good job（干得好，真不错）	take out the rubbish（丢垃圾）
+Day 7	again（adv.再一次）	also（adv.还）	sunshine（n.阳光）	sometimes（adv.有时）	feel（v.感受到）
+	tired（adj.疲惫的）	helpful（adj.乐于助人的）	pick the apples（摘苹果）	milk the cow（挤牛奶）	warm up（（使）变暖）
+Day 8	warm（v.温暖）	water（v.浇水；n.水）	yard（n.院子）	helper（n.帮手）	pick（v.采）
+	pig（n.猪）	cow（n.奶牛）	tidy the room（打扫房间）	feed the dog（喂狗）	get the eggs（收集鸡蛋）
+Day 9	cut（v.修剪）	grass（n.草）	weather（n.天气）	sunny（adj.阳光充足的）	cloud（n.云）
+	cloudy（adj.多云的）	by（adv.经过）	on the farm（在农场）	well done（干得好）	wash the dishes（洗盘子）
+Day 10	wind（n.风）	windy（adj.多风的）	blow（v.吹）	rain（n.雨）	rainy（adj.多雨的）
+	snow（n.雪）	snowy（adj.有雪的）	cut the grass（割草）	do chores（做家务）	make the bed（整理床）
+Day 11	any（任何一个）	cold（adj.冷的）	or（conj.或者）	enjoy（v.享受）	umbrella（n.伞）
+	diary（n.日记）	grass（n.草，草地）	water the vegetables（给蔬菜浇水）	clean/sweep the floor（清扫地板）	go by（经过）
+Day 12	teacher（n.老师）	taste（v.有...味道）	ice cream（n.冰激凌）	real（adj.真的）	later（adv.之后）
+	surprise（n.惊喜）	coat（n.外套）	blow around（（风）四处吹）	go out to play（出去玩）	go home（回家）
+Day 13	turn（v.转身）	report（n.报道）	season（n.季节）	spring（n.春天）	summer（n.夏天）
+	autumn（n.秋天）	winter（n.冬天）	snowy day（下雪天）	turn off （关掉）	turn on（打开）
+Day 14	favourite（adj.最喜欢的）	birthday（n.生日）	fly（v.放飞）	share（v.分享）	snowstorm（n.雪暴）
+	beach（n.海滩）	sea（n.海）	weather report（天气预报）	fly kites（放风筝）	eat ice cream（吃冰激凌）
+Day 15	equator（n.赤道）	round（adv.到处）	quite（adv.非常）	join（v.加入）	bus（n.公交车）
+	car（n.汽车）	train（n.火车）	in summer（在夏天）	share...with...（和...分享...）	wait for（等待）
+Day 16	city（n.城市）	town（n.城镇）	ship（n.船）	plane（n.飞机）	sky（n.天空）
+	place（n.地方）	near（adj.近的）	go to the beach（去海滩）	all year around（全年）	from......to......（从...到...）
+Day 17	far（adj.远的）	travel（v.旅行）	way（n.方式）	picnic（n.野餐）	wear（v.穿）
+	minute（n.分钟）	live（v.居住）	get ready（做好准备）	by car（乘汽车）	by train（乘火车）
+Day 18	truck（n.卡车）	bike（n.自行车）	subway（n.地铁）	wheel（n.轮子）	left（adv.向左；n.右边）
+	straight（adv.笔直地）	library（n.图书馆）	on foot（步行）	on a plane（在飞机上）	far away（遥远的）
+Day 19	cinema（n.电影院）	supermarket（n.超市）	hospital（n.医院）	centre（n.中间）	tomorrow（n.明天）
+	woman（n.女性）	wish（n.愿望）	come from（来自）	go out（外出）	sports centre（体育中心）
+Day 20	own（adj.自己的）	cross（v.横穿）	careful（adj.谨慎的）	step（n.步）	safe（adj.安全的）
+	right（adv.向右；n.右边）	museum（n.博物馆）	find out（查明，弄清）	get/go around（四处走动）	be careful（当心，小心）
+Day 21	tram（n.电车）	walk （v.步行）	ill(adj.生病的）	come true （实现）	fly a kite 放风筝
+	make a wish （许愿）	on her own (靠她自己)	on my own（靠我自己）	play in the snow（在雪地里玩耍）	give up（放弃）

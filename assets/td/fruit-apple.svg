@@ -1,0 +1,12 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="apple" cx="0.4" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#ff8a7a" />
+      <stop offset="1" stop-color="#d63b2c" />
+    </radialGradient>
+  </defs>
+  <circle cx="32" cy="36" r="18" fill="url(#apple)" />
+  <circle cx="24" cy="30" r="10" fill="url(#apple)" />
+  <rect x="30" y="10" width="4" height="10" rx="2" fill="#6b4f2f" />
+  <path d="M36 14c8 2 12 6 14 10-7 1-13-1-16-6-1-2 0-3 2-4z" fill="#4c8c3f" />
+</svg>
