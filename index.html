@@ -221,6 +221,53 @@
         box-shadow: 0 10px 24px rgba(232, 111, 58, 0.25);
       }
 
+      .day-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .game-links {
+        display: inline-flex;
+        gap: 6px;
+      }
+
+      .game-link {
+        width: 32px;
+        height: 32px;
+        border-radius: 12px;
+        background: #f7efe6;
+        box-shadow: 0 8px 16px rgba(30, 23, 12, 0.12);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+      }
+
+      .game-link:hover {
+        transform: translateY(-1px);
+      }
+
+      .game-icon {
+        width: 18px;
+        height: 18px;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
+      }
+
+      .td-icon {
+        background-image: url("assets/index/td.svg");
+      }
+
+      .snake-icon {
+        background-image: url("assets/index/snake.svg");
+      }
+
+      .search-icon {
+        background-image: url("assets/index/search.svg");
+      }
+
       .list-hint {
         color: var(--muted);
         font-size: 13px;
@@ -239,6 +286,12 @@
         .day-row {
           grid-template-columns: 1fr;
           align-items: flex-start;
+        }
+
+        .day-actions {
+          width: 100%;
+          justify-content: space-between;
+          flex-wrap: wrap;
         }
 
         .start-btn {

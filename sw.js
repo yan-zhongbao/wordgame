@@ -1,4 +1,4 @@
-const CACHE_NAME = "wordgame-v54";
+const CACHE_NAME = "wordgame-v55";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -22,6 +22,9 @@ const CORE_ASSETS = [
   "./assets/wordsearch/hand.svg",
   "./assets/wordsearch/bomb.svg",
   "./assets/wordsearch/radar.svg",
+  "./assets/index/td.svg",
+  "./assets/index/snake.svg",
+  "./assets/index/search.svg",
   "./td.html",
   "./td.js",
   "./td.css",

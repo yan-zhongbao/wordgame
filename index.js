@@ -91,10 +91,29 @@ function formatQuality(stats) {
   return stats.stars;
 }
 
+function isPerfect(stats) {
+  if (!stats || stats.errors === undefined) {
+    return false;
+  }
+  return Number(stats.errors) <= 0;
+}
+
 function setHint(message) {
   if (UI.listHint) {
     UI.listHint.textContent = message || "";
   }
+}
+
+function createGameLink({ href, title, iconClass }) {
+  const link = document.createElement("a");
+  link.className = "game-link";
+  link.href = href;
+  link.title = title;
+  link.setAttribute("aria-label", title);
+  const icon = document.createElement("span");
+  icon.className = `game-icon ${iconClass}`;
+  link.appendChild(icon);
+  return link;
 }
 
 function renderDayList(words, reviewRecords, dayStats) {
@@ -107,7 +126,8 @@ function renderDayList(words, reviewRecords, dayStats) {
     const key = String(day);
     const wordCount = wordCounts[key] || 0;
     const wrongCount = wrongCounts[key] || 0;
-    const quality = formatQuality(dayStats[key]);
+    const stats = dayStats[key];
+    const quality = formatQuality(stats);
 
     const row = document.createElement("div");
     row.className = "day-row";
@@ -120,6 +140,36 @@ function renderDayList(words, reviewRecords, dayStats) {
     meta.className = "day-meta";
     meta.innerHTML = `单词 ${wordCount} · 错词 ${wrongCount} · 质量 <span class="quality">${quality}</span>`;
 
+    const actions = document.createElement("div");
+    actions.className = "day-actions";
+
+    if (isPerfect(stats)) {
+      const gameLinks = document.createElement("div");
+      gameLinks.className = "game-links";
+      gameLinks.appendChild(
+        createGameLink({
+          href: `td.html?day=${day}`,
+          title: "单词大战作业",
+          iconClass: "td-icon",
+        })
+      );
+      gameLinks.appendChild(
+        createGameLink({
+          href: `snake.html?day=${day}`,
+          title: "贪吃蛇记忆",
+          iconClass: "snake-icon",
+        })
+      );
+      gameLinks.appendChild(
+        createGameLink({
+          href: `wordsearch.html?day=${day}`,
+          title: "单词寻宝",
+          iconClass: "search-icon",
+        })
+      );
+      actions.appendChild(gameLinks);
+    }
+
     const start = document.createElement("button");
     start.className = "start-btn";
     start.textContent = "进入";
@@ -127,9 +177,10 @@ function renderDayList(words, reviewRecords, dayStats) {
       window.location.href = `practice.html?day=${day}`;
     });
 
+    actions.appendChild(start);
     row.appendChild(title);
     row.appendChild(meta);
-    row.appendChild(start);
+    row.appendChild(actions);
     UI.dayList.appendChild(row);
   }
 }
