@@ -183,7 +183,7 @@ button {
 }
 
 .grid.xray {
-  filter: grayscale(1);
+  filter: grayscale(1) brightness(0.92);
 }
 
 .grid-cell {
@@ -196,6 +196,16 @@ button {
   color: #3a2a1c;
   font-size: clamp(14px, 2.4vw, 18px);
   user-select: none;
+}
+
+.grid.xray .grid-cell {
+  background: rgba(205, 205, 205, 0.6);
+  color: rgba(80, 80, 80, 0.45);
+}
+
+.grid.xray .grid-cell.empty {
+  background: rgba(200, 200, 200, 0.3);
+  color: transparent;
 }
 
 .grid-cell.empty {
@@ -218,7 +228,14 @@ button {
 }
 
 .grid-cell.xray-cell {
-  outline: 2px dashed rgba(42, 36, 29, 0.55);
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+}
+
+.grid.xray .grid-cell.xray-cell {
+  background: #2f2f2f;
+  color: #fff;
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  text-shadow: 0 2px 8px rgba(255, 255, 255, 0.35);
 }
 
 .grid-cell.hand {
