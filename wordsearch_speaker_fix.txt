@@ -1,0 +1,30 @@
+﻿  state.speakerActive = true;
+  state.speakerLetter = "";
+  updateCoinUI();
+  showMessage("点选一个字母");
+}
+
+function highlightLetter(letter) {
+  if (!letter) {
+    return;
+  }
+  if (!/[a-z]/i.test(letter)) {
+    showMessage("请选择字母");
+    state.speakerActive = false;
+    state.speakerLetter = "";
+    updateCoinUI();
+    return;
+  }
+  state.grid.flat().forEach((cell) => {
+    if (cell.char === letter && !cell.el.classList.contains("found")) {
+      cell.el.classList.add("announce");
+    }
+  });
+  state.speakerLetter = letter;
+  window.setTimeout(() => {
+    state.grid.flat().forEach((cell) => cell.el.classList.remove("announce"));
+    state.speakerActive = false;
+    state.speakerLetter = "";
+    updateCoinUI();
+  }, CONFIG.speakerMs);
+}

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>单词寻宝</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#f0822e" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="WordGame" />
+    <link rel="apple-touch-icon" href="assets/pwa/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/pwa/icon-512.png" />
+    <link rel="stylesheet" href="wordsearch.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="title">
+        <div class="title-main">单词寻宝</div>
+        <div class="title-sub">涂抹连线找出单词</div>
+      </div>
+      <div class="stats">
+        <div>Day <span id="dayValue">1</span></div>
+        <div>已找 <span id="foundValue">0</span>/<span id="totalValue">0</span></div>
+        <div class="stars" id="starBar">
+          <span class="star">★</span>
+          <span class="star">★</span>
+          <span class="star">★</span>
+        </div>
+        <div class="coin-block"><span class="coin-icon"></span><span id="coinValue">0</span></div>
+      </div>
+      <div class="tools">
+        <button id="flashBtn" class="tool-btn" type="button" title="手电筒">
+          <span class="tool-icon flashlight-icon"></span>
+          <span class="tool-cost">-10</span>
+        </button>
+        <button id="speakerBtn" class="tool-btn" type="button" title="字母点名机">
+          <span class="tool-icon speaker-icon"></span>
+          <span class="tool-cost">-10</span>
+        </button>
+        <button id="xrayBtn" class="tool-btn" type="button" title="X光机">
+          <span class="tool-icon xray-icon"></span>
+          <span class="tool-cost">-50</span>
+        </button>
+        <button id="handBtn" class="tool-btn" type="button" title="举手提示">
+          <span class="tool-icon hand-icon"></span>
+          <span class="tool-cost">-10</span>
+        </button>
+        <button id="bombBtn" class="tool-btn" type="button" title="炸弹">
+          <span class="tool-icon bomb-icon"></span>
+          <span class="tool-cost">-10</span>
+        </button>
+        <button id="radarBtn" class="tool-btn" type="button" title="雷达">
+          <span class="tool-icon radar-icon"></span>
+          <span class="tool-cost">-5</span>
+        </button>
+      </div>
+      <button id="backBtn" class="ghost">返回主页面</button>
+    </header>
+
+    <main class="layout">
+      <section class="grid-panel">
+        <div id="grid" class="grid"></div>
+        <div id="messageText" class="message"></div>
+      </section>
+      <aside class="word-panel">
+        <div class="panel-title">中文词库</div>
+        <div id="wordList" class="word-list"></div>
+      </aside>
+    </main>
+
+    <script src="wordsearch.js"></script>
+  </body>
+</html>

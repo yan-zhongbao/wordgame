@@ -1,9 +1,18 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Word Quest 21</title>
+    <title>Word Quest · 关卡选择</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#f0822e" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="WordGame" />
+    <link rel="apple-touch-icon" href="assets/pwa/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/pwa/icon-512.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,11 +24,10 @@
         --ink: #1c1a16;
         --muted: #5c554b;
         --paper: #f7f0e6;
-        --card: rgba(255, 255, 255, 0.78);
+        --card: rgba(255, 255, 255, 0.82);
         --accent: #e86f3a;
         --accent-2: #2f7d74;
         --shadow: 0 20px 40px rgba(36, 28, 14, 0.18);
-        --glow: rgba(232, 111, 58, 0.2);
       }
 
       * {
@@ -44,39 +52,24 @@
         position: fixed;
         z-index: 0;
         border-radius: 50%;
-        filter: blur(0px);
-        opacity: 0.5;
+        opacity: 0.45;
         pointer-events: none;
       }
 
       body::before {
-        width: 340px;
-        height: 340px;
-        top: -120px;
-        right: -80px;
+        width: 320px;
+        height: 320px;
+        top: -140px;
+        right: -90px;
         background: radial-gradient(circle, #f4b77a 0%, rgba(244, 183, 122, 0) 70%);
-        animation: drift 16s ease-in-out infinite;
       }
 
       body::after {
-        width: 280px;
-        height: 280px;
+        width: 260px;
+        height: 260px;
         bottom: -120px;
-        left: -60px;
+        left: -70px;
         background: radial-gradient(circle, #89c2b5 0%, rgba(137, 194, 181, 0) 70%);
-        animation: drift 20s ease-in-out infinite reverse;
-      }
-
-      @keyframes drift {
-        0% {
-          transform: translateY(0) translateX(0);
-        }
-        50% {
-          transform: translateY(12px) translateX(10px);
-        }
-        100% {
-          transform: translateY(0) translateX(0);
-        }
       }
 
       .app {
@@ -118,61 +111,28 @@
         letter-spacing: 2px;
       }
 
-      .day-info {
+      .top-actions {
         display: flex;
         align-items: center;
-        gap: 16px;
-        background: rgba(255, 255, 255, 0.6);
-        padding: 10px 16px;
-        border-radius: 999px;
-        box-shadow: 0 8px 20px rgba(32, 24, 12, 0.12);
+        gap: 12px;
       }
 
-      .day-label {
-        font-size: 16px;
+      .coin-block {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.7);
+        box-shadow: 0 10px 20px rgba(30, 23, 12, 0.12);
         font-weight: 600;
       }
 
-      .progress {
-        width: 160px;
-        height: 10px;
-        border-radius: 999px;
-        background: rgba(31, 29, 24, 0.08);
-        overflow: hidden;
-      }
-
-      .progress-fill {
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, var(--accent) 0%, #f1b259 100%);
-        transition: width 0.3s ease;
-      }
-
-      .stars {
-        font-size: 18px;
-        letter-spacing: 2px;
-      }
-
-      .score {
-        font-size: 14px;
-        font-weight: 600;
-        padding: 6px 12px;
-        border-radius: 999px;
-        background: rgba(47, 125, 116, 0.12);
-        color: var(--accent-2);
-        min-width: 84px;
-        text-align: center;
-      }
-
-      .audio-btn {
-        border: none;
-        background: #fff;
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
-        font-size: 18px;
-        box-shadow: 0 10px 20px rgba(23, 18, 9, 0.12);
-        opacity: 0.45;
+      .coin-icon {
+        width: 16px;
+        height: 16px;
+        background: url("assets/td/coin.svg") center/contain no-repeat;
+        display: inline-block;
       }
 
       .update-btn {
@@ -187,362 +147,83 @@
         cursor: pointer;
       }
 
-      .stage {
+      .content {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 18px;
+        gap: 16px;
       }
 
       .card {
-        padding: 28px;
+        padding: 24px;
         border-radius: 28px;
         background: var(--card);
         box-shadow: var(--shadow);
         display: flex;
         flex-direction: column;
-        gap: 16px;
-        animation: rise 0.7s ease;
-      }
-
-      @keyframes rise {
-        from {
-          transform: translateY(18px);
-          opacity: 0;
-        }
-        to {
-          transform: translateY(0);
-          opacity: 1;
-        }
-      }
-
-      .stage-label {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 2px;
-      }
-
-      .prompt {
-        font-size: clamp(26px, 4vw, 38px);
-        font-weight: 600;
-      }
-
-      .prompt.prompt-split {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .prompt-zh {
-        font-size: clamp(24px, 3.6vw, 34px);
-      }
-
-      .prompt-en {
-        font-size: clamp(20px, 3.2vw, 28px);
-        letter-spacing: 1px;
-      }
-
-      .phrase-gap {
-        display: inline-block;
-        width: 18px;
-      }
-
-      .phrase-slash {
-        display: inline-block;
-        padding: 0 4px;
-        color: var(--muted);
-        font-weight: 600;
-      }
-
-      .hint {
-        color: var(--muted);
-        font-size: 16px;
-      }
-
-      .options {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .options.builder-mode {
-        display: flex;
-        flex-direction: column;
-      }
-
-      .option {
-        border: none;
-        border-radius: 18px;
-        padding: 18px 16px;
-        font-size: 18px;
-        font-weight: 500;
-        background: #fff;
-        box-shadow: 0 12px 24px rgba(30, 23, 12, 0.12);
-        transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .option:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 14px 30px rgba(30, 23, 12, 0.18);
-      }
-
-      .option:disabled {
-        cursor: default;
-        opacity: 0.7;
-      }
-
-      .option.correct {
-        border: 2px solid #2f7d74;
-        box-shadow: 0 10px 28px rgba(47, 125, 116, 0.3);
-      }
-
-      .option.wrong {
-        border: 2px solid #c6483c;
-        box-shadow: 0 10px 28px rgba(198, 72, 60, 0.3);
-      }
-
-      .builder {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .slots {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        min-height: 56px;
-        padding: 12px;
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.7);
-        border: 1px dashed rgba(52, 41, 28, 0.2);
-      }
-
-      .slot {
-        border: none;
-        border-radius: 14px;
-        padding: 10px 14px;
-        font-size: 17px;
-        font-weight: 600;
-        background: #fff;
-        color: var(--ink);
-        box-shadow: 0 8px 16px rgba(30, 23, 12, 0.12);
-      }
-
-      .slot.empty {
-        background: transparent;
-        color: rgba(28, 26, 22, 0.4);
-        box-shadow: none;
-        border: 1px dashed rgba(52, 41, 28, 0.18);
-      }
-
-      .slot-gap {
-        width: 24px;
-        height: 32px;
-      }
-
-      .slot-sep {
-        display: inline-flex;
-        align-items: center;
-        padding: 0 6px;
-        color: var(--muted);
-        font-weight: 700;
-      }
-
-      .tiles {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-      }
-
-      .tile {
-        border: none;
-        border-radius: 14px;
-        padding: 12px 16px;
-        font-size: 17px;
-        font-weight: 600;
-        background: #fff;
-        color: var(--ink);
-        cursor: pointer;
-        box-shadow: 0 10px 18px rgba(23, 17, 9, 0.12);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-      }
-
-      .tile:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 24px rgba(23, 17, 9, 0.18);
-      }
-
-      .tile.used {
-        opacity: 0.4;
-        cursor: default;
-        transform: none;
-        box-shadow: none;
-      }
-
-      .fix-panel {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .fix-word {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 8px;
-        padding: 12px;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.7);
-        border: 1px dashed rgba(52, 41, 28, 0.2);
-      }
-
-      .fix-letter {
-        border: none;
-        padding: 10px 12px;
-        border-radius: 12px;
-        font-size: 16px;
-        font-weight: 600;
-        background: #fff;
-        box-shadow: 0 8px 16px rgba(30, 23, 12, 0.12);
-        cursor: pointer;
-      }
-
-      .fix-letter.selected {
-        border: 2px solid #c6483c;
-      }
-
-      .fix-letter.ghost {
-        background: transparent;
-        box-shadow: none;
-        cursor: default;
-      }
-
-      .fix-options {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        justify-content: center;
-      }
-
-      .missing-display {
-        letter-spacing: 6px;
-        font-weight: 700;
-      }
-
-      .prompt.prompt-split.missing-display .prompt-zh {
-        letter-spacing: normal;
-      }
-
-      .prompt.prompt-split.missing-display .prompt-en {
-        letter-spacing: 6px;
-      }
-
-      .footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        color: var(--muted);
-        margin-top: auto;
-        padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
-      }
-
-      .status {
-        font-size: 15px;
-      }
-
-      .primary {
-        border: none;
-        padding: 12px 22px;
-        border-radius: 14px;
-        background: linear-gradient(135deg, var(--accent) 0%, #f0a44b 100%);
-        color: white;
-        font-weight: 600;
-        font-size: 15px;
-        box-shadow: 0 12px 26px var(--glow);
-        cursor: pointer;
-      }
-
-      .overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(22, 20, 16, 0.38);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        z-index: 10;
-      }
-
-      .overlay.hidden {
-        display: none;
-      }
-
-      .panel {
-        width: min(520px, 100%);
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 26px;
-        padding: 28px;
-        box-shadow: var(--shadow);
-        display: flex;
-        flex-direction: column;
         gap: 18px;
       }
 
-      .panel-title {
-        font-family: "Fraunces", "PingFang SC", serif;
-        font-size: 26px;
+      .card-title {
+        font-size: 20px;
+        font-weight: 700;
       }
 
-      .panel-body {
+      .card-sub {
         color: var(--muted);
-        line-height: 1.6;
+        font-size: 14px;
       }
 
-      .panel-actions {
+      .day-list {
         display: flex;
-        flex-wrap: wrap;
+        flex-direction: column;
         gap: 12px;
-        align-items: center;
       }
 
-      .panel-actions select {
-        padding: 10px 12px;
-        border-radius: 10px;
-        border: 1px solid rgba(40, 30, 20, 0.2);
-        font-size: 15px;
-      }
-
-      .ghost {
-        background: transparent;
-        border: 1px solid rgba(40, 30, 20, 0.2);
-        color: var(--ink);
-      }
-
-      .day-grid {
+      .day-row {
         display: grid;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
-        gap: 10px;
-        width: 100%;
+        grid-template-columns: 90px 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 18px;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 12px 24px rgba(30, 23, 12, 0.1);
       }
 
-      .day-button {
+      .day-title {
+        font-weight: 700;
+        font-size: 16px;
+      }
+
+      .day-meta {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      .quality {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 700;
+        color: var(--accent-2);
+      }
+
+      .start-btn {
         border: none;
-        border-radius: 12px;
-        padding: 10px 0;
-        font-size: 15px;
+        padding: 8px 16px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--accent) 0%, #f0a44b 100%);
+        color: #fff;
         font-weight: 600;
-        background: #fff;
-        box-shadow: 0 8px 16px rgba(30, 23, 12, 0.12);
         cursor: pointer;
+        box-shadow: 0 10px 24px rgba(232, 111, 58, 0.25);
+      }
+
+      .list-hint {
+        color: var(--muted);
+        font-size: 13px;
       }
 
       @media (max-width: 720px) {
@@ -555,18 +236,13 @@
           align-items: flex-start;
         }
 
-        .day-info {
-          width: 100%;
-          justify-content: space-between;
-        }
-
-        .options {
+        .day-row {
           grid-template-columns: 1fr;
+          align-items: flex-start;
         }
 
-        .footer {
-          flex-direction: column;
-          align-items: flex-start;
+        .start-btn {
+          width: 100%;
         }
       }
     </style>
@@ -576,43 +252,26 @@
       <header class="topbar">
         <div class="brand">
           <div class="title">Word Quest</div>
-          <div class="subtitle">21-Day Adventure</div>
+          <div class="subtitle">Choose Your Level</div>
         </div>
-        <div class="day-info">
-          <div class="day-label">Day <span id="dayLabel">1</span></div>
-          <div class="progress">
-            <div class="progress-fill" id="progressFill"></div>
-          </div>
-          <div class="score">分数 <span id="scoreValue">0</span></div>
-          <div class="stars" id="starPreview">★★★</div>
+        <div class="top-actions">
+          <div class="coin-block"><span class="coin-icon"></span><span id="coinValue">0</span></div>
+          <button class="update-btn" id="updateBtn">更新</button>
         </div>
-        <button class="audio-btn" id="audioBtn" disabled>🔊</button>
-        <button class="update-btn" id="updateBtn">更新</button>
       </header>
 
-      <main class="stage">
+      <main class="content">
         <section class="card">
-          <div class="stage-label" id="stageLabel">Stage 0 · 复活区</div>
-          <div class="prompt" id="prompt">准备开始挑战</div>
-          <div class="hint" id="hint">从错词复活区开始，再进入新词识别</div>
+          <div>
+            <div class="card-title">选择关卡</div>
+            <div class="card-sub">查看单词数量、错词数量和挑战质量</div>
+          </div>
+          <div id="dayList" class="day-list"></div>
+          <div id="listHint" class="list-hint"></div>
         </section>
-        <section class="options" id="options"></section>
       </main>
-
-      <footer class="footer">
-        <div class="status" id="statusText">等待开始</div>
-        <button class="primary" id="primaryBtn">开始</button>
-      </footer>
     </div>
 
-    <div class="overlay hidden" id="overlay">
-      <div class="panel">
-        <div class="panel-title" id="panelTitle"></div>
-        <div class="panel-body" id="panelBody"></div>
-        <div class="panel-actions" id="panelActions"></div>
-      </div>
-    </div>
-
-    <script src="app.js"></script>
+    <script src="index.js"></script>
   </body>
 </html>

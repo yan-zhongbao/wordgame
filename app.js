@@ -21,6 +21,7 @@ const STORAGE_KEYS = {
   review: "wg-review",
   spell: "wg-spell-stats",
   lastDay: "wg-last-day",
+  dayStats: "wg-day-stats",
 };
 
 const Stage = {
@@ -153,6 +154,65 @@ function setLastDay(day) {
   const safeDay = Math.min(21, Math.max(1, Number(day) || 1));
   Storage.save(STORAGE_KEYS.lastDay, safeDay);
   return safeDay;
+}
+
+function getStarCount(errors) {
+  if (errors <= 0) {
+    return 3;
+  }
+  if (errors <= 2) {
+    return 2;
+  }
+  if (errors < 5) {
+    return 1;
+  }
+  return 0;
+}
+
+function formatStars(count) {
+  if (count <= 0) {
+    return "☆☆☆";
+  }
+  if (count === 1) {
+    return "★☆☆";
+  }
+  if (count === 2) {
+    return "★★☆";
+  }
+  return "★★★";
+}
+
+function updateStarPreview(errors) {
+  if (!UI.starPreview) {
+    return;
+  }
+  const count = getStarCount(errors);
+  const stars = Array.from(UI.starPreview.querySelectorAll(".star"));
+  if (!stars.length) {
+    UI.starPreview.textContent = formatStars(count);
+    return;
+  }
+  stars.forEach((star, index) => {
+    star.classList.toggle("dim", index >= count);
+  });
+}
+
+function getDayFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const value = Number(params.get("day"));
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+  const day = Math.floor(value);
+  if (day < 1 || day > 21) {
+    return null;
+  }
+  return day;
+}
+
+function getInitialDay() {
+  const fromQuery = getDayFromQuery();
+  return fromQuery || getLastDay();
 }
 
 const AudioPlayer = {
@@ -439,6 +499,30 @@ const SpellStats = {
   reset() {
     this.records = {};
     Storage.remove(STORAGE_KEYS.spell);
+  },
+};
+
+const DayStats = {
+  records: {},
+
+  load() {
+    this.records = Storage.load(STORAGE_KEYS.dayStats, {});
+  },
+
+  save() {
+    Storage.save(STORAGE_KEYS.dayStats, this.records);
+  },
+
+  set(day, stats) {
+    if (!day) {
+      return;
+    }
+    this.records[String(day)] = stats;
+    this.save();
+  },
+
+  get(day) {
+    return this.records[String(day)];
   },
 };
 
@@ -1470,7 +1554,7 @@ const Engine = {
       targetNormalized: question.targetNormalized,
       chunks: question.chunks,
       tiles: question.tiles,
-      selected: [],
+      selected: new Array(question.chunks.length).fill(undefined),
       tileButtons,
       slotsEl: slots,
       recordedWrong: false,
@@ -1537,14 +1621,18 @@ const Engine = {
     if (spelling.selected.includes(tileId)) {
       return;
     }
-    spelling.selected.push(tileId);
+    const slotIndex = spelling.selected.findIndex((id) => id === undefined);
+    if (slotIndex < 0) {
+      return;
+    }
+    spelling.selected[slotIndex] = tileId;
     const button = spelling.tileButtons.get(tileId);
     if (button) {
       button.classList.add("used");
       button.disabled = true;
     }
     this.updateSpellingSlots();
-    if (spelling.selected.length === spelling.chunks.length) {
+    if (spelling.selected.every((id) => id !== undefined)) {
       this.checkSpelling();
     }
   },
@@ -1558,7 +1646,7 @@ const Engine = {
     if (tileId === undefined) {
       return;
     }
-    spelling.selected.splice(index, 1);
+    spelling.selected[index] = undefined;
     const button = spelling.tileButtons.get(tileId);
     if (button) {
       button.classList.remove("used");
@@ -1607,6 +1695,9 @@ const Engine = {
   async checkSpelling() {
     const spelling = this.state.spelling;
     if (!spelling) {
+      return;
+    }
+    if (spelling.selected.some((id) => id === undefined)) {
       return;
     }
     const answer = spelling.selected.map((tileId) => spelling.tiles[tileId]).join("");
@@ -1749,21 +1840,21 @@ const Engine = {
     UI.stageLabel.textContent = StageMeta[this.state.stage].label;
     UI.statusText.textContent = `${StageMeta[this.state.stage].status} ${done}/${total} · 错误 ${this.state.errors} 次`;
     UI.scoreValue.textContent = String(this.state.score);
-    UI.starPreview.textContent = this.starsForErrors(this.state.errors);
+    updateStarPreview(this.state.errors);
   },
 
   starsForErrors(errors) {
-    if (errors === 0) {
-      return "★★★";
-    }
-    if (errors <= 2) {
-      return "★★☆";
-    }
-    return "★☆☆";
+    return formatStars(getStarCount(errors));
   },
 
   finish() {
     const stars = this.starsForErrors(this.state.errors);
+    DayStats.set(this.state.day, {
+      stars,
+      score: this.state.score,
+      errors: this.state.errors,
+      updatedAt: new Date().toISOString(),
+    });
     const body = [
       `Day ${this.state.day} 已完成`,
       `星级：${stars}`,
@@ -1790,6 +1881,20 @@ const Engine = {
       window.location.href = `td.html?day=${this.state.day}`;
     });
 
+    const snakeMode = document.createElement("button");
+    snakeMode.className = "primary ghost";
+    snakeMode.textContent = "进入贪吃蛇记忆";
+    snakeMode.addEventListener("click", () => {
+      window.location.href = `snake.html?day=${this.state.day}`;
+    });
+
+    const searchMode = document.createElement("button");
+    searchMode.className = "primary ghost";
+    searchMode.textContent = "进入单词寻宝";
+    searchMode.addEventListener("click", () => {
+      window.location.href = `wordsearch.html?day=${this.state.day}`;
+    });
+
     const close = document.createElement("button");
     close.className = "primary ghost";
     close.textContent = "关闭";
@@ -1799,6 +1904,8 @@ const Engine = {
 
     UI.panelActions.appendChild(restart);
     UI.panelActions.appendChild(tdMode);
+    UI.panelActions.appendChild(snakeMode);
+    UI.panelActions.appendChild(searchMode);
     UI.panelActions.appendChild(close);
     showOverlay();
     AudioPlayer.updateButton(null);
@@ -1851,6 +1958,8 @@ function showStartScreen(selectedDay = null) {
   const dayItems = queues[Stage.NEW].length;
   const spellCount = queues[Stage.SPELL].length;
   const meaningCount = queues[Stage.MEANING].length;
+  UI.dayLabel.textContent = String(day);
+  updateStarPreview(0);
   UI.panelTitle.textContent = `准备开始 · Day ${day}`;
   UI.panelBody.innerHTML = [
     "先复习错词，再学习新词。",
@@ -1860,11 +1969,6 @@ function showStartScreen(selectedDay = null) {
     `中文意思：${meaningCount} 个`,
   ].join("<br />");
   UI.panelActions.innerHTML = "";
-
-  const pick = document.createElement("button");
-  pick.className = "primary ghost";
-  pick.textContent = "选择关卡";
-  pick.addEventListener("click", () => showDayPicker(day));
 
   const start = document.createElement("button");
   start.className = "primary";
@@ -1892,10 +1996,17 @@ function showStartScreen(selectedDay = null) {
     showStartScreen(day);
   });
 
-  UI.panelActions.appendChild(pick);
   UI.panelActions.appendChild(start);
   UI.panelActions.appendChild(reviewOnly);
   UI.panelActions.appendChild(reset);
+
+  const back = document.createElement("button");
+  back.className = "primary ghost";
+  back.textContent = "返回关卡列表";
+  back.addEventListener("click", () => {
+    window.location.href = "index.html";
+  });
+  UI.panelActions.appendChild(back);
   showOverlay();
 }
 
@@ -1921,7 +2032,7 @@ function showNotice(message) {
 }
 
 UI.primaryBtn.addEventListener("click", () => {
-  showStartScreen(getLastDay());
+  showStartScreen(getInitialDay());
 });
 
 UI.audioBtn.addEventListener("click", () => {
@@ -1970,7 +2081,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     await Data.load();
     Review.load();
     SpellStats.load();
-    showStartScreen(1);
+    DayStats.load();
+    showStartScreen(getInitialDay());
   } catch (err) {
     showError(err.message || "加载失败，请刷新重试。");
   }

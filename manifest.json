@@ -1,0 +1,23 @@
+{
+  "name": "WordGame",
+  "short_name": "WordGame",
+  "description": "Word learning game for daily practice.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f0e7",
+  "theme_color": "#f0822e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "assets/pwa/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/pwa/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

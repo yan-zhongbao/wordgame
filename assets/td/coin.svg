@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <radialGradient id="coinGlow" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#fff6c8"/>
+      <stop offset="45%" stop-color="#f6d56b"/>
+      <stop offset="100%" stop-color="#e6a62a"/>
+    </radialGradient>
+    <linearGradient id="coinEdge" x1="0%" x2="100%">
+      <stop offset="0%" stop-color="#f7da78"/>
+      <stop offset="100%" stop-color="#c9891f"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="52" fill="url(#coinEdge)"/>
+  <circle cx="60" cy="60" r="46" fill="url(#coinGlow)"/>
+  <circle cx="60" cy="60" r="30" fill="none" stroke="#d08a1a" stroke-width="6"/>
+  <path d="M48 44c6-4 18-4 24 0 2 2 2 6 0 8-4 3-8 3-12 3s-8 0-12 3c-2 2-2 6 0 8 6 4 18 4 24 0" fill="none" stroke="#d08a1a" stroke-width="6" stroke-linecap="round"/>
+</svg>

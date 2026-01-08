@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>贪吃蛇记忆</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#f0822e" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="WordGame" />
+    <link rel="apple-touch-icon" href="assets/pwa/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/pwa/icon-512.png" />
+    <link rel="stylesheet" href="snake.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="title">
+        <div class="title-main">贪吃蛇记忆</div>
+        <div class="title-sub">拖动蛇头按顺序吃字母</div>
+      </div>
+      <div class="stats">
+        <div>Day <span id="dayValue">1</span></div>
+        <div>单词 <span id="wordValue">0</span>/<span id="wordTotal">0</span></div>
+        <div>等级 <span id="levelValue">1</span></div>
+        <div class="stars" id="starBar">
+          <span class="star">★</span>
+          <span class="star">★</span>
+          <span class="star">★</span>
+        </div>
+        <div class="coin-block"><span class="coin-icon"></span><span id="coinValue">0</span></div>
+      </div>
+      <div class="tools">
+        <button id="freezeBtn" class="tool-btn" type="button" title="冻结 10 秒">
+          <span class="tool-icon ice-icon"></span>
+          <span class="tool-cost">-20</span>
+        </button>
+        <button id="speedBtn" class="tool-btn" type="button" title="加速 50 秒">
+          <span class="tool-icon wheel-icon"></span>
+          <span class="tool-cost">-30</span>
+        </button>
+        <button id="aimBtn" class="tool-btn" type="button" title="自动锁定">
+          <span class="tool-icon scope-icon"></span>
+          <span class="tool-cost">-50</span>
+        </button>
+      </div>
+      <button id="backBtn" class="ghost">返回主页面</button>
+    </header>
+
+    <main class="main">
+      <section class="playfield" id="playfield">
+        <div class="word-display" id="targetWord"></div>
+        <div class="effect-status" id="effectStatus"></div>
+        <div class="message" id="messageText"></div>
+      </section>
+    </main>
+
+    <script src="snake.js"></script>
+  </body>
+</html>

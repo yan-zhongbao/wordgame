@@ -4,11 +4,17 @@ const UI = {
   bagValue: document.getElementById("bagValue"),
   coinValue: document.getElementById("coinValue"),
   bossValue: document.getElementById("bossValue"),
+  starBar: document.getElementById("starBar"),
   seedTray: document.getElementById("seedTray"),
   restartBtn: document.getElementById("restartBtn"),
   backBtn: document.getElementById("backBtn"),
+  hoeBtn: document.getElementById("hoeBtn"),
+  keyBtn: document.getElementById("keyBtn"),
+  hornBtn: document.getElementById("hornBtn"),
+  batonBtn: document.getElementById("batonBtn"),
   field: document.getElementById("field"),
   bagArea: document.getElementById("bagArea"),
+  enemyArea: document.getElementById("enemyArea"),
   plantSlots: Array.from(document.querySelectorAll(".plant-slot")),
   enemyLayer: document.getElementById("enemyLayer"),
   bulletLayer: document.getElementById("bulletLayer"),
@@ -41,6 +47,12 @@ const CONFIG = {
   appleSplashRatio: 1 / 3,
   appleSplashRadius: 90,
   coconutPierceRatio: 0.1,
+  hoeCost: 20,
+  keyCost: 50,
+  hornCost: 50,
+  batonCost: 500,
+  coinFlightMs: 4200,
+  coinFadeMs: 700,
   bulletSpeed: 260,
   enemySpeed: 8,
   bossSpeed: 5,
@@ -55,6 +67,15 @@ const FRUITS = [
   { name: "cucumber", label: "cucumber" },
   { name: "blueberry", label: "blueberry" },
 ];
+
+const FIRE_INTERVALS = {
+  pear: 500,
+  apple: 1000,
+  banana: 1500,
+  coconut: 1000,
+  cucumber: 1000,
+  blueberry: 5000,
+};
 
 const TEXT = {
   brandSubtitle: "单词大战作业",
@@ -86,14 +107,27 @@ const TEXT = {
   noLetters: "这里没有可用字母。",
   turretMissing: "没有炮台可以填字母。",
   turretFull: "这个炮台不缺字母。",
+  toolNeedTurret: "请先选中一个炮台。",
+  toolNoSlot: "这里没有炮台可移除。",
+  toolNoGap: "这个炮台没有空格。",
+  toolBusy: "炮台正在忙。",
+  toolRemoved: "已移除炮台。",
+  toolKeyUsed: "已使用钥匙填字母。",
+  toolNoCoin: "金币不足。",
+  toolBossLimit: "当前没有可召唤的Boss。",
+  toolBossAlive: "Boss已经在场上了。",
+  toolHornUsed: "号角召唤了Boss！",
+  toolBatonUsed: "指挥棒启动自动填字。",
+  toolNoTurret: "没有可填字的炮台。",
   correctShot: "拼写正确，发射！",
   wrongShot: "拼写错误，炮台耐久-1。",
   turretExplode: "炮台爆炸了，重新种植吧。",
   flashHint: "先记住拼写。",
+  coinGain: "你打败了作业获得了金币。",
   noEnemy: "没有敌人出现。",
   bagged: "进了书包！",
   winTitle: "胜利！",
-  winBody: "作业都完成了，书包安全！",
+  winBody: "恭喜你通过挑战，今天作业全免了。",
   loseTitle: "失败！",
   loseBody: "书包被塞满了，继续努力再来一次。",
   loadFail: "词库加载失败，请检查words.json。",
@@ -101,6 +135,10 @@ const TEXT = {
   voiceBag1: "快把{NAME}做完！",
   voiceBag2: "这个作业你还没写！",
   voiceBag3: "作业堆起来啦！",
+};
+
+const STORAGE_KEYS = {
+  coins: "wg-td-coins",
 };
 
 const SoundFX = {
@@ -164,6 +202,18 @@ const SoundFX = {
     await this.playTone({ frequency: 1175, duration: 0.1, type: "sine", gain: 0.1 });
   },
 
+  async playExplosion() {
+    await this.unlock();
+    await this.playTone({ frequency: 220, duration: 0.16, type: "triangle", gain: 0.12 });
+    await this.playTone({ frequency: 160, duration: 0.14, type: "triangle", gain: 0.1 });
+  },
+
+  async playFirework() {
+    await this.unlock();
+    await this.playTone({ frequency: 520, duration: 0.12, type: "sine", gain: 0.1 });
+    await this.playTone({ frequency: 780, duration: 0.1, type: "sine", gain: 0.09 });
+  },
+
   async playFruitShot(fruit) {
     await this.unlock();
     const profiles = {
@@ -176,20 +226,23 @@ const SoundFX = {
     };
     const tones = profiles[fruit] || [520, 640];
     for (const freq of tones) {
-      await this.playTone({ frequency: freq, duration: 0.08, type: "sine", gain: 0.12 });
+      await this.playTone({ frequency: freq, duration: 0.08, type: "sine", gain: 0.1 });
     }
   },
 };
 
 const AudioBank = {
+  unlocked: false,
+  pool: {},
   entries: {
-    shot: { src: "audio/td/shot.wav", fallback: () => SoundFX.playSuccess() },
-    error: { src: "audio/td/error.wav", fallback: () => SoundFX.playError() },
-    coin: { src: "audio/td/coin.wav", fallback: () => SoundFX.playCoin() },
-    hit1: { src: "audio/td/hit1.wav" },
-    hit2: { src: "audio/td/hit2.wav" },
-    hit3: { src: "audio/td/hit3.wav" },
-    explode: { src: "audio/td/explode.wav" },
+    shot: { src: "audio/td/shot.wav", volume: 0.5, rate: 0.95, fallback: () => SoundFX.playSuccess() },
+    error: { src: "audio/td/error.wav", volume: 0.5, rate: 0.95, fallback: () => SoundFX.playError() },
+    coin: { src: "audio/td/coin.wav", volume: 0.6, fallback: () => SoundFX.playCoin() },
+    hit1: { src: "audio/td/hit1.wav", volume: 0.45, rate: 0.96, fallback: () => SoundFX.playTone({ frequency: 320, duration: 0.06, gain: 0.1 }) },
+    hit2: { src: "audio/td/hit2.wav", volume: 0.5, rate: 0.96, fallback: () => SoundFX.playTone({ frequency: 360, duration: 0.06, gain: 0.1 }) },
+    hit3: { src: "audio/td/hit3.wav", volume: 0.55, rate: 0.96, fallback: () => SoundFX.playTone({ frequency: 420, duration: 0.06, gain: 0.1 }) },
+    explode: { src: "audio/td/explode.wav", volume: 0.55, rate: 0.9, fallback: () => SoundFX.playExplosion() },
+    firework: { src: "audio/td/firework.wav", volume: 0.6, rate: 1.05, fallback: () => SoundFX.playFirework() },
     voice_fail: { src: "audio/td/voice_fail.wav", text: TEXT.voiceFail },
     voice_bag_1: { src: "audio/td/voice_bag_1.wav", text: TEXT.voiceBag1 },
     voice_bag_2: { src: "audio/td/voice_bag_2.wav", text: TEXT.voiceBag2 },
@@ -197,6 +250,42 @@ const AudioBank = {
   },
   canSpeak() {
     return "speechSynthesis" in window;
+  },
+  unlock() {
+    if (this.unlocked) {
+      return;
+    }
+    try {
+      const audio = new Audio("audio/td/shot.wav");
+      audio.volume = 0;
+      audio.play()
+        .then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          this.unlocked = true;
+        })
+        .catch(() => {
+          this.unlocked = true;
+        });
+    } catch (err) {
+      this.unlocked = true;
+    }
+  },
+  getAudio(key) {
+    const entry = this.entries[key];
+    if (!entry || !entry.src) {
+      return null;
+    }
+    if (!this.pool[key]) {
+      this.pool[key] = [];
+    }
+    let audio = this.pool[key].find((item) => item.paused || item.ended);
+    if (!audio) {
+      audio = new Audio(entry.src);
+      audio.preload = "auto";
+      this.pool[key].push(audio);
+    }
+    return audio;
   },
   speak(text, lang = "zh-CN") {
     if (!this.canSpeak()) {
@@ -220,22 +309,44 @@ const AudioBank = {
     if (!entry) {
       return;
     }
+    let played = false;
+    const audio = this.getAudio(key);
+  if (audio) {
+    if (typeof entry.volume === "number") {
+      audio.volume = Math.max(0, Math.min(1, entry.volume));
+    }
+    if (typeof entry.rate === "number") {
+      audio.playbackRate = Math.max(0.5, Math.min(1.5, entry.rate));
+    }
+    audio.currentTime = 0;
     try {
-      const response = await fetch(entry.src);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        await new Promise((resolve) => {
-          audio.addEventListener("ended", resolve, { once: true });
-          audio.addEventListener("error", resolve, { once: true });
-          audio.play().catch(() => resolve());
-        });
-        URL.revokeObjectURL(url);
+      const playPromise = audio.play();
+      if (!playPromise) {
+        played = true;
         return;
       }
+      let resolveDone = null;
+      const done = new Promise((resolve) => {
+        resolveDone = resolve;
+      });
+      const handleDone = () => {
+        audio.removeEventListener("ended", handleDone);
+        audio.removeEventListener("error", handleDone);
+        resolveDone();
+      };
+      audio.addEventListener("ended", handleDone);
+      audio.addEventListener("error", handleDone);
+      const timeoutId = window.setTimeout(handleDone, 1500);
+      await playPromise;
+      played = true;
+      await done;
+      clearTimeout(timeoutId);
     } catch (err) {
-      // fall through to speech fallback
+      played = false;
+    }
+  }
+    if (played) {
+      return;
     }
     const speakText = textOverride || entry.text;
     if (speakText) {
@@ -250,7 +361,14 @@ const AudioBank = {
 const DragState = {
   active: null,
   targetSlot: null,
+  targetBag: false,
 };
+
+function preventTouchScroll(event) {
+  if (DragState.active) {
+    event.preventDefault();
+  }
+}
 
 const TD = {
   day: 1,
@@ -269,7 +387,13 @@ const TD = {
   bossAlive: false,
   bossTimer: 0,
   smallHpBudget: 0,
+  emptySince: 0,
+  winPending: false,
+  victoryActive: false,
+  victoryOverlayShown: false,
+  victoryTurretsLeft: 0,
   running: true,
+  errors: 0,
   lastTime: 0,
   spawnTimer: 0,
   removeLeftNext: true,
@@ -349,15 +473,21 @@ function buildWordWeights() {
   TD.reviewWeights = weights;
 }
 
-function pickWeightedWord(exclude, minLen = 0) {
+function pickWeightedWord(exclude, minLen = 0, bannedSet = null) {
   const pool = TD.wordPool;
   if (!pool.length) {
     return null;
   }
-  const candidates =
+  let candidates =
     minLen > 0
       ? pool.filter((item) => normalizeWord(item.en).length >= minLen)
       : pool;
+  if (bannedSet && bannedSet.size) {
+    const filtered = candidates.filter((item) => !bannedSet.has(item.en.toLowerCase()));
+    if (filtered.length) {
+      candidates = filtered;
+    }
+  }
   const source = candidates.length ? candidates : pool;
   const weights = source.map((item) => {
     const key = item.en.toLowerCase();
@@ -373,6 +503,18 @@ function pickWeightedWord(exclude, minLen = 0) {
     }
   }
   return source[source.length - 1];
+}
+
+function collectActiveWords(exceptTurret) {
+  const used = new Set();
+  TD.slots.forEach((slot) => {
+    const turret = slot.turret;
+    if (!turret || turret === exceptTurret || !turret.wordItem?.en) {
+      return;
+    }
+    used.add(turret.wordItem.en.toLowerCase());
+  });
+  return used;
 }
 
 function applyTemplate(template, letters) {
@@ -486,10 +628,90 @@ function selectSlot(id) {
   });
 }
 
+function getActiveSlot() {
+  if (TD.activeSlot === null || TD.activeSlot === undefined) {
+    return null;
+  }
+  return TD.slots.find((slot) => slot.id === TD.activeSlot) || null;
+}
+
 function showMessage(text) {
   if (UI.messageText) {
     UI.messageText.textContent = text;
   }
+}
+
+function loadCoins() {
+  const raw = localStorage.getItem(STORAGE_KEYS.coins);
+  const value = Number.parseInt(raw, 10);
+  if (!Number.isFinite(value) || value < 0) {
+    return 0;
+  }
+  return value;
+}
+
+function saveCoins() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.coins, String(TD.coins));
+  } catch (err) {
+    // ignore storage errors
+  }
+}
+
+function updateCoinUI() {
+  if (UI.coinValue) {
+    UI.coinValue.textContent = String(TD.coins);
+  }
+  if (UI.hoeBtn) {
+    UI.hoeBtn.classList.toggle("disabled", TD.coins < CONFIG.hoeCost);
+  }
+  if (UI.keyBtn) {
+    UI.keyBtn.classList.toggle("disabled", TD.coins < CONFIG.keyCost);
+  }
+  if (UI.hornBtn) {
+    UI.hornBtn.classList.toggle("disabled", TD.coins < CONFIG.hornCost);
+  }
+  if (UI.batonBtn) {
+    UI.batonBtn.classList.toggle("disabled", TD.coins < CONFIG.batonCost);
+  }
+  saveCoins();
+}
+
+function getStarCount(errors) {
+  if (errors <= 0) {
+    return 3;
+  }
+  if (errors <= 2) {
+    return 2;
+  }
+  if (errors < 5) {
+    return 1;
+  }
+  return 0;
+}
+
+function updateStarUI() {
+  if (!UI.starBar) {
+    return;
+  }
+  const count = getStarCount(TD.errors);
+  const stars = Array.from(UI.starBar.querySelectorAll(".star"));
+  if (!stars.length) {
+    return;
+  }
+  stars.forEach((star, index) => {
+    star.classList.toggle("dim", index >= count);
+  });
+}
+
+function spendCoins(amount) {
+  if (TD.coins < amount) {
+    showMessage(TEXT.toolNoCoin);
+    return false;
+  }
+  TD.coins -= amount;
+  updateCoinUI();
+  return true;
 }
 
 function plantSeedAt(slot, fruit) {
@@ -535,11 +757,14 @@ function renderSeedTray() {
 
 function createTurret(slot, fruit) {
   const turret = {
+    slotId: slot.id,
     level: 1,
     maxLevel: 6,
     hp: 3,
     maxHp: 3,
     fruit: fruit || "",
+    shotIntervalMs: FIRE_INTERVALS[fruit] || 1000,
+    baseShotIntervalMs: FIRE_INTERVALS[fruit] || 1000,
     wordItem: null,
     missingTemplateIndices: [],
     missingLetters: [],
@@ -557,7 +782,9 @@ function createTurret(slot, fruit) {
   slot.el.innerHTML = `
     <div class="turret">
       <div class="turret-header">
-        <div class="turret-icon ${turret.fruit ? `fruit-${turret.fruit}` : ""}"></div>
+        <div class="turret-icon ${turret.fruit ? `fruit-${turret.fruit}` : ""}">
+          <span class="turret-level"></span>
+        </div>
         <div class="turret-zh"></div>
       </div>
       <div class="turret-word"></div>
@@ -576,7 +803,8 @@ function assignNewWord(turret, forceNew = false) {
   const minLen = Math.max(2, turret.level + 1);
   let item = turret.wordItem;
   if (forceNew || !item || normalizeWord(item.en).length < minLen) {
-    item = pickWeightedWord(prev, minLen);
+    const banned = collectActiveWords(turret);
+    item = pickWeightedWord(prev, minLen, banned);
   }
   if (!item) {
     return;
@@ -597,12 +825,16 @@ function updateTurretUI(slot) {
   }
   const wordEl = slot.el.querySelector(".turret-word");
   const zhEl = slot.el.querySelector(".turret-zh");
+  const levelEl = slot.el.querySelector(".turret-level");
   const hpFill = slot.el.querySelector(".turret-hp .hp-fill");
   if (!wordEl || !hpFill) {
     return;
   }
   if (zhEl) {
     zhEl.textContent = slot.turret.wordItem?.zh || "";
+  }
+  if (levelEl) {
+    levelEl.textContent = String(slot.turret.level);
   }
   const rawDisplay = slot.turret.display.join("");
   wordEl.innerHTML = renderDisplayHtml(rawDisplay, slot.turret.wrongIndices);
@@ -665,6 +897,12 @@ function lockTurret(turret, ms, onUnlock) {
       onUnlock();
     }
   }, ms);
+}
+
+function computeShotInterval(turret) {
+  const base = turret?.shotIntervalMs || CONFIG.shotIntervalMs;
+  const jitter = (Math.random() * 2 - 1) * 500;
+  return Math.max(200, base + jitter);
 }
 
 function revealFullWord(slot, duration, resumeDisplay, resumeFillIndex, delayMs = 0) {
@@ -748,6 +986,9 @@ function startFiringSequence(slot, shots, onFinish) {
   const sequence = {
     remaining: Math.max(1, shots || 1),
     timer: null,
+    lastShotAt: 0,
+    nextAt: 0,
+    fireOnce: null,
   };
   turret.fireSequence = sequence;
   turret.locked = true;
@@ -756,6 +997,7 @@ function startFiringSequence(slot, shots, onFinish) {
       clearTurretFire(turret);
       return;
     }
+    sequence.lastShotAt = performance.now();
     fireBullet(slot);
     sequence.remaining -= 1;
     if (sequence.remaining <= 0) {
@@ -766,9 +1008,31 @@ function startFiringSequence(slot, shots, onFinish) {
       }
       return;
     }
-    sequence.timer = window.setTimeout(fireOnce, CONFIG.shotIntervalMs);
+    const intervalMs = computeShotInterval(turret);
+    sequence.nextAt = sequence.lastShotAt + intervalMs;
+    sequence.timer = window.setTimeout(fireOnce, intervalMs);
   };
+  sequence.fireOnce = fireOnce;
   fireOnce();
+}
+
+function adjustNextShot(turret) {
+  const seq = turret?.fireSequence;
+  if (!seq || !seq.timer || !seq.fireOnce) {
+    return;
+  }
+  const now = performance.now();
+  const lastShotAt = seq.lastShotAt || now;
+  const intervalMs = computeShotInterval(turret);
+  const desiredNextAt = lastShotAt + intervalMs;
+  clearTimeout(seq.timer);
+  if (desiredNextAt <= now) {
+    seq.timer = null;
+    seq.fireOnce();
+    return;
+  }
+  seq.nextAt = desiredNextAt;
+  seq.timer = window.setTimeout(seq.fireOnce, desiredNextAt - now);
 }
 
 async function handleCorrectShot(slot) {
@@ -779,7 +1043,8 @@ async function handleCorrectShot(slot) {
   showMessage(TEXT.correctShot);
   AudioBank.speakEn(turret.wordItem.en);
   updateTurretUI(slot);
-  const shots = turret.level * 3;
+  turret.shotIntervalMs = turret.baseShotIntervalMs;
+  const shots = turret.fruit === "pear" ? turret.level * 6 : turret.level * 3;
   SoundFX.playFruitShot(turret.fruit);
   turret.wrongStreak = 0;
   turret.flashMode = false;
@@ -802,6 +1067,8 @@ async function handleWrongShot(slot, wrongIndex) {
   if (!turret || !turret.wordItem) {
     return;
   }
+  TD.errors += 1;
+  updateStarUI();
   const correctCount = turret.missingFillIndex;
   const resumeDisplay = [...turret.displayBase];
   for (let i = 0; i < correctCount; i += 1) {
@@ -813,7 +1080,7 @@ async function handleWrongShot(slot, wrongIndex) {
   updateTurretUI(slot);
   triggerWordExplode(slot);
   turret.locked = true;
-  await AudioBank.play("error");
+  AudioBank.play("error");
   AudioBank.speakEn(turret.wordItem.en);
   turret.hp -= 1;
   updateTurretUI(slot);
@@ -849,6 +1116,24 @@ function explodeTurret(slot) {
   }
   showMessage(TEXT.turretExplode);
   AudioBank.play("explode");
+}
+
+function removeTurret(slot) {
+  if (!slot) {
+    return;
+  }
+  if (slot.turret) {
+    clearTurretFire(slot.turret);
+    clearTurretTimers(slot.turret);
+  }
+  slot.el.innerHTML = "";
+  slot.state = "empty";
+  slot.seed = null;
+  slot.turret = null;
+  if (TD.activeSlot === slot.id) {
+    TD.activeSlot = null;
+    slot.el.classList.remove("active");
+  }
 }
 
 function renderLetterQueue() {
@@ -905,11 +1190,120 @@ function fillLetterForSlot(slot, letter) {
   return true;
 }
 
+function handleHoeOnSlot(slot) {
+  if (!slot || (!slot.turret && !slot.seed)) {
+    showMessage(TEXT.toolNoSlot);
+    return false;
+  }
+  if (!spendCoins(CONFIG.hoeCost)) {
+    return false;
+  }
+  removeTurret(slot);
+  showMessage(TEXT.toolRemoved);
+  return true;
+}
+
+function handleKeyOnSlot(slot) {
+  if (!slot || !slot.turret) {
+    showMessage(TEXT.toolNeedTurret);
+    return false;
+  }
+  const turret = slot.turret;
+  if (turret.locked) {
+    showMessage(TEXT.toolBusy);
+    return false;
+  }
+  const fillIndex = turret.missingTemplateIndices[turret.missingFillIndex];
+  if (fillIndex === undefined) {
+    showMessage(TEXT.toolNoGap);
+    return false;
+  }
+  if (!spendCoins(CONFIG.keyCost)) {
+    return false;
+  }
+  const expected = turret.missingLetters[turret.missingFillIndex];
+  fillLetterForSlot(slot, expected);
+  showMessage(TEXT.toolKeyUsed);
+  return true;
+}
+
+function handleHornAction() {
+  if (TD.winPending || TD.victoryActive) {
+    return false;
+  }
+  if (TD.bossAlive) {
+    showMessage(TEXT.toolBossAlive);
+    return false;
+  }
+  if (TD.bossSpawned >= CONFIG.maxBoss) {
+    showMessage(TEXT.toolBossLimit);
+    return false;
+  }
+  if (!spendCoins(CONFIG.hornCost)) {
+    return false;
+  }
+  spawnBoss();
+  for (let i = 0; i < 5; i += 1) {
+    const task = randomItem(TASKS);
+    spawnEnemy({ name: task.name, hp: task.hp, tier: "normal" }, getSpawnPoint());
+  }
+  showMessage(TEXT.toolHornUsed);
+  return true;
+}
+
+function autoFillTurret(slot) {
+  const turret = slot.turret;
+  if (!turret || turret.locked || turret.fireSequence) {
+    return false;
+  }
+  if (turret.missingFillIndex >= turret.missingLetters.length) {
+    return false;
+  }
+  for (let i = turret.missingFillIndex; i < turret.missingLetters.length; i += 1) {
+    const idx = turret.missingTemplateIndices[i];
+    turret.display[idx] = turret.missingLetters[i];
+  }
+  turret.missingFillIndex = turret.missingLetters.length;
+  updateTurretUI(slot);
+  handleCorrectShot(slot);
+  return true;
+}
+
+function handleBatonAction() {
+  if (TD.winPending || TD.victoryActive) {
+    return false;
+  }
+  const targets = TD.slots.filter((slot) => slot.turret);
+  if (!targets.length) {
+    showMessage(TEXT.toolNoTurret);
+    return false;
+  }
+  if (!spendCoins(CONFIG.batonCost)) {
+    return false;
+  }
+  let used = false;
+  targets.forEach((slot) => {
+    if (autoFillTurret(slot)) {
+      used = true;
+    }
+  });
+  if (used) {
+    showMessage(TEXT.toolBatonUsed);
+  } else {
+    showMessage(TEXT.toolNoTurret);
+  }
+  return used;
+}
+
 function clearDropTarget() {
   if (DragState.targetSlot) {
     DragState.targetSlot.el.classList.remove("drop-target");
   }
   DragState.targetSlot = null;
+  if (DragState.targetBag && UI.bagArea) {
+    UI.bagArea.classList.remove("drop-bag");
+  }
+  DragState.targetBag = false;
 }
 
 function setDropTarget(slot) {
@@ -918,6 +1312,34 @@ function setDropTarget(slot) {
     slot.el.classList.add("drop-target");
     DragState.targetSlot = slot;
   }
+}
+
+function setBagTarget(active) {
+  clearDropTarget();
+  if (active && UI.bagArea) {
+    UI.bagArea.classList.add("drop-bag");
+    DragState.targetBag = true;
+  }
+}
+
+function canHoeSlot(slot) {
+  return !!slot && (slot.turret || slot.seed);
+}
+
+function canKeySlot(slot) {
+  if (!slot || !slot.turret) {
+    return false;
+  }
+  const turret = slot.turret;
+  if (turret.locked) {
+    return false;
+  }
+  const fillIndex = turret.missingTemplateIndices[turret.missingFillIndex];
+  return fillIndex !== undefined;
+}
+
+function isOverBag(element) {
+  return !!(UI.bagArea && element && UI.bagArea.contains(element));
 }
 
 function getSlotFromElement(element) {
@@ -933,8 +1355,16 @@ function getSlotFromElement(element) {
 }
 
 function updateDragTarget(event) {
-  const target = getSlotFromElement(document.elementFromPoint(event.clientX, event.clientY));
+  const element = document.elementFromPoint(event.clientX, event.clientY);
+  const target = getSlotFromElement(element);
   if (!target) {
+    if (
+      DragState.active?.type === "tool" &&
+      (DragState.active.payload?.tool === "horn" || DragState.active.payload?.tool === "baton")
+    ) {
+      setBagTarget(isOverBag(element));
+      return;
+    }
     setDropTarget(null);
     return;
   }
@@ -944,6 +1374,21 @@ function updateDragTarget(event) {
   }
   if (DragState.active?.type === "letter") {
     setDropTarget(target.turret ? target : null);
+    return;
+  }
+  if (DragState.active?.type === "tool") {
+    if (DragState.active.payload?.tool === "hoe") {
+      setDropTarget(canHoeSlot(target) ? target : null);
+    } else if (DragState.active.payload?.tool === "key") {
+      setDropTarget(canKeySlot(target) ? target : null);
+    } else if (
+      DragState.active.payload?.tool === "horn" ||
+      DragState.active.payload?.tool === "baton"
+    ) {
+      setBagTarget(isOverBag(element));
+    } else {
+      setDropTarget(null);
+    }
   }
 }
 
@@ -970,6 +1415,7 @@ function startDrag(type, payload, sourceEl, event) {
   updateDragTarget(event);
   window.addEventListener("pointermove", onDragMove);
   window.addEventListener("pointerup", onDragEnd);
+  window.addEventListener("touchmove", preventTouchScroll, { passive: false });
 }
 
 function moveGhost(x, y) {
@@ -993,18 +1439,35 @@ function onDragEnd(event) {
   }
   window.removeEventListener("pointermove", onDragMove);
   window.removeEventListener("pointerup", onDragEnd);
+  window.removeEventListener("touchmove", preventTouchScroll);
   active.ghost.remove();
   const dropSlot = DragState.targetSlot;
-  if (dropSlot) {
-    if (active.type === "seed") {
-      plantSeedAt(dropSlot, active.payload.fruit);
-    } else if (active.type === "letter") {
-      const entry = TD.letterQueue.find((item) => item.id === active.payload.id);
-      if (entry) {
-        const used = fillLetterForSlot(dropSlot, entry.letter);
-        if (used) {
-          consumeLetterById(entry.id);
-        }
+  if (active.type === "seed" && dropSlot) {
+    plantSeedAt(dropSlot, active.payload.fruit);
+  } else if (active.type === "letter" && dropSlot) {
+    const entry = TD.letterQueue.find((item) => item.id === active.payload.id);
+    if (entry) {
+      const used = fillLetterForSlot(dropSlot, entry.letter);
+      if (used) {
+        consumeLetterById(entry.id);
+      }
+    }
+  } else if (active.type === "tool") {
+    if (active.payload?.tool === "hoe") {
+      if (dropSlot) {
+        handleHoeOnSlot(dropSlot);
+      }
+    } else if (active.payload?.tool === "key") {
+      if (dropSlot) {
+        handleKeyOnSlot(dropSlot);
+      }
+    } else if (active.payload?.tool === "horn") {
+      if (DragState.targetBag) {
+        handleHornAction();
+      }
+    } else if (active.payload?.tool === "baton") {
+      if (DragState.targetBag) {
+        handleBatonAction();
       }
     }
   }
@@ -1071,7 +1534,7 @@ function initLetterQueue() {
   renderLetterQueue();
 }
 
-function spawnEnemy(entry) {
+function spawnEnemy(entry, spawnPoint) {
   if (!TD.running) {
     return;
   }
@@ -1079,8 +1542,8 @@ function spawnEnemy(entry) {
     return;
   }
   const fieldRect = UI.field.getBoundingClientRect();
-  const spawnX = fieldRect.width - 20;
-  const spawnY = fieldRect.height / 2 + 10;
+  const spawnX = spawnPoint?.x ?? fieldRect.width - 20;
+  const spawnY = spawnPoint?.y ?? fieldRect.height / 2 + 10;
   const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const enemy = {
     id,
@@ -1101,6 +1564,7 @@ function spawnEnemy(entry) {
     alive: true,
     falling: false,
     fallSpeed: 0,
+    hitCount: 0,
     slowUntil: 0,
     slipUntil: 0,
   };
@@ -1118,16 +1582,39 @@ function spawnBoss() {
   }
   TD.bossSpawned += 1;
   TD.bossAlive = true;
-  spawnEnemy({ ...entry, tier: "boss" });
+  spawnEnemy({ ...entry, tier: "boss" }, getSpawnPoint());
 }
 
-function isSpawnAreaClear(spawnX) {
-  return !TD.enemies.some(
-    (enemy) => enemy.alive && !enemy.falling && enemy.x > spawnX - 90
-  );
+function isSpawnAreaClear(spawnX, spawnY) {
+  return !TD.enemies.some((enemy) => {
+    if (!enemy.alive || enemy.falling) {
+      return false;
+    }
+    const dist = Math.hypot(enemy.x - spawnX, enemy.y - spawnY);
+    return dist < 90;
+  });
+}
+
+function getSpawnPoint() {
+  const fieldRect = UI.field.getBoundingClientRect();
+  const enemyRect = UI.enemyArea
+    ? UI.enemyArea.getBoundingClientRect()
+    : fieldRect;
+  const top = enemyRect.top - fieldRect.top;
+  const bottom = enemyRect.bottom - fieldRect.top;
+  const left = enemyRect.left - fieldRect.left;
+  const right = enemyRect.right - fieldRect.left;
+  const minY = Math.min(top + 30, bottom - 30);
+  const maxY = Math.max(top + 30, bottom - 30);
+  const spawnY = minY + Math.random() * Math.max(20, maxY - minY);
+  const spawnX = Math.max(left + 30, right - 20 - Math.random() * 20);
+  return { x: spawnX, y: spawnY };
 }
 
 function updateSpawns(delta) {
+  if (TD.winPending || TD.victoryActive) {
+    return;
+  }
   TD.bossTimer += delta * 1000;
   if (!TD.bossAlive && TD.bossSpawned < CONFIG.maxBoss && TD.bossTimer >= CONFIG.bossIntervalMs) {
     TD.bossTimer = 0;
@@ -1135,29 +1622,39 @@ function updateSpawns(delta) {
   }
   const rate = getSmallHpRate();
   TD.smallHpBudget += rate * delta;
+  const aliveCount = TD.enemies.filter((enemy) => enemy.alive && !enemy.falling).length;
+  const now = performance.now();
+  if (aliveCount === 0) {
+    if (!TD.emptySince) {
+      TD.emptySince = now;
+    }
+  } else {
+    TD.emptySince = 0;
+  }
+  const spawnInterval =
+    TD.emptySince && now - TD.emptySince <= 20000 ? 2000 : CONFIG.spawnIntervalMs;
   TD.spawnTimer += delta * 1000;
-  if (TD.spawnTimer < CONFIG.spawnIntervalMs) {
+  if (TD.spawnTimer < spawnInterval) {
     return;
   }
-  const fieldRect = UI.field.getBoundingClientRect();
-  const spawnX = fieldRect.width - 20;
-  if (!isSpawnAreaClear(spawnX)) {
-    TD.spawnTimer = CONFIG.spawnIntervalMs;
+  const spawnPoint = getSpawnPoint();
+  if (!isSpawnAreaClear(spawnPoint.x, spawnPoint.y)) {
+    TD.spawnTimer = spawnInterval * 0.6;
     return;
   }
   if (TD.smallHpBudget < 1) {
-    TD.spawnTimer = CONFIG.spawnIntervalMs;
+    TD.spawnTimer = spawnInterval;
     return;
   }
   const maxHp = Math.floor(TD.smallHpBudget);
   const task = pickSmallTask(maxHp);
   if (!task || task.hp > TD.smallHpBudget) {
-    TD.spawnTimer = CONFIG.spawnIntervalMs;
+    TD.spawnTimer = spawnInterval;
     return;
   }
   TD.smallHpBudget -= task.hp;
-  spawnEnemy({ name: task.name, hp: task.hp, tier: "normal" });
-  TD.spawnTimer -= CONFIG.spawnIntervalMs;
+  spawnEnemy({ name: task.name, hp: task.hp, tier: "normal" }, spawnPoint);
+  TD.spawnTimer -= spawnInterval;
 }
 
 function renderEnemy(enemy) {
@@ -1165,7 +1662,7 @@ function renderEnemy(enemy) {
   el.className = `enemy ${enemy.tier === "boss" ? "boss" : enemy.tier === "mid" ? "mid" : "normal"}`;
   el.dataset.id = enemy.id;
   el.innerHTML = `
-    <div class="enemy-img"></div>
+    <div class="enemy-img"><span class="enemy-tag"></span></div>
     <div class="enemy-title"></div>
     <div class="hp-bar"><div class="hp-fill"></div></div>
   `;
@@ -1187,8 +1684,13 @@ function updateEnemyPosition(enemy) {
   enemy.el.classList.toggle("slip", enemy.slipUntil > now);
   const title = enemy.el.querySelector(".enemy-title");
   const fill = enemy.el.querySelector(".hp-fill");
+  const tag = enemy.el.querySelector(".enemy-tag");
   if (title) {
     title.textContent = enemy.name;
+  }
+  if (tag) {
+    tag.textContent = getSubjectTag(enemy.name);
+    tag.style.display = tag.textContent ? "inline-flex" : "none";
   }
   if (fill) {
     const ratio = enemy.maxHp ? enemy.hp / enemy.maxHp : 0;
@@ -1203,13 +1705,20 @@ function removeEnemy(enemy) {
   TD.enemies = TD.enemies.filter((entry) => entry.id !== enemy.id);
 }
 
+function formatDamageText(damage) {
+  if (Number.isInteger(damage)) {
+    return `${damage}`;
+  }
+  return damage.toFixed(1);
+}
+
 function spawnDamageText(x, y, damage) {
   if (!UI.impactLayer) {
     return;
   }
   const text = document.createElement("div");
   text.className = "damage-text";
-  text.textContent = `-${damage}`;
+  text.textContent = `-${formatDamageText(damage)}`;
   text.style.left = `${x}px`;
   text.style.top = `${y}px`;
   UI.impactLayer.appendChild(text);
@@ -1227,7 +1736,8 @@ function spawnCoinFly(x, y) {
     return;
   }
   const fieldRect = UI.field.getBoundingClientRect();
-  const bagRect = UI.bagArea.getBoundingClientRect();
+  const bagLabel = UI.bagArea.querySelector(".bag-text");
+  const bagRect = (bagLabel || UI.bagArea).getBoundingClientRect();
   const targetX = bagRect.left - fieldRect.left + bagRect.width / 2;
   const targetY = bagRect.top - fieldRect.top + bagRect.height / 2;
   const coin = document.createElement("div");
@@ -1235,10 +1745,18 @@ function spawnCoinFly(x, y) {
   coin.style.left = `${x}px`;
   coin.style.top = `${y}px`;
   UI.impactLayer.appendChild(coin);
+  const travelMs = CONFIG.coinFlightMs;
+  const fadeMs = CONFIG.coinFadeMs;
+  coin.style.transition = `transform ${travelMs}ms ease-out, opacity ${fadeMs}ms ease-out ${Math.max(
+    0,
+    travelMs - fadeMs
+  )}ms`;
   requestAnimationFrame(() => {
-    coin.style.transform = `translate(${targetX - x}px, ${targetY - y}px) scale(0.6)`;
-    coin.style.opacity = "0";
+    coin.style.transform = `translate(calc(-50% + ${targetX - x}px), calc(-50% + ${targetY - y}px)) scale(0.6)`;
   });
+  window.setTimeout(() => {
+    coin.style.opacity = "0";
+  }, Math.max(0, travelMs - fadeMs));
   coin.addEventListener(
     "transitionend",
     () => {
@@ -1250,11 +1768,67 @@ function spawnCoinFly(x, y) {
 
 function awardCoins(amount, x, y) {
   TD.coins += amount;
-  if (UI.coinValue) {
-    UI.coinValue.textContent = String(TD.coins);
-  }
+  updateCoinUI();
   spawnCoinFly(x, y);
   AudioBank.play("coin");
+  showMessage(TEXT.coinGain);
+}
+
+function spawnBubble(x, y) {
+  if (!UI.impactLayer) {
+    return;
+  }
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  const fieldRect = UI.field.getBoundingClientRect();
+  const minX = 20;
+  const maxX = Math.max(40, fieldRect.width - 20);
+  const targetX = minX + Math.random() * (maxX - minX);
+  const dx = Math.round(Math.max(-fieldRect.width, Math.min(fieldRect.width, targetX - x)));
+  const dy = Math.round(-200 - Math.random() * 200);
+  const dyHalf = Math.round(dy * 0.55);
+  const colors = [
+    "rgba(255, 99, 132, 0.75)",
+    "rgba(54, 162, 235, 0.75)",
+    "rgba(255, 206, 86, 0.75)",
+    "rgba(75, 192, 192, 0.75)",
+    "rgba(153, 102, 255, 0.75)",
+    "rgba(255, 159, 64, 0.75)",
+  ];
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  bubble.style.left = `${x}px`;
+  bubble.style.top = `${y}px`;
+  bubble.style.setProperty("--dx", `${dx}px`);
+  bubble.style.setProperty("--dy", `${dy}px`);
+  bubble.style.setProperty("--dy-half", `${dyHalf}px`);
+  bubble.style.setProperty("--bubble-color", color);
+  UI.impactLayer.appendChild(bubble);
+  bubble.addEventListener(
+    "animationend",
+    () => {
+      bubble.remove();
+    },
+    { once: true }
+  );
+}
+
+function spawnFirework(x, y, color) {
+  if (!UI.impactLayer) {
+    return;
+  }
+  const firework = document.createElement("div");
+  firework.className = "firework";
+  firework.style.left = `${x}px`;
+  firework.style.top = `${y}px`;
+  firework.style.setProperty("--fw-color", color);
+  UI.impactLayer.appendChild(firework);
+  firework.addEventListener(
+    "animationend",
+    () => {
+      firework.remove();
+    },
+    { once: true }
+  );
 }
 
 function spawnImpact(x, y, fruit) {
@@ -1275,6 +1849,34 @@ function spawnImpact(x, y, fruit) {
   );
 }
 
+function getSubjectTag(name) {
+  if (!name) {
+    return "";
+  }
+  if (name.includes("英语")) {
+    return "English";
+  }
+  if (name.includes("语文")) {
+    return "语文";
+  }
+  if (name.includes("数学")) {
+    return "数学";
+  }
+  return "";
+}
+
+function flashEnemy(enemy, className = "burn-flash", duration = 400) {
+  if (!enemy?.el) {
+    return;
+  }
+  enemy.el.classList.remove(className);
+  void enemy.el.offsetWidth;
+  enemy.el.classList.add(className);
+  window.setTimeout(() => {
+    enemy.el && enemy.el.classList.remove(className);
+  }, duration);
+}
+
 function findFrontEnemy() {
   const alive = TD.enemies.filter((enemy) => enemy.alive);
   if (!alive.length) {
@@ -1286,6 +1888,29 @@ function findFrontEnemy() {
     }
     return enemy.x < closest.x ? enemy : closest;
   }, null);
+}
+
+function findFrontEnemyBy(filterFn) {
+  const alive = TD.enemies.filter((enemy) => enemy.alive && filterFn(enemy));
+  if (!alive.length) {
+    return null;
+  }
+  return alive.reduce((closest, enemy) => {
+    if (!closest) {
+      return enemy;
+    }
+    return enemy.x < closest.x ? enemy : closest;
+  }, null);
+}
+
+function getBulletDamage(turret) {
+  if (!turret) {
+    return 1;
+  }
+  if (turret.fruit === "pear") {
+    return 1 + (turret.level - 1) * 0.5;
+  }
+  return turret.level;
 }
 
 function findHighestHpEnemy() {
@@ -1308,13 +1933,37 @@ function findEnemyById(id) {
   return TD.enemies.find((enemy) => enemy.id === id && enemy.alive) || null;
 }
 
+function findTurretBySlotId(id) {
+  if (id === null || id === undefined) {
+    return null;
+  }
+  const slot = TD.slots.find((entry) => entry.id === id);
+  return slot?.turret || null;
+}
+
 function applyEnemyDamage(enemy, damage, fruit) {
   if (!enemy.alive) {
     return;
   }
-  const hit = Math.max(1, Math.round(damage));
-  enemy.hp -= hit;
-  spawnDamageText(enemy.x, enemy.y, hit);
+  const now = performance.now();
+  if (enemy.tier === "boss") {
+    enemy.hitCount = (enemy.hitCount || 0) + 1;
+    if (enemy.hitCount % 5 === 0) {
+      enemy.jumpingUntil = now + 900;
+      enemy.nextJumpAt = now + 2000;
+      updateEnemyPosition(enemy);
+      return;
+    }
+  }
+  const actualDamage = Math.max(0.5, Math.round(damage * 2) / 2);
+  const hit = Math.max(1, Math.round(actualDamage));
+  enemy.hp -= actualDamage;
+  spawnDamageText(enemy.x, enemy.y, actualDamage);
+  if (enemy.el) {
+    enemy.el.classList.remove("shake");
+    void enemy.el.offsetWidth;
+    enemy.el.classList.add("shake");
+  }
   if (hit >= 3) {
     AudioBank.play("hit3");
   } else if (hit === 2) {
@@ -1367,7 +2016,9 @@ function updateBossJump(enemy, now) {
 function updateEnemies(delta, now) {
   const bagRect = UI.bagArea.getBoundingClientRect();
   const fieldRect = UI.field.getBoundingClientRect();
-  const bagLimitX = bagRect.right - fieldRect.left + 6;
+  const bagCenterX = bagRect.left - fieldRect.left + bagRect.width / 2;
+  const bagCenterY = bagRect.top - fieldRect.top + bagRect.height / 2;
+  const bagRadius = Math.min(bagRect.width, bagRect.height) * 0.45;
   TD.enemies.forEach((enemy) => {
     if (enemy.falling) {
       enemy.y += enemy.fallSpeed * delta;
@@ -1380,14 +2031,23 @@ function updateEnemies(delta, now) {
       return;
     }
     const slowFactor = enemy.slowUntil > now ? CONFIG.slowFactor : 1;
-    enemy.x -= enemy.speed * slowFactor * delta;
+    const dx = bagCenterX - enemy.x;
+    const dy = bagCenterY - enemy.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const step = enemy.speed * slowFactor * delta;
+    enemy.x += (dx / dist) * step;
+    enemy.y += (dy / dist) * step;
     updateEnemyPosition(enemy);
   });
   TD.enemies
-    .filter((enemy) => enemy.alive && enemy.x <= bagLimitX)
+    .filter(
+      (enemy) =>
+        enemy.alive && Math.hypot(enemy.x - bagCenterX, enemy.y - bagCenterY) <= bagRadius
+    )
     .forEach((enemy) => {
-      TD.bagLoad += enemy.hp;
-      UI.bagValue.textContent = TD.bagLoad;
+      const loadGain = Math.max(1, Math.round(enemy.hp));
+      TD.bagLoad += loadGain;
+      UI.bagValue.textContent = String(TD.bagLoad);
       showMessage(`${enemy.name}${TEXT.bagged}`);
       playBagVoice(enemy.name);
       if (enemy.tier === "boss") {
@@ -1407,7 +2067,7 @@ function updateEnemies(delta, now) {
     });
 }
 
-function spawnSingleBullet(originX, originY, damage, fruit, targetId, options = {}) {
+function spawnSingleBullet(originX, originY, damage, fruit, targetId, sourceId, options = {}) {
   const bullet = {
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
     x: originX,
@@ -1416,9 +2076,23 @@ function spawnSingleBullet(originX, originY, damage, fruit, targetId, options = 
     speed: CONFIG.bulletSpeed,
     fruit,
     targetId,
+    sourceId,
     pierceDamage: options.pierceDamage || 0,
     pierced: new Set(),
+    vx: 0,
+    vy: 0,
   };
+  const target = findEnemyById(targetId);
+  if (target) {
+    const dx = target.x - originX;
+    const dy = target.y - originY;
+    const dist = Math.hypot(dx, dy) || 1;
+    bullet.vx = (dx / dist) * bullet.speed;
+    bullet.vy = (dy / dist) * bullet.speed;
+  } else {
+    bullet.vx = bullet.speed;
+    bullet.vy = 0;
+  }
   const el = document.createElement("div");
   el.className = `bullet ${fruit ? `fruit-${fruit}` : ""}`;
   el.dataset.id = bullet.id;
@@ -1437,7 +2111,7 @@ function fireBullet(slot) {
   const slotRect = slot.el.getBoundingClientRect();
   const originX = slotRect.left - fieldRect.left + slotRect.width * 0.8;
   const originY = slotRect.top - fieldRect.top + slotRect.height * 0.5;
-  const baseDamage = turret.level;
+  const baseDamage = getBulletDamage(turret);
   if (turret.fruit === "blueberry") {
     const alive = TD.enemies.filter((enemy) => enemy.alive);
     if (!alive.length) {
@@ -1449,13 +2123,24 @@ function fireBullet(slot) {
     alive.forEach((enemy, index) => {
       const rawDamage = base + (index < remainder ? 1 : 0);
       const perDamage = Math.max(1, rawDamage);
-      spawnSingleBullet(originX, originY, perDamage, turret.fruit, enemy.id);
+      spawnSingleBullet(originX, originY, perDamage, turret.fruit, enemy.id, turret.slotId);
     });
     SoundFX.playFruitShot(turret.fruit);
     return;
   }
-  const target =
-    turret.fruit === "coconut" ? findHighestHpEnemy() : findFrontEnemy();
+  const now = performance.now();
+  let target = null;
+  if (turret.fruit === "coconut") {
+    target = findHighestHpEnemy();
+  } else if (turret.fruit === "banana") {
+    target =
+      findFrontEnemyBy((enemy) => enemy.slipUntil <= now) || findFrontEnemy();
+  } else if (turret.fruit === "cucumber") {
+    target =
+      findFrontEnemyBy((enemy) => enemy.slowUntil <= now) || findFrontEnemy();
+  } else {
+    target = findFrontEnemy();
+  }
   if (!target) {
     showMessage(TEXT.noEnemy);
     return;
@@ -1464,7 +2149,7 @@ function fireBullet(slot) {
   if (turret.fruit === "coconut") {
     options.pierceDamage = Math.max(1, Math.round(baseDamage * CONFIG.coconutPierceRatio));
   }
-  spawnSingleBullet(originX, originY, baseDamage, turret.fruit, target.id, options);
+  spawnSingleBullet(originX, originY, baseDamage, turret.fruit, target.id, turret.slotId, options);
   SoundFX.playFruitShot(turret.fruit);
 }
 
@@ -1491,8 +2176,10 @@ function applyBulletHit(bullet, target, now) {
   if (!target) {
     return;
   }
+  const turret = findTurretBySlotId(bullet.sourceId);
   if (bullet.fruit === "apple") {
     applyEnemyDamage(target, bullet.damage, bullet.fruit);
+    flashEnemy(target, "burn-flash");
     const splashDamage = Math.max(1, Math.round(bullet.damage * CONFIG.appleSplashRatio));
     TD.enemies.forEach((enemy) => {
       if (!enemy.alive || enemy.id === target.id) {
@@ -1501,6 +2188,7 @@ function applyBulletHit(bullet, target, now) {
       const dist = Math.hypot(enemy.x - target.x, enemy.y - target.y);
       if (dist <= CONFIG.appleSplashRadius) {
         applyEnemyDamage(enemy, splashDamage, bullet.fruit);
+        flashEnemy(enemy, "burn-flash");
       }
     });
     return;
@@ -1519,6 +2207,18 @@ function applyBulletHit(bullet, target, now) {
       target.slowUntil = now + CONFIG.slowDurationMs;
       updateEnemyPosition(target);
     }
+    if (turret) {
+      turret.shotIntervalMs = Math.min(turret.shotIntervalMs + 500, 5000);
+      adjustNextShot(turret);
+    }
+    return;
+  }
+  if (bullet.fruit === "blueberry") {
+    applyEnemyDamage(target, bullet.damage, bullet.fruit);
+    if (turret) {
+      turret.shotIntervalMs = Math.max(turret.shotIntervalMs - 1000, 1000);
+      adjustNextShot(turret);
+    }
     return;
   }
   applyEnemyDamage(target, bullet.damage, bullet.fruit);
@@ -1534,10 +2234,6 @@ function removeBullet(bullet) {
 function updateBullets(delta, now) {
   TD.bullets.forEach((bullet) => {
     const target = resolveBulletTarget(bullet);
-    if (!target) {
-      removeBullet(bullet);
-      return;
-    }
     if (bullet.fruit === "coconut" && bullet.pierceDamage > 0) {
       TD.enemies.forEach((enemy) => {
         if (!enemy.alive || enemy.tier !== "normal" || bullet.pierced.has(enemy.id)) {
@@ -1550,22 +2246,42 @@ function updateBullets(delta, now) {
         }
       });
     }
-    const dx = target.x - bullet.x;
-    const dy = target.y - bullet.y;
-    const dist = Math.hypot(dx, dy) || 1;
-    const step = bullet.speed * delta;
-    if (dist <= step + 4) {
-      if (target.jumpingUntil > now) {
+    if (target) {
+      const dx = target.x - bullet.x;
+      const dy = target.y - bullet.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const step = bullet.speed * delta;
+      bullet.vx = (dx / dist) * bullet.speed;
+      bullet.vy = (dy / dist) * bullet.speed;
+      if (dist <= step + 4) {
+        if (target.jumpingUntil > now) {
+          removeBullet(bullet);
+          return;
+        }
+        applyBulletHit(bullet, target, now);
         removeBullet(bullet);
         return;
       }
-      applyBulletHit(bullet, target, now);
-      removeBullet(bullet);
-      return;
+      bullet.x += (dx / dist) * step;
+      bullet.y += (dy / dist) * step;
+    } else {
+      if (!Number.isFinite(bullet.vx)) {
+        bullet.vx = bullet.speed;
+        bullet.vy = 0;
+      }
+      bullet.x += bullet.vx * delta;
+      bullet.y += bullet.vy * delta;
     }
-    bullet.x += (dx / dist) * step;
-    bullet.y += (dy / dist) * step;
     updateBulletPosition(bullet);
+    const fieldRect = UI.field.getBoundingClientRect();
+    if (
+      bullet.x < -60 ||
+      bullet.y < -60 ||
+      bullet.x > fieldRect.width + 60 ||
+      bullet.y > fieldRect.height + 60
+    ) {
+      removeBullet(bullet);
+    }
   });
 }
 
@@ -1599,6 +2315,12 @@ function gameLoop(timestamp) {
   updateEnemies(delta, timestamp);
   updateBullets(delta, timestamp);
   updateSpawns(delta);
+  if (TD.winPending && !TD.victoryActive && TD.enemies.length === 0) {
+    startVictorySequence();
+  }
+  if (TD.victoryActive && !TD.victoryOverlayShown && TD.victoryTurretsLeft <= 0) {
+    finishVictory();
+  }
   requestAnimationFrame(gameLoop);
 }
 
@@ -1612,12 +2334,94 @@ function hideOverlay() {
   UI.overlay.classList.add("hidden");
 }
 
-function winGame() {
-  if (!TD.running) {
+function prepareVictory() {
+  if (TD.winPending || TD.victoryActive) {
     return;
   }
+  TD.winPending = true;
+}
+
+function launchFireworks() {
+  const fieldRect = UI.field.getBoundingClientRect();
+  const left = 40;
+  const right = fieldRect.width - 40;
+  const top = 40;
+  const bottom = fieldRect.height - 40;
+  const colors = ["#ff3b3b", "#ffb700", "#39d98a", "#3b82f6", "#a855f7", "#ff6ad5"];
+  let count = 0;
+  const timer = window.setInterval(() => {
+    const x = left + Math.random() * Math.max(20, right - left);
+    const y = top + Math.random() * Math.max(20, bottom - top);
+    spawnFirework(x, y, colors[count % colors.length]);
+    if (count % 3 === 0) {
+      AudioBank.play("firework");
+    }
+    count += 1;
+    if (count >= 24) {
+      clearInterval(timer);
+    }
+  }, 180);
+}
+
+function celebrateTurret(slot) {
+  if (!slot || !slot.turret) {
+    TD.victoryTurretsLeft -= 1;
+    return;
+  }
+  const turret = slot.turret;
+  clearTurretFire(turret);
+  clearTurretTimers(turret);
+  turret.locked = true;
+  let fired = 0;
+  const fieldRect = UI.field.getBoundingClientRect();
+  const slotRect = slot.el.getBoundingClientRect();
+  const originX = slotRect.left - fieldRect.left + slotRect.width * 0.6;
+  const originY = slotRect.top - fieldRect.top + slotRect.height * 0.4;
+  const fireBubble = () => {
+    if (!slot.turret) {
+      TD.victoryTurretsLeft -= 1;
+      return;
+    }
+    spawnBubble(originX + (Math.random() * 24 - 12), originY + (Math.random() * 20 - 10));
+    fired += 1;
+    if (fired >= 10) {
+      removeTurret(slot);
+      TD.victoryTurretsLeft -= 1;
+      return;
+    }
+    window.setTimeout(fireBubble, 1000);
+  };
+  fireBubble();
+}
+
+function startVictorySequence() {
+  if (TD.victoryActive) {
+    return;
+  }
+  TD.victoryActive = true;
+  TD.winPending = false;
+  showMessage(TEXT.winBody);
+  launchFireworks();
+  const turrets = TD.slots.filter((slot) => slot.turret);
+  TD.victoryTurretsLeft = turrets.length;
+  if (!turrets.length) {
+    finishVictory();
+    return;
+  }
+  turrets.forEach((slot) => celebrateTurret(slot));
+}
+
+function finishVictory() {
+  if (TD.victoryOverlayShown) {
+    return;
+  }
+  TD.victoryOverlayShown = true;
   TD.running = false;
   showOverlay(TEXT.winTitle, TEXT.winBody);
+}
+
+function winGame() {
+  prepareVictory();
 }
 
 function loseGame() {
@@ -1636,13 +2440,18 @@ function resetGame() {
   TD.enemies = [];
   TD.bullets = [];
   TD.bagLoad = 0;
-  TD.coins = 0;
   TD.bossDefeated = 0;
   TD.bossSpawned = 0;
   TD.bossAlive = false;
   TD.bossTimer = 0;
   TD.smallHpBudget = 0;
+  TD.emptySince = 0;
+  TD.winPending = false;
+  TD.victoryActive = false;
+  TD.victoryOverlayShown = false;
+  TD.victoryTurretsLeft = 0;
   TD.running = true;
+  TD.errors = 0;
   TD.spawnTimer = 0;
   TD.lastTime = 0;
   TD.spawnTick = 0;
@@ -1661,9 +2470,8 @@ function resetGame() {
   });
   TD.activeSlot = null;
   UI.bagValue.textContent = "0";
-  if (UI.coinValue) {
-    UI.coinValue.textContent = "0";
-  }
+  updateCoinUI();
+  updateStarUI();
   UI.bossValue.textContent = "0";
   initLetterQueue();
   hideOverlay();
@@ -1704,7 +2512,7 @@ async function loadWords(day) {
     throw new Error(TEXT.loadFail);
   }
   const data = await response.json();
-  TD.wordPool = data.filter((item) => item.day <= day);
+  TD.wordPool = data.filter((item) => item.day === day);
 }
 
 function bindUI() {
@@ -1712,17 +2520,44 @@ function bindUI() {
   UI.backBtn?.addEventListener("click", () => {
     window.location.href = "index.html";
   });
+  UI.hoeBtn?.addEventListener("pointerdown", (event) => {
+    if (TD.coins < CONFIG.hoeCost) {
+      showMessage(TEXT.toolNoCoin);
+      return;
+    }
+    startDrag("tool", { tool: "hoe" }, UI.hoeBtn, event);
+  });
+  UI.keyBtn?.addEventListener("pointerdown", (event) => {
+    if (TD.coins < CONFIG.keyCost) {
+      showMessage(TEXT.toolNoCoin);
+      return;
+    }
+    startDrag("tool", { tool: "key" }, UI.keyBtn, event);
+  });
+  UI.hornBtn?.addEventListener("pointerdown", (event) => {
+    if (TD.coins < CONFIG.hornCost) {
+      showMessage(TEXT.toolNoCoin);
+      return;
+    }
+    startDrag("tool", { tool: "horn" }, UI.hornBtn, event);
+  });
+  UI.batonBtn?.addEventListener("pointerdown", (event) => {
+    if (TD.coins < CONFIG.batonCost) {
+      showMessage(TEXT.toolNoCoin);
+      return;
+    }
+    startDrag("tool", { tool: "baton" }, UI.batonBtn, event);
+  });
   UI.overlayRestart?.addEventListener("click", () => resetGame());
   UI.overlayBack?.addEventListener("click", () => {
     window.location.href = "index.html";
   });
-  window.addEventListener(
-    "pointerdown",
-    () => {
-      SoundFX.unlock();
-    },
-    { once: true }
-  );
+  const unlockAudioOnce = () => {
+    SoundFX.unlock();
+    AudioBank.unlock();
+  };
+  window.addEventListener("pointerdown", unlockAudioOnce, { once: true });
+  window.addEventListener("touchstart", unlockAudioOnce, { once: true });
 }
 
 async function init() {
@@ -1733,13 +2568,13 @@ async function init() {
   buildWordWeights();
   const day = getDayFromQuery() || 1;
   TD.day = day;
-  TD.coins = 0;
+  TD.coins = loadCoins();
+  TD.errors = 0;
   if (UI.dayValue) {
     UI.dayValue.textContent = String(day);
   }
-  if (UI.coinValue) {
-    UI.coinValue.textContent = "0";
-  }
+  updateCoinUI();
+  updateStarUI();
   try {
     await loadWords(day);
     TD.enemyQueue = [];
@@ -1748,6 +2583,7 @@ async function init() {
   }
   showMessage(TEXT.startHint);
   bindUI();
+  updateCoinUI();
   requestAnimationFrame(gameLoop);
 }
 

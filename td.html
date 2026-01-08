@@ -1,9 +1,18 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Word vs Homework TD</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#f0822e" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="WordGame" />
+    <link rel="apple-touch-icon" href="assets/pwa/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/pwa/icon-512.png" />
     <link rel="stylesheet" href="td.css" />
   </head>
   <body>
@@ -14,9 +23,23 @@
       </div>
       <div class="status">
         <div><span data-i18n="dayLabel"></span> <span id="dayValue">1</span></div>
-        <div><span data-i18n="bagLabel"></span> <span id="bagValue">0</span>/30</div>
-        <div><span data-i18n="coinLabel"></span> <span id="coinValue">0</span></div>
-        <div><span data-i18n="bossLabel"></span> <span id="bossValue">0</span>/8</div>
+        <div>
+          <span class="status-icon notebook-icon" data-i18n-aria="bagLabel"></span>
+          <span id="bagValue">0</span>/30
+        </div>
+        <div>
+          <span class="status-icon coin-icon" data-i18n-aria="coinLabel"></span>
+          <span id="coinValue">0</span>
+        </div>
+        <div>
+          <span class="status-icon skull-icon" data-i18n-aria="bossLabel"></span>
+          <span id="bossValue">0</span>/8
+        </div>
+        <div class="stars" id="starBar">
+          <span class="star">★</span>
+          <span class="star">★</span>
+          <span class="star">★</span>
+        </div>
       </div>
       <div class="actions">
         <button id="restartBtn" class="ghost" data-i18n="restart"></button>
@@ -24,17 +47,39 @@
       </div>
     </header>
 
-    <section id="ammoArea" class="ammo-area">
-      <div id="letterQueue" class="letter-queue"></div>
-    </section>
-
     <main class="layout">
+      <section id="ammoArea" class="ammo-area">
+        <div id="letterQueue" class="letter-queue"></div>
+      </section>
       <section id="field" data-i18n-aria="battlefield">
         <div class="track-line"></div>
-        <div id="bagArea" class="zone">
-          <div class="bag-slot">
-            <div class="bag-icon"></div>
-            <div class="bag-text" data-i18n="bagText"></div>
+        <div id="bagColumn" class="bag-column">
+          <div id="seedPanel" class="zone seed-panel">
+            <div id="seedTray" class="seed-tray"></div>
+          </div>
+          <div id="bagArea" class="zone">
+            <div class="bag-slot">
+              <div class="bag-icon"></div>
+              <div class="bag-text" data-i18n="bagText"></div>
+            </div>
+          </div>
+          <div class="bag-tools">
+            <button id="hoeBtn" class="tool-btn" title="移除炮台" type="button">
+              <span class="tool-icon hoe-icon"></span>
+              <span class="tool-cost">-20<span class="coin-mini"></span></span>
+            </button>
+            <button id="keyBtn" class="tool-btn" title="钥匙填空" type="button">
+              <span class="tool-icon key-icon"></span>
+              <span class="tool-cost">-50<span class="coin-mini"></span></span>
+            </button>
+            <button id="hornBtn" class="tool-btn" title="召唤Boss" type="button">
+              <span class="tool-icon horn-icon"></span>
+              <span class="tool-cost">-50<span class="coin-mini"></span></span>
+            </button>
+            <button id="batonBtn" class="tool-btn" title="指挥填充" type="button">
+              <span class="tool-icon baton-icon"></span>
+              <span class="tool-cost">-500<span class="coin-mini"></span></span>
+            </button>
           </div>
         </div>
         <div id="plantArea" class="zone">
@@ -49,23 +94,15 @@
         </div>
         <div id="attackArea" class="zone">
           <div class="attack-guide" data-i18n="attackGuide"></div>
+          <div class="message-block">
+            <div class="panel-title" data-i18n="hintTitle"></div>
+            <div id="messageText" class="message"></div>
+          </div>
         </div>
-        <div id="enemyArea" class="zone">
-        </div>
+        <div id="enemyArea" class="zone"></div>
         <div id="enemyLayer"></div>
         <div id="bulletLayer"></div>
         <div id="impactLayer"></div>
-      </section>
-
-      <section class="side-panel">
-        <div class="panel-card">
-          <div id="seedTray" class="seed-tray"></div>
-          <div class="panel-hint" data-i18n="seedHint"></div>
-        </div>
-        <div class="panel-card">
-          <div class="panel-title" data-i18n="hintTitle"></div>
-          <div id="messageText" class="message"></div>
-        </div>
       </section>
     </main>
 
