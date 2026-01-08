@@ -1905,11 +1905,30 @@ function findFrontEnemyBy(filterFn) {
   }, null);
 }
 
+function findNextAppleTarget(origin, hitIds) {
+  const excluded = new Set(hitIds || []);
+  const alive = TD.enemies.filter((enemy) => enemy.alive && !excluded.has(enemy.id));
+  if (!alive.length) {
+    return null;
+  }
+  return alive.reduce((closest, enemy) => {
+    if (!closest) {
+      return enemy;
+    }
+    const currentDist = Math.hypot(enemy.x - origin.x, enemy.y - origin.y);
+    const closestDist = Math.hypot(closest.x - origin.x, closest.y - origin.y);
+    return currentDist < closestDist ? enemy : closest;
+  }, null);
+}
+
 function getBulletDamage(turret) {
   if (!turret) {
     return 1;
   }
   if (turret.fruit === "pear") {
+    return 1 + (turret.level - 1) * 0.5;
+  }
+  if (turret.fruit === "apple") {
     return 1 + (turret.level - 1) * 0.5;
   }
   return turret.level;
@@ -2081,6 +2100,7 @@ function spawnSingleBullet(originX, originY, damage, fruit, targetId, sourceId, 
     targetId,
     sourceId,
     pierceDamage: options.pierceDamage || 0,
+    hitIds: options.hitIds || [],
     pierced: new Set(),
     vx: 0,
     vy: 0,
@@ -2167,7 +2187,13 @@ function updateBulletPosition(bullet) {
 function resolveBulletTarget(bullet) {
   let target = findEnemyById(bullet.targetId);
   if (!target) {
-    target = bullet.fruit === "coconut" ? findHighestHpEnemy() : findFrontEnemy();
+    if (bullet.fruit === "coconut") {
+      target = findHighestHpEnemy();
+    } else if (bullet.fruit === "apple" && bullet.hitIds?.length) {
+      target = findFrontEnemyBy((enemy) => !bullet.hitIds.includes(enemy.id));
+    } else {
+      target = findFrontEnemy();
+    }
     if (target) {
       bullet.targetId = target.id;
     }
@@ -2183,17 +2209,22 @@ function applyBulletHit(bullet, target, now) {
   if (bullet.fruit === "apple") {
     applyEnemyDamage(target, bullet.damage, bullet.fruit);
     flashEnemy(target, "burn-flash");
-    const splashDamage = Math.max(1, Math.round(bullet.damage * CONFIG.appleSplashRatio));
-    TD.enemies.forEach((enemy) => {
-      if (!enemy.alive || enemy.id === target.id) {
-        return;
+    const nextDamage = bullet.damage * 0.5;
+    if (Math.floor(nextDamage) >= 1) {
+      const hitIds = [...(bullet.hitIds || []), target.id];
+      const nextTarget = findNextAppleTarget(target, hitIds);
+      if (nextTarget) {
+        spawnSingleBullet(
+          target.x,
+          target.y,
+          nextDamage,
+          bullet.fruit,
+          nextTarget.id,
+          bullet.sourceId,
+          { hitIds }
+        );
       }
-      const dist = Math.hypot(enemy.x - target.x, enemy.y - target.y);
-      if (dist <= CONFIG.appleSplashRadius) {
-        applyEnemyDamage(enemy, splashDamage, bullet.fruit);
-        flashEnemy(enemy, "burn-flash");
-      }
-    });
+    }
     return;
   }
   if (bullet.fruit === "banana") {
