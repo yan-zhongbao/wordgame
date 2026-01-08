@@ -233,6 +233,43 @@ button {
   color: #a85a16;
 }
 
+.firework-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.firework {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--fw-color);
+  box-shadow:
+    0 -40px 0 var(--fw-color),
+    0 40px 0 var(--fw-color),
+    40px 0 0 var(--fw-color),
+    -40px 0 0 var(--fw-color),
+    30px 30px 0 var(--fw-color),
+    -30px 30px 0 var(--fw-color),
+    30px -30px 0 var(--fw-color),
+    -30px -30px 0 var(--fw-color);
+  transform: translate(-50%, -50%) scale(0.3);
+  animation: firework-burst 1.2s ease-out forwards;
+}
+
+@keyframes firework-burst {
+  0% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.6);
+  }
+}
+
 @keyframes flash-cell {
   0% {
     background: #fff1b8;

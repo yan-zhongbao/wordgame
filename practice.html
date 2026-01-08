@@ -173,6 +173,25 @@
         text-shadow: none;
       }
 
+      .coin-block {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.6);
+        box-shadow: 0 8px 18px rgba(32, 24, 12, 0.12);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .coin-icon {
+        width: 16px;
+        height: 16px;
+        background: url("assets/td/coin.svg") center/contain no-repeat;
+        display: inline-block;
+      }
+
       .score {
         font-size: 14px;
         font-weight: 600;
@@ -609,9 +628,10 @@
             <span class="star">★</span>
             <span class="star">★</span>
           </div>
+          <div class="coin-block"><span class="coin-icon"></span><span id="coinValue">0</span></div>
         </div>
         <button class="audio-btn" id="audioBtn" disabled>🔊</button>
-        <button class="update-btn" id="updateBtn">更新</button>
+        <button class="update-btn" id="backBtn">返回</button>
       </header>
 
       <main class="stage">

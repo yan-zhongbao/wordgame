@@ -3,11 +3,13 @@ const UI = {
   progressFill: document.getElementById("progressFill"),
   starPreview: document.getElementById("starPreview"),
   scoreValue: document.getElementById("scoreValue"),
+  coinValue: document.getElementById("coinValue"),
   stageLabel: document.getElementById("stageLabel"),
   prompt: document.getElementById("prompt"),
   hint: document.getElementById("hint"),
   audioBtn: document.getElementById("audioBtn"),
   updateBtn: document.getElementById("updateBtn"),
+  backBtn: document.getElementById("backBtn"),
   options: document.getElementById("options"),
   statusText: document.getElementById("statusText"),
   primaryBtn: document.getElementById("primaryBtn"),
@@ -22,6 +24,7 @@ const STORAGE_KEYS = {
   spell: "wg-spell-stats",
   lastDay: "wg-last-day",
   dayStats: "wg-day-stats",
+  coins: "wg-td-coins",
 };
 
 const Stage = {
@@ -91,6 +94,49 @@ const Storage = {
 
 let hintToken = 0;
 let swRegistration = null;
+let coinBalance = 0;
+
+const COIN_REWARD = 5;
+
+function loadCoins() {
+  const raw = localStorage.getItem(STORAGE_KEYS.coins);
+  const value = Number.parseInt(raw, 10);
+  if (!Number.isFinite(value) || value < 0) {
+    return 0;
+  }
+  return value;
+}
+
+function saveCoins() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.coins, String(coinBalance));
+  } catch (err) {
+    // ignore
+  }
+}
+
+function updateCoinUI() {
+  if (UI.coinValue) {
+    UI.coinValue.textContent = String(coinBalance);
+  }
+  saveCoins();
+}
+
+function addCoins(amount) {
+  coinBalance += amount;
+  updateCoinUI();
+}
+
+function speakEnglish(text) {
+  if (!("speechSynthesis" in window)) {
+    return;
+  }
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  utterance.rate = 0.9;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}
 
 function flashHint(message, duration = 1200) {
   const token = (hintToken += 1);
@@ -211,8 +257,7 @@ function getDayFromQuery() {
 }
 
 function getInitialDay() {
-  const fromQuery = getDayFromQuery();
-  return fromQuery || getLastDay();
+  return getLastDay();
 }
 
 const AudioPlayer = {
@@ -1739,6 +1784,7 @@ const Engine = {
       }
       this.state.stageCleared += 1;
       this.updateProgress();
+      addCoins(COIN_REWARD);
       await SoundFX.playSuccess();
       this.state.stageQueue.shift();
       this.nextTurn();
@@ -1813,6 +1859,7 @@ const Engine = {
       this.state.score += 1;
       this.state.stageCleared += 1;
       this.updateProgress();
+      addCoins(COIN_REWARD);
       await SoundFX.playSuccess();
       this.state.stageQueue.shift();
       this.nextTurn();
@@ -1909,6 +1956,7 @@ const Engine = {
     UI.panelActions.appendChild(close);
     showOverlay();
     AudioPlayer.updateButton(null);
+    speakEnglish("Great, you finished all the words.");
   },
 };
 
@@ -2041,7 +2089,7 @@ UI.audioBtn.addEventListener("click", () => {
   AudioPlayer.playForItem(Engine.state.currentItem);
 });
 
-UI.updateBtn.addEventListener("click", async () => {
+UI.updateBtn?.addEventListener("click", async () => {
   if (!("serviceWorker" in navigator)) {
     flashHint("当前浏览器不支持离线更新");
     return;
@@ -2070,6 +2118,10 @@ UI.updateBtn.addEventListener("click", async () => {
   }
 });
 
+UI.backBtn?.addEventListener("click", () => {
+  window.location.href = "index.html";
+});
+
 document.addEventListener("DOMContentLoaded", async () => {
   try {
     if ("serviceWorker" in navigator) {
@@ -2082,7 +2134,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     Review.load();
     SpellStats.load();
     DayStats.load();
-    showStartScreen(getInitialDay());
+    coinBalance = loadCoins();
+    updateCoinUI();
+    const dayFromQuery = getDayFromQuery();
+    if (dayFromQuery) {
+      Engine.start(dayFromQuery);
+    } else {
+      showStartScreen(getInitialDay());
+    }
   } catch (err) {
     showError(err.message || "加载失败，请刷新重试。");
   }

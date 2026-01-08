@@ -386,6 +386,7 @@ const TD = {
   bossSpawned: 0,
   bossAlive: false,
   bossTimer: 0,
+  speedBoostWave: 0,
   smallHpBudget: 0,
   emptySince: 0,
   winPending: false,
@@ -1545,6 +1546,7 @@ function spawnEnemy(entry, spawnPoint) {
   const spawnX = spawnPoint?.x ?? fieldRect.width - 20;
   const spawnY = spawnPoint?.y ?? fieldRect.height / 2 + 10;
   const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const speedBoost = Math.pow(1.2, TD.speedBoostWave);
   const enemy = {
     id,
     name: entry.name,
@@ -1557,8 +1559,8 @@ function spawnEnemy(entry, spawnPoint) {
       entry.tier === "boss"
         ? CONFIG.bossSpeed
         : entry.tier === "mid"
-          ? CONFIG.midSpeed
-          : CONFIG.enemySpeed,
+          ? CONFIG.midSpeed * speedBoost
+          : CONFIG.enemySpeed * speedBoost,
     jumpingUntil: 0,
     nextJumpAt: performance.now() + 1000,
     alive: true,
@@ -1988,6 +1990,7 @@ function applyEnemyDamage(enemy, damage, fruit) {
     if (enemy.tier === "boss") {
       TD.bossDefeated += 1;
       TD.bossAlive = false;
+      TD.speedBoostWave = TD.bossDefeated;
       UI.bossValue.textContent = TD.bossDefeated;
       if (TD.bossDefeated >= CONFIG.maxBoss) {
         winGame();
@@ -2444,6 +2447,7 @@ function resetGame() {
   TD.bossSpawned = 0;
   TD.bossAlive = false;
   TD.bossTimer = 0;
+  TD.speedBoostWave = 0;
   TD.smallHpBudget = 0;
   TD.emptySince = 0;
   TD.winPending = false;

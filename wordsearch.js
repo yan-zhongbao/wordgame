@@ -53,6 +53,7 @@ const state = {
   lastSelection: [],
   coins: 0,
   errors: 0,
+  completed: false,
   xrayActive: false,
   speakerActive: false,
   speakerLetter: "",
@@ -186,6 +187,57 @@ function updateStarUI() {
   stars.forEach((star, index) => {
     star.classList.toggle("dim", index >= count);
   });
+}
+
+function getCompletionPraise() {
+  const stars = getStarCount(state.errors);
+  if (stars === 3) {
+    return "Congratulations, you did a perfect job.";
+  }
+  if (stars === 2) {
+    return "Congratulations, you did a fantastic job.";
+  }
+  if (stars === 1) {
+    return "Congratulations, you did a nice job.";
+  }
+  return "Congratulations, you did a good job.";
+}
+
+function launchFireworks() {
+  if (!UI.grid) {
+    return;
+  }
+  const container = document.createElement("div");
+  container.className = "firework-layer";
+  document.body.appendChild(container);
+  const colors = ["#ff8a3d", "#ffd166", "#8bd3dd", "#ff6b6b", "#cdb4db"];
+  const rect = UI.grid.getBoundingClientRect();
+  const bursts = 8;
+  for (let i = 0; i < bursts; i += 1) {
+    const firework = document.createElement("div");
+    firework.className = "firework";
+    const color = colors[i % colors.length];
+    const x = rect.left + Math.random() * rect.width;
+    const y = rect.top + Math.random() * rect.height * 0.7;
+    firework.style.left = `${x}px`;
+    firework.style.top = `${y}px`;
+    firework.style.setProperty("--fw-color", color);
+    container.appendChild(firework);
+    firework.addEventListener(
+      "animationend",
+      () => {
+        firework.remove();
+      },
+      { once: true }
+    );
+  }
+  window.setTimeout(() => container.remove(), 1500);
+}
+
+async function handleCompletion() {
+  showMessage("全部完成！");
+  launchFireworks();
+  await AudioFX.speak(getCompletionPraise(), "en-US");
 }
 
 function toggleDisabled(button, disabled) {
@@ -441,7 +493,11 @@ async function handleSelection(cells) {
   addCoins(CONFIG.reward);
   showMessage("Good job!");
   await AudioFX.playGoodJob();
-  AudioFX.speak(match.en, "en-US");
+  await AudioFX.speak(match.en, "en-US");
+  if (!state.completed && state.words.every((entry) => entry.found)) {
+    state.completed = true;
+    await handleCompletion();
+  }
   clearSelection();
 }
 
@@ -726,6 +782,7 @@ async function init() {
   UI.dayValue.textContent = String(state.day);
   state.coins = loadCoins();
   state.errors = 0;
+  state.completed = false;
   updateCoinUI();
   updateStarUI();
   bindEvents();
