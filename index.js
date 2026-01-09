@@ -3,6 +3,7 @@
   coinValue: document.getElementById("coinValue"),
   updateBtn: document.getElementById("updateBtn"),
   listHint: document.getElementById("listHint"),
+  versionTag: document.getElementById("versionTag"),
 };
 
 const STORAGE_KEYS = {
@@ -101,6 +102,26 @@ function isPerfect(stats) {
 function setHint(message) {
   if (UI.listHint) {
     UI.listHint.textContent = message || "";
+  }
+}
+
+
+async function loadVersionTag() {
+  if (!UI.versionTag) {
+    return;
+  }
+  try {
+    const response = await fetch("sw.js", { cache: "no-store" });
+    if (!response.ok) {
+      return;
+    }
+    const text = await response.text();
+    const match = text.match(/CACHE_NAME\s*=\s*"(wordgame-v\d+)"/);
+    if (match) {
+      UI.versionTag.textContent = match[1];
+    }
+  } catch (err) {
+    // ignore version errors
   }
 }
 
@@ -230,6 +251,7 @@ window.addEventListener("storage", (event) => {
 
 async function init() {
   updateCoinUI();
+  loadVersionTag();
   try {
     if ("serviceWorker" in navigator) {
       swRegistration = await navigator.serviceWorker.register("sw.js");
