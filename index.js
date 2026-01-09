@@ -222,15 +222,20 @@ async function updateAppCache() {
     await registration.update();
     if (registration.waiting) {
       registration.waiting.postMessage({ type: "SKIP_WAITING" });
+      setHint("正在应用更新...");
       return;
     }
     if (registration.installing) {
+      setHint("正在下载更新...");
       registration.installing.addEventListener("statechange", () => {
         if (registration.waiting) {
           registration.waiting.postMessage({ type: "SKIP_WAITING" });
         }
       });
+      return;
     }
+    setHint("已是最新版本");
+    window.setTimeout(() => setHint(""), 1500);
   } catch (err) {
     setHint("更新失败，请稍后再试");
   }
@@ -255,6 +260,9 @@ async function init() {
   try {
     if ("serviceWorker" in navigator) {
       swRegistration = await navigator.serviceWorker.register("sw.js");
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        location.reload();
+      });
     }
     const words = await loadWords();
     const reviewRecords = loadReviewRecords();

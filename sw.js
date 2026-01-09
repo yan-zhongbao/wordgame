@@ -1,4 +1,4 @@
-const CACHE_NAME = "wordgame-v60";
+const CACHE_NAME = "wordgame-v61";
 const CORE_ASSETS = [
   "./",
   "./index.html",
