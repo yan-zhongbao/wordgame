@@ -264,10 +264,14 @@ async function init() {
   loadVersionTag();
   try {
     if ("serviceWorker" in navigator) {
-      swRegistration = await navigator.serviceWorker.register("sw.js");
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        location.reload();
-      });
+      try {
+        swRegistration = await navigator.serviceWorker.register("sw.js");
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          location.reload();
+        });
+      } catch (err) {
+        // ignore sw registration issues
+      }
     }
     const words = await loadWords();
     const reviewRecords = loadReviewRecords();
@@ -284,6 +288,16 @@ async function init() {
 document.addEventListener("DOMContentLoaded", init);
 window.addEventListener("pageshow", (event) => {
   if (event.persisted || (UI.dayList && UI.dayList.children.length === 0)) {
+    init();
+  }
+});
+window.addEventListener("focus", () => {
+  if (UI.dayList && UI.dayList.children.length === 0) {
+    init();
+  }
+});
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && UI.dayList && UI.dayList.children.length === 0) {
     init();
   }
 });

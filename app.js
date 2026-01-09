@@ -106,6 +106,7 @@ const Storage = {
 let hintToken = 0;
 let swRegistration = null;
 let coinBalance = 0;
+let audioUnlockBound = false;
 
 const COIN_REWARD = 5;
 
@@ -147,6 +148,24 @@ function speakEnglish(text) {
   utterance.rate = 0.9;
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
+}
+
+function bindAudioUnlock() {
+  if (audioUnlockBound) {
+    return;
+  }
+  audioUnlockBound = true;
+  const handler = () => {
+    AudioPlayer.unlocked = true;
+    AudioPlayer.autoBlocked = false;
+    if (Engine.state.currentItem) {
+      AudioPlayer.playForItem(Engine.state.currentItem);
+    }
+    window.removeEventListener("pointerdown", handler, true);
+    window.removeEventListener("touchstart", handler, true);
+  };
+  window.addEventListener("pointerdown", handler, true);
+  window.addEventListener("touchstart", handler, true);
 }
 
 function flashHint(message, duration = 1200) {
@@ -2147,6 +2166,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     DayStats.load();
     coinBalance = loadCoins();
     updateCoinUI();
+    bindAudioUnlock();
     const dayFromQuery = getDayFromQuery();
     if (dayFromQuery) {
       Engine.start(dayFromQuery);
