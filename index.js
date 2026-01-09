@@ -13,6 +13,7 @@ const STORAGE_KEYS = {
 };
 
 let swRegistration = null;
+let initInFlight = false;
 
 function loadCoins() {
   const raw = localStorage.getItem(STORAGE_KEYS.coins);
@@ -255,6 +256,10 @@ window.addEventListener("storage", (event) => {
 });
 
 async function init() {
+  if (initInFlight) {
+    return;
+  }
+  initInFlight = true;
   updateCoinUI();
   loadVersionTag();
   try {
@@ -271,7 +276,14 @@ async function init() {
     setHint("");
   } catch (err) {
     setHint(err.message || "加载失败，请刷新重试");
+  } finally {
+    initInFlight = false;
   }
 }
 
 document.addEventListener("DOMContentLoaded", init);
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted || (UI.dayList && UI.dayList.children.length === 0)) {
+    init();
+  }
+});
