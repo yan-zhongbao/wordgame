@@ -66,7 +66,18 @@ const Data = {
   },
 
   getDay(day) {
-    return this.byDay.get(day) || [];
+    if (this.byDay.has(day)) {
+      return this.byDay.get(day);
+    }
+    const numDay = Number(day);
+    if (Number.isFinite(numDay) && this.byDay.has(numDay)) {
+      return this.byDay.get(numDay);
+    }
+    const strDay = String(day);
+    if (this.byDay.has(strDay)) {
+      return this.byDay.get(strDay);
+    }
+    return [];
   },
 };
 
