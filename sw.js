@@ -1,4 +1,4 @@
-const CACHE_NAME = "wordgame-v65";
+const CACHE_NAME = "wordgame-v67";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -170,18 +170,38 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
-      const cached = await cache.match(request);
+      const cacheOverride = request.cache === "no-store";
+      const cached = cacheOverride ? null : await cache.match(request);
+      const url = new URL(request.url);
+      const isWords = url.pathname.endsWith("/words.json");
+      if (isWords) {
+        try {
+          const response = await fetch(request);
+          if (response.ok) {
+            await cache.put(request, response.clone());
+          }
+          return response;
+        } catch (err) {
+          const fallback = await cache.match(request);
+          return fallback || Response.error();
+        }
+      }
       if (cached) {
         return cached;
       }
       try {
         const response = await fetch(request);
-        const url = new URL(request.url);
         if (response.ok && url.pathname.includes("/audio/")) {
           await cache.put(request, response.clone());
         }
         return response;
       } catch (err) {
+        if (cacheOverride) {
+          const fallback = await cache.match(request);
+          if (fallback) {
+            return fallback;
+          }
+        }
         return cached || Response.error();
       }
     })()

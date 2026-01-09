@@ -10,6 +10,11 @@ const STORAGE_KEYS = {
   coins: "wg-td-coins",
   review: "wg-review",
   dayStats: "wg-day-stats",
+  wordsCache: "wg-words-cache",
+};
+
+const SESSION_KEYS = {
+  nextDay: "wg-next-day",
 };
 
 let swRegistration = null;
@@ -54,12 +59,78 @@ function loadDayStats() {
   }
 }
 
-async function loadWords() {
-  const response = await fetch("words.json");
-  if (!response.ok) {
-    throw new Error("词库加载失败");
+function saveWordsCache(words) {
+  if (!Array.isArray(words) || words.length === 0) {
+    return;
   }
-  return response.json();
+  try {
+    const payload = {
+      savedAt: new Date().toISOString(),
+      words,
+    };
+    localStorage.setItem(STORAGE_KEYS.wordsCache, JSON.stringify(payload));
+  } catch (err) {
+    // ignore storage quota errors
+  }
+}
+
+function loadWordsCacheFromStorage() {
+  const raw = localStorage.getItem(STORAGE_KEYS.wordsCache);
+  if (!raw) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    const words = Array.isArray(parsed) ? parsed : parsed.words;
+    return Array.isArray(words) && words.length ? words : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+async function loadWordsCacheFromCaches() {
+  if (!("caches" in window)) {
+    return null;
+  }
+  try {
+    const cached = await caches.match("words.json", { ignoreSearch: true });
+    if (!cached) {
+      return null;
+    }
+    const words = await cached.json();
+    return Array.isArray(words) && words.length ? words : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+async function loadWordsFallback() {
+  const storageWords = loadWordsCacheFromStorage();
+  if (storageWords) {
+    return storageWords;
+  }
+  return loadWordsCacheFromCaches();
+}
+
+async function loadWords() {
+  try {
+    const response = await fetch("words.json", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error("词库加载失败");
+    }
+    const words = await response.json();
+    if (!Array.isArray(words) || words.length === 0) {
+      throw new Error("词库为空");
+    }
+    saveWordsCache(words);
+    return words;
+  } catch (err) {
+    const fallback = await loadWordsFallback();
+    if (fallback) {
+      return fallback;
+    }
+    throw err;
+  }
 }
 
 function countWrongByDay(records) {
@@ -196,6 +267,11 @@ function renderDayList(words, reviewRecords, dayStats) {
     start.className = "start-btn";
     start.textContent = "进入";
     start.addEventListener("click", () => {
+      try {
+        sessionStorage.setItem(SESSION_KEYS.nextDay, String(day));
+      } catch (err) {
+        // ignore storage errors
+      }
       window.location.href = `practice.html?day=${day}`;
     });
 

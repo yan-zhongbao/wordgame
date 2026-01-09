@@ -25,6 +25,11 @@ const STORAGE_KEYS = {
   lastDay: "wg-last-day",
   dayStats: "wg-day-stats",
   coins: "wg-td-coins",
+  wordsCache: "wg-words-cache",
+};
+
+const SESSION_KEYS = {
+  nextDay: "wg-next-day",
 };
 
 const Stage = {
@@ -46,13 +51,30 @@ const Data = {
   byDay: new Map(),
 
   async load(options = {}) {
-    const { noCache = false } = options;
-    const response = await fetch("words.json", { cache: noCache ? "no-store" : "default" });
-    if (!response.ok) {
-      throw new Error("词库加载失败，请检查 words.json。");
+    const { noCache = false, cacheBust = false } = options;
+    const url = cacheBust ? `words.json?v=${Date.now()}` : "words.json";
+    try {
+      const response = await fetch(url, { cache: noCache ? "no-store" : "default" });
+      if (!response.ok) {
+        throw new Error("词库加载失败，请检查 words.json。");
+      }
+      const words = await response.json();
+      if (!Array.isArray(words) || words.length === 0) {
+        throw new Error("词库为空，请稍后重试。");
+      }
+      this.words = words;
+      this.byDay = this.groupByDay(words);
+      saveWordsCache(words);
+      return;
+    } catch (err) {
+      const fallback = await loadWordsFallback();
+      if (fallback) {
+        this.words = fallback;
+        this.byDay = this.groupByDay(fallback);
+        return;
+      }
+      throw err;
     }
-    this.words = await response.json();
-    this.byDay = this.groupByDay(this.words);
   },
 
   groupByDay(words) {
@@ -103,6 +125,59 @@ const Storage = {
     localStorage.removeItem(key);
   },
 };
+
+function saveWordsCache(words) {
+  if (!Array.isArray(words) || words.length === 0) {
+    return;
+  }
+  try {
+    const payload = {
+      savedAt: new Date().toISOString(),
+      words,
+    };
+    localStorage.setItem(STORAGE_KEYS.wordsCache, JSON.stringify(payload));
+  } catch (err) {
+    // ignore storage quota errors
+  }
+}
+
+function loadWordsCacheFromStorage() {
+  const raw = localStorage.getItem(STORAGE_KEYS.wordsCache);
+  if (!raw) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    const words = Array.isArray(parsed) ? parsed : parsed.words;
+    return Array.isArray(words) && words.length ? words : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+async function loadWordsCacheFromCaches() {
+  if (!("caches" in window)) {
+    return null;
+  }
+  try {
+    const cached = await caches.match("words.json", { ignoreSearch: true });
+    if (!cached) {
+      return null;
+    }
+    const words = await cached.json();
+    return Array.isArray(words) && words.length ? words : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+async function loadWordsFallback() {
+  const storageWords = loadWordsCacheFromStorage();
+  if (storageWords) {
+    return storageWords;
+  }
+  return loadWordsCacheFromCaches();
+}
 
 let hintToken = 0;
 let swRegistration = null;
@@ -278,6 +353,22 @@ function updateStarPreview(errors) {
 function getDayFromQuery() {
   const params = new URLSearchParams(window.location.search);
   const value = Number(params.get("day"));
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+  const day = Math.floor(value);
+  if (day < 1 || day > 21) {
+    return null;
+  }
+  return day;
+}
+
+function getDayFromSession() {
+  if (!window.sessionStorage) {
+    return null;
+  }
+  const raw = sessionStorage.getItem(SESSION_KEYS.nextDay);
+  const value = Number(raw);
   if (!Number.isFinite(value)) {
     return null;
   }
@@ -2000,6 +2091,13 @@ function hideOverlay() {
   UI.overlay.classList.add("hidden");
 }
 
+function showLoading(message = "词库正在下载，请稍候...") {
+  UI.panelTitle.textContent = "正在加载";
+  UI.panelBody.textContent = message;
+  UI.panelActions.innerHTML = "";
+  showOverlay();
+}
+
 function showDayPicker(selectedDay) {
   UI.panelTitle.textContent = "选择关卡";
   UI.panelBody.textContent = "点击关卡编号进行选择。";
@@ -2159,6 +2257,7 @@ async function bootApp() {
     return;
   }
   bootInFlight = true;
+  showLoading();
   try {
     if ("serviceWorker" in navigator) {
       try {
@@ -2178,11 +2277,21 @@ async function bootApp() {
     updateCoinUI();
     bindAudioUnlock();
     const dayFromQuery = getDayFromQuery();
-    if (dayFromQuery && Data.getDay(dayFromQuery).length === 0) {
-      await Data.load({ noCache: true });
+    const dayFromSession = dayFromQuery ? null : getDayFromSession();
+    if (dayFromSession && window.sessionStorage) {
+      sessionStorage.removeItem(SESSION_KEYS.nextDay);
     }
-    if (dayFromQuery) {
-      Engine.start(dayFromQuery);
+    const targetDay = dayFromQuery ?? dayFromSession;
+    if (targetDay && Data.getDay(targetDay).length === 0) {
+      await Data.load({ noCache: true, cacheBust: true });
+    }
+    if (targetDay && Data.getDay(targetDay).length === 0) {
+      showError(`未找到 Day ${targetDay} 的词库，请更新后重试。`);
+      return;
+    }
+    hideOverlay();
+    if (targetDay) {
+      Engine.start(targetDay);
     } else {
       showStartScreen(getInitialDay());
     }
@@ -2200,7 +2309,9 @@ window.addEventListener("pageshow", (event) => {
     return;
   }
   const dayFromQuery = getDayFromQuery();
-  if (dayFromQuery && Engine.state.day !== dayFromQuery) {
+  const dayFromSession = dayFromQuery ? null : getDayFromSession();
+  const targetDay = dayFromQuery ?? dayFromSession;
+  if (targetDay && Engine.state.day !== targetDay) {
     bootApp();
   }
 });
