@@ -45,8 +45,9 @@ const Data = {
   words: [],
   byDay: new Map(),
 
-  async load() {
-    const response = await fetch("words.json");
+  async load(options = {}) {
+    const { noCache = false } = options;
+    const response = await fetch("words.json", { cache: noCache ? "no-store" : "default" });
     if (!response.ok) {
       throw new Error("词库加载失败，请检查 words.json。");
     }
@@ -1305,7 +1306,7 @@ const Engine = {
     const queues = buildStageQueues(safeDay);
     const stageOrder = buildStageOrder(queues);
     if (stageOrder.length === 0) {
-      this.finish();
+      showNotice("当前关卡没有可用单词。");
       return;
     }
     const stage = stageOrder[0];
@@ -2177,6 +2178,9 @@ async function bootApp() {
     updateCoinUI();
     bindAudioUnlock();
     const dayFromQuery = getDayFromQuery();
+    if (dayFromQuery && Data.getDay(dayFromQuery).length === 0) {
+      await Data.load({ noCache: true });
+    }
     if (dayFromQuery) {
       Engine.start(dayFromQuery);
     } else {
