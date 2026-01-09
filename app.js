@@ -107,6 +107,7 @@ let hintToken = 0;
 let swRegistration = null;
 let coinBalance = 0;
 let audioUnlockBound = false;
+let bootInFlight = false;
 
 const COIN_REWARD = 5;
 
@@ -2152,13 +2153,21 @@ UI.backBtn?.addEventListener("click", () => {
   window.location.href = "index.html";
 });
 
-document.addEventListener("DOMContentLoaded", async () => {
+async function bootApp() {
+  if (bootInFlight) {
+    return;
+  }
+  bootInFlight = true;
   try {
     if ("serviceWorker" in navigator) {
-      swRegistration = await navigator.serviceWorker.register("sw.js");
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        location.reload();
-      });
+      try {
+        swRegistration = await navigator.serviceWorker.register("sw.js");
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          location.reload();
+        });
+      } catch (err) {
+        // ignore sw registration errors
+      }
     }
     await Data.load();
     Review.load();
@@ -2175,5 +2184,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   } catch (err) {
     showError(err.message || "加载失败，请刷新重试。");
+  } finally {
+    bootInFlight = false;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", bootApp);
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) {
+    bootApp();
+    return;
+  }
+  const dayFromQuery = getDayFromQuery();
+  if (dayFromQuery && Engine.state.day !== dayFromQuery) {
+    bootApp();
   }
 });
