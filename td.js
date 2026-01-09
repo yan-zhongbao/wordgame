@@ -243,10 +243,10 @@ const AudioBank = {
     hit3: { src: "audio/td/hit3.wav", volume: 0.55, rate: 0.96, fallback: () => SoundFX.playTone({ frequency: 420, duration: 0.06, gain: 0.1 }) },
     explode: { src: "audio/td/explode.wav", volume: 0.55, rate: 0.9, fallback: () => SoundFX.playExplosion() },
     firework: { src: "audio/td/firework.wav", volume: 0.6, rate: 1.05, fallback: () => SoundFX.playFirework() },
-    voice_fail: { src: "audio/td/voice_fail.wav", text: TEXT.voiceFail },
-    voice_bag_1: { src: "audio/td/voice_bag_1.wav", text: TEXT.voiceBag1 },
-    voice_bag_2: { src: "audio/td/voice_bag_2.wav", text: TEXT.voiceBag2 },
-    voice_bag_3: { src: "audio/td/voice_bag_3.wav", text: TEXT.voiceBag3 },
+    voice_fail: { src: "audio/td/voice_fail.mp3", text: TEXT.voiceFail },
+    voice_bag_1: { src: "", text: TEXT.voiceBag1 },
+    voice_bag_2: { src: "audio/td/voice_bag_2.mp3", text: TEXT.voiceBag2 },
+    voice_bag_3: { src: "audio/td/voice_bag_3.mp3", text: TEXT.voiceBag3 },
   },
   canSpeak() {
     return "speechSynthesis" in window;
@@ -287,6 +287,21 @@ const AudioBank = {
     }
     return audio;
   },
+  getAudioFromSrc(cacheKey, src) {
+    if (!src) {
+      return null;
+    }
+    if (!this.pool[cacheKey]) {
+      this.pool[cacheKey] = [];
+    }
+    let audio = this.pool[cacheKey].find((item) => item.paused || item.ended);
+    if (!audio) {
+      audio = new Audio(src);
+      audio.preload = "auto";
+      this.pool[cacheKey].push(audio);
+    }
+    return audio;
+  },
   speak(text, lang = "zh-CN") {
     if (!this.canSpeak()) {
       return Promise.resolve();
@@ -310,7 +325,17 @@ const AudioBank = {
       return;
     }
     let played = false;
-    const audio = this.getAudio(key);
+    let audio = null;
+    if (key === "voice_bag_1" && textOverride) {
+      const name = extractBagName(textOverride);
+      const src = name ? VOICE_BAG_SRC[name] : "";
+      if (src) {
+        audio = this.getAudioFromSrc(`voice_bag_1:${name}`, src);
+      }
+    }
+    if (!audio) {
+      audio = this.getAudio(key);
+    }
   if (audio) {
     if (typeof entry.volume === "number") {
       audio.volume = Math.max(0, Math.min(1, entry.volume));
@@ -431,6 +456,21 @@ const BOSSES = [
   { name: "寒假园地", hp: 30 },
   { name: "暑假园地", hp: 60 },
 ];
+
+const VOICE_BAG_NAMES = [...TASKS.map((task) => task.name), ...BOSSES.map((boss) => boss.name)];
+const VOICE_BAG_SRC = VOICE_BAG_NAMES.reduce((map, name, index) => {
+  const fileIndex = String(index + 1).padStart(2, "0");
+  map[name] = `audio/td/voice_bag_1_${fileIndex}.mp3`;
+  return map;
+}, {});
+
+function extractBagName(text) {
+  if (!text) {
+    return "";
+  }
+  const match = text.match(/快把(.+?)做完/);
+  return match ? match[1] : "";
+}
 
 function applyI18n() {
   document.querySelectorAll("[data-i18n]").forEach((node) => {
