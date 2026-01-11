@@ -2394,21 +2394,33 @@ const Engine = {
     tdMode.className = "primary ghost";
     tdMode.textContent = "进入单词大战作业";
     tdMode.addEventListener("click", () => {
-      window.location.href = `td.html?day=${this.state.day}`;
+      if (window.AppNav && typeof window.AppNav.show === "function") {
+        window.AppNav.show("td", { day: this.state.day });
+      } else {
+        window.location.href = `td.html?day=${this.state.day}`;
+      }
     });
 
     const snakeMode = document.createElement("button");
     snakeMode.className = "primary ghost";
     snakeMode.textContent = "进入贪吃蛇记忆";
     snakeMode.addEventListener("click", () => {
-      window.location.href = `snake.html?day=${this.state.day}`;
+      if (window.AppNav && typeof window.AppNav.show === "function") {
+        window.AppNav.show("snake", { day: this.state.day });
+      } else {
+        window.location.href = `snake.html?day=${this.state.day}`;
+      }
     });
 
     const searchMode = document.createElement("button");
     searchMode.className = "primary ghost";
     searchMode.textContent = "进入单词寻宝";
     searchMode.addEventListener("click", () => {
-      window.location.href = `wordsearch.html?day=${this.state.day}`;
+      if (window.AppNav && typeof window.AppNav.show === "function") {
+        window.AppNav.show("wordsearch", { day: this.state.day });
+      } else {
+        window.location.href = `wordsearch.html?day=${this.state.day}`;
+      }
     });
 
     const close = document.createElement("button");
