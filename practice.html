@@ -538,6 +538,43 @@
         overflow: auto;
       }
 
+      .audio-gate {
+        position: fixed;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 7;
+        background: rgba(28, 26, 22, 0.92);
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+      }
+
+      .audio-gate.hidden {
+        display: none;
+      }
+
+      .audio-gate button {
+        border: none;
+        padding: 6px 10px;
+        border-radius: 10px;
+        background: #f0a44b;
+        color: #1c1a16;
+        font-weight: 600;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .audio-gate .ghost {
+        background: transparent;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+      }
+
       .status {
         font-size: 15px;
       }
@@ -699,6 +736,12 @@
         <div class="panel-body" id="panelBody"></div>
         <div class="panel-actions" id="panelActions"></div>
       </div>
+    </div>
+
+    <div class="audio-gate hidden" id="audioGate">
+      <div id="audioGateStatus">声音未启用</div>
+      <button id="audioGateEnable">启用声音</button>
+      <button class="ghost" id="audioGateSkip">无声模式</button>
     </div>
 
     <button class="debug-toggle" id="debugToggle">调试</button>

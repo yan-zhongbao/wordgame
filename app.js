@@ -17,6 +17,10 @@ const UI = {
   panelTitle: document.getElementById("panelTitle"),
   panelBody: document.getElementById("panelBody"),
   panelActions: document.getElementById("panelActions"),
+  audioGate: document.getElementById("audioGate"),
+  audioGateStatus: document.getElementById("audioGateStatus"),
+  audioGateEnable: document.getElementById("audioGateEnable"),
+  audioGateSkip: document.getElementById("audioGateSkip"),
 };
 
 const Debug = {
@@ -69,6 +73,10 @@ const STORAGE_KEYS = {
 
 const SESSION_KEYS = {
   nextDay: "wg-next-day",
+};
+
+const AUDIO_KEYS = {
+  gateSkip: "wg-audio-skip",
 };
 
 const Stage = {
@@ -326,6 +334,7 @@ async function unlockAudioOnce(source = "unknown") {
     audioUnlocked = true;
     SoundFX.unlock();
     Debug.log("info", "unlockAudio done");
+    AudioGate.hide();
     return true;
   } catch (err) {
     if (unlockAudioElement) {
@@ -479,6 +488,54 @@ function getInitialDay() {
   return getLastDay();
 }
 
+function isStandaloneMode() {
+  return (
+    window.navigator.standalone === true ||
+    window.matchMedia?.("(display-mode: standalone)")?.matches
+  );
+}
+
+const AudioGate = {
+  init() {
+    if (!UI.audioGate || !UI.audioGateEnable || !UI.audioGateSkip) {
+      return;
+    }
+    UI.audioGateEnable.addEventListener("click", async () => {
+      UI.audioGateStatus.textContent = "正在启用...";
+      const ok = await unlockAudioOnce("gate");
+      if (ok) {
+        UI.audioGateStatus.textContent = "声音已启用";
+        this.hide();
+        if (Engine.state.currentItem) {
+          AudioPlayer.playForItem(Engine.state.currentItem);
+        }
+      } else {
+        UI.audioGateStatus.textContent = "启用失败，请关闭静音并调高音量";
+      }
+    });
+    UI.audioGateSkip.addEventListener("click", () => {
+      sessionStorage.setItem(AUDIO_KEYS.gateSkip, "1");
+      this.hide();
+    });
+  },
+
+  show(message) {
+    if (!UI.audioGate) {
+      return;
+    }
+    const skipped = sessionStorage.getItem(AUDIO_KEYS.gateSkip) === "1";
+    if (skipped) {
+      return;
+    }
+    UI.audioGateStatus.textContent = message || "声音未启用";
+    UI.audioGate.classList.remove("hidden");
+  },
+
+  hide() {
+    UI.audioGate?.classList.add("hidden");
+  },
+};
+
 const AudioPlayer = {
   audio: null,
   unlocked: false,
@@ -570,6 +627,10 @@ const AudioPlayer = {
         this.unlocked = false;
         audioUnlocked = false;
         flashHint("浏览器阻止自动播放，请点击喇叭按钮");
+        AudioGate.show("点击启用声音");
+      }
+      if (!auto && err && (err.name === "NotAllowedError" || err.name === "AbortError")) {
+        AudioGate.show("请启用声音或检查静音");
       }
     }
   },
@@ -2571,11 +2632,15 @@ async function bootApp() {
     coinBalance = loadCoins();
     updateCoinUI();
     bindAudioUnlock();
+    AudioGate.init();
+    if (isStandaloneMode() && !audioUnlocked) {
+      AudioGate.show("点击启用声音");
+    }
     const dayFromQuery = getDayFromQuery();
     const dayFromSession = dayFromQuery ? null : getDayFromSession();
-    if (dayFromSession && window.sessionStorage) {
-      sessionStorage.removeItem(SESSION_KEYS.nextDay);
-    }
+  if (dayFromSession && window.sessionStorage) {
+    sessionStorage.removeItem(SESSION_KEYS.nextDay);
+  }
     const targetDay = dayFromQuery ?? dayFromSession;
     if (targetDay && Data.getDay(targetDay).length === 0) {
       await Data.load({ noCache: true, cacheBust: true });
