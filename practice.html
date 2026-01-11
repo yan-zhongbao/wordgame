@@ -494,6 +494,50 @@
         padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
       }
 
+      .debug-toggle {
+        position: fixed;
+        left: 16px;
+        bottom: 16px;
+        z-index: 6;
+        border: none;
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 12px;
+        background: rgba(28, 26, 22, 0.85);
+        color: #fff;
+        cursor: pointer;
+      }
+
+      .debug-panel {
+        position: fixed;
+        left: 16px;
+        bottom: 56px;
+        width: min(360px, 90vw);
+        max-height: 40vh;
+        padding: 10px;
+        border-radius: 12px;
+        background: rgba(18, 16, 14, 0.88);
+        color: #fff;
+        font-size: 12px;
+        line-height: 1.4;
+        box-shadow: 0 16px 30px rgba(0, 0, 0, 0.28);
+        display: none;
+        overflow: hidden;
+        z-index: 6;
+      }
+
+      .debug-panel.open {
+        display: block;
+      }
+
+      .debug-body {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 34vh;
+        overflow: auto;
+      }
+
       .status {
         font-size: 15px;
       }
@@ -655,6 +699,11 @@
         <div class="panel-body" id="panelBody"></div>
         <div class="panel-actions" id="panelActions"></div>
       </div>
+    </div>
+
+    <button class="debug-toggle" id="debugToggle">调试</button>
+    <div class="debug-panel" id="debugPanel">
+      <pre class="debug-body" id="debugBody"></pre>
     </div>
 
     <script src="app.js"></script>

@@ -4,6 +4,45 @@
   updateBtn: document.getElementById("updateBtn"),
   listHint: document.getElementById("listHint"),
   versionTag: document.getElementById("versionTag"),
+  debugPanel: document.getElementById("debugPanel"),
+  debugBody: document.getElementById("debugBody"),
+  debugToggle: document.getElementById("debugToggle"),
+};
+
+const Debug = {
+  buffer: [],
+  max: 200,
+  open: false,
+
+  init() {
+    if (!UI.debugPanel || !UI.debugBody || !UI.debugToggle) {
+      return;
+    }
+    UI.debugToggle.addEventListener("click", () => {
+      this.open = !this.open;
+      UI.debugPanel.classList.toggle("open", this.open);
+      UI.debugToggle.textContent = this.open ? "关闭调试" : "调试";
+    });
+  },
+
+  log(level, message, detail = null) {
+    const ts = new Date().toISOString().slice(11, 19);
+    const extra =
+      detail === null
+        ? ""
+        : ` ${typeof detail === "string" ? detail : JSON.stringify(detail)}`;
+    const line = `[${ts}] ${level.toUpperCase()} ${message}${extra}`;
+    this.buffer.push(line);
+    if (this.buffer.length > this.max) {
+      this.buffer.shift();
+    }
+    if (UI.debugBody) {
+      UI.debugBody.textContent = this.buffer.join("\n");
+      UI.debugBody.scrollTop = UI.debugBody.scrollHeight;
+    }
+    const logger = console[level] || console.log;
+    logger(line);
+  },
 };
 
 const STORAGE_KEYS = {
@@ -107,14 +146,20 @@ async function loadWordsCacheFromCaches() {
 async function loadWordsFallback() {
   const storageWords = loadWordsCacheFromStorage();
   if (storageWords) {
-    return storageWords;
+    return { words: storageWords, source: "localStorage" };
   }
-  return loadWordsCacheFromCaches();
+  const cachedWords = await loadWordsCacheFromCaches();
+  if (cachedWords) {
+    return { words: cachedWords, source: "cache" };
+  }
+  return null;
 }
 
 async function loadWords() {
   try {
+    Debug.log("info", "fetch words.json start", { url: "words.json", cache: "no-store" });
     const response = await fetch("words.json", { cache: "no-store" });
+    Debug.log("info", "fetch words.json response", { status: response.status });
     if (!response.ok) {
       throw new Error("词库加载失败");
     }
@@ -125,9 +170,14 @@ async function loadWords() {
     saveWordsCache(words);
     return words;
   } catch (err) {
+    Debug.log("error", "fetch words.json failed", { error: err.message || err });
     const fallback = await loadWordsFallback();
-    if (fallback) {
-      return fallback;
+    if (fallback && fallback.words) {
+      Debug.log("warn", "use cached words", {
+        source: fallback.source,
+        count: fallback.words.length,
+      });
+      return fallback.words;
     }
     throw err;
   }
@@ -183,7 +233,9 @@ async function loadVersionTag() {
     return;
   }
   try {
+    Debug.log("info", "fetch sw.js start", { url: "sw.js", cache: "no-store" });
     const response = await fetch("sw.js", { cache: "no-store" });
+    Debug.log("info", "fetch sw.js response", { status: response.status });
     if (!response.ok) {
       return;
     }
@@ -193,7 +245,7 @@ async function loadVersionTag() {
       UI.versionTag.textContent = match[1];
     }
   } catch (err) {
-    // ignore version errors
+    Debug.log("warn", "fetch sw.js failed", { error: err.message || err });
   }
 }
 
@@ -267,6 +319,7 @@ function renderDayList(words, reviewRecords, dayStats) {
     start.className = "start-btn";
     start.textContent = "进入";
     start.addEventListener("click", () => {
+      Debug.log("info", "enter day", { day });
       try {
         sessionStorage.setItem(SESSION_KEYS.nextDay, String(day));
       } catch (err) {
@@ -322,6 +375,21 @@ UI.updateBtn.addEventListener("click", () => {
   updateAppCache();
 });
 
+Debug.init();
+window.addEventListener("error", (event) => {
+  Debug.log("error", "window error", {
+    message: event.message,
+    source: event.filename,
+    line: event.lineno,
+    col: event.colno,
+  });
+});
+window.addEventListener("unhandledrejection", (event) => {
+  Debug.log("error", "unhandledrejection", {
+    reason: event.reason && event.reason.message ? event.reason.message : String(event.reason),
+  });
+});
+
 window.addEventListener("storage", (event) => {
   if (event.key === STORAGE_KEYS.coins) {
     updateCoinUI();
@@ -336,6 +404,7 @@ async function init() {
     return;
   }
   initInFlight = true;
+  Debug.log("info", "init start");
   updateCoinUI();
   loadVersionTag();
   try {
@@ -354,7 +423,9 @@ async function init() {
     const dayStats = loadDayStats();
     renderDayList(words, reviewRecords, dayStats);
     setHint("");
+    Debug.log("info", "init ready", { days: 21, words: words.length });
   } catch (err) {
+    Debug.log("error", "init failed", { error: err.message || err });
     setHint(err.message || "加载失败，请刷新重试");
   } finally {
     initInFlight = false;

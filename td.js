@@ -251,22 +251,17 @@ const AudioBank = {
   canSpeak() {
     return "speechSynthesis" in window;
   },
-  unlock() {
+  async unlock() {
     if (this.unlocked) {
       return;
     }
     try {
       const audio = new Audio("audio/td/shot.wav");
       audio.volume = 0;
-      audio.play()
-        .then(() => {
-          audio.pause();
-          audio.currentTime = 0;
-          this.unlocked = true;
-        })
-        .catch(() => {
-          this.unlocked = true;
-        });
+      await audio.play();
+      audio.pause();
+      audio.currentTime = 0;
+      this.unlocked = true;
     } catch (err) {
       this.unlocked = true;
     }

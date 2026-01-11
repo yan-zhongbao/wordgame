@@ -19,6 +19,45 @@ const UI = {
   panelActions: document.getElementById("panelActions"),
 };
 
+const Debug = {
+  panel: document.getElementById("debugPanel"),
+  body: document.getElementById("debugBody"),
+  toggle: document.getElementById("debugToggle"),
+  buffer: [],
+  max: 200,
+  open: false,
+
+  init() {
+    if (!this.panel || !this.body || !this.toggle) {
+      return;
+    }
+    this.toggle.addEventListener("click", () => {
+      this.open = !this.open;
+      this.panel.classList.toggle("open", this.open);
+      this.toggle.textContent = this.open ? "关闭调试" : "调试";
+    });
+  },
+
+  log(level, message, detail = null) {
+    const ts = new Date().toISOString().slice(11, 19);
+    const extra =
+      detail === null
+        ? ""
+        : ` ${typeof detail === "string" ? detail : JSON.stringify(detail)}`;
+    const line = `[${ts}] ${level.toUpperCase()} ${message}${extra}`;
+    this.buffer.push(line);
+    if (this.buffer.length > this.max) {
+      this.buffer.shift();
+    }
+    if (this.body) {
+      this.body.textContent = this.buffer.join("\n");
+      this.body.scrollTop = this.body.scrollHeight;
+    }
+    const logger = console[level] || console.log;
+    logger(line);
+  },
+};
+
 const STORAGE_KEYS = {
   review: "wg-review",
   spell: "wg-spell-stats",
@@ -54,7 +93,9 @@ const Data = {
     const { noCache = false, cacheBust = false } = options;
     const url = cacheBust ? `words.json?v=${Date.now()}` : "words.json";
     try {
+      Debug.log("info", "fetch words.json start", { url, cache: noCache ? "no-store" : "default" });
       const response = await fetch(url, { cache: noCache ? "no-store" : "default" });
+      Debug.log("info", "fetch words.json response", { url, status: response.status });
       if (!response.ok) {
         throw new Error("词库加载失败，请检查 words.json。");
       }
@@ -67,10 +108,15 @@ const Data = {
       saveWordsCache(words);
       return;
     } catch (err) {
+      Debug.log("error", "fetch words.json failed", { url, error: err.message || err });
       const fallback = await loadWordsFallback();
-      if (fallback) {
-        this.words = fallback;
-        this.byDay = this.groupByDay(fallback);
+      if (fallback && fallback.words) {
+        Debug.log("warn", "use cached words", {
+          source: fallback.source,
+          count: fallback.words.length,
+        });
+        this.words = fallback.words;
+        this.byDay = this.groupByDay(fallback.words);
         return;
       }
       throw err;
@@ -174,9 +220,13 @@ async function loadWordsCacheFromCaches() {
 async function loadWordsFallback() {
   const storageWords = loadWordsCacheFromStorage();
   if (storageWords) {
-    return storageWords;
+    return { words: storageWords, source: "localStorage" };
   }
-  return loadWordsCacheFromCaches();
+  const cachedWords = await loadWordsCacheFromCaches();
+  if (cachedWords) {
+    return { words: cachedWords, source: "cache" };
+  }
+  return null;
 }
 
 let hintToken = 0;
@@ -184,8 +234,13 @@ let swRegistration = null;
 let coinBalance = 0;
 let audioUnlockBound = false;
 let bootInFlight = false;
+let audioUnlockInFlight = false;
+let audioUnlocked = false;
 
 const COIN_REWARD = 5;
+
+const SILENT_AUDIO =
+  "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
 
 function loadCoins() {
   const raw = localStorage.getItem(STORAGE_KEYS.coins);
@@ -232,17 +287,48 @@ function bindAudioUnlock() {
     return;
   }
   audioUnlockBound = true;
-  const handler = () => {
-    AudioPlayer.unlocked = true;
-    AudioPlayer.autoBlocked = false;
-    if (Engine.state.currentItem) {
-      AudioPlayer.playForItem(Engine.state.currentItem);
+  const handler = async () => {
+    const success = await unlockAudioOnce("gesture");
+    if (success) {
+      if (Engine.state.currentItem) {
+        AudioPlayer.playForItem(Engine.state.currentItem, { auto: true });
+      }
+      window.removeEventListener("pointerdown", handler, true);
+      window.removeEventListener("touchstart", handler, true);
     }
-    window.removeEventListener("pointerdown", handler, true);
-    window.removeEventListener("touchstart", handler, true);
   };
   window.addEventListener("pointerdown", handler, true);
   window.addEventListener("touchstart", handler, true);
+}
+
+async function unlockAudioOnce(source = "unknown") {
+  if (audioUnlocked || audioUnlockInFlight) {
+    return audioUnlocked;
+  }
+  audioUnlockInFlight = true;
+  Debug.log("info", "unlockAudio start", { source });
+  try {
+    await SoundFX.unlock();
+    AudioPlayer.ensure();
+    if (AudioPlayer.audio) {
+      AudioPlayer.audio.src = SILENT_AUDIO;
+      AudioPlayer.audio.volume = 0;
+      await AudioPlayer.audio.play();
+      AudioPlayer.audio.pause();
+      AudioPlayer.audio.currentTime = 0;
+      AudioPlayer.audio.volume = 1;
+    }
+    AudioPlayer.unlocked = true;
+    AudioPlayer.autoBlocked = false;
+    audioUnlocked = true;
+    Debug.log("info", "unlockAudio done");
+    return true;
+  } catch (err) {
+    Debug.log("warn", "unlockAudio failed", { error: err.message || err });
+    return false;
+  } finally {
+    audioUnlockInFlight = false;
+  }
 }
 
 function flashHint(message, duration = 1200) {
@@ -392,6 +478,15 @@ const AudioPlayer = {
     if (!this.audio) {
       this.audio = new Audio();
       this.audio.preload = "auto";
+      this.audio.addEventListener("play", () => {
+        Debug.log("info", "audio play", { src: this.audio.src });
+      });
+      this.audio.addEventListener("ended", () => {
+        Debug.log("info", "audio ended", { src: this.audio.src });
+      });
+      this.audio.addEventListener("error", () => {
+        Debug.log("error", "audio error", { src: this.audio.src });
+      });
     }
   },
 
@@ -432,6 +527,7 @@ const AudioPlayer = {
     }
     this.ensure();
     try {
+      Debug.log("info", "audio play request", { src, auto });
       this.audio.onerror = () => {
         if (!auto) {
           flashHint("音频播放失败");
@@ -446,6 +542,7 @@ const AudioPlayer = {
       this.unlocked = true;
       this.autoBlocked = false;
     } catch (err) {
+      Debug.log("warn", "audio play failed", { src, error: err.message || err });
       if (auto && err && err.name === "NotAllowedError") {
         this.autoBlocked = true;
         flashHint("浏览器阻止自动播放，请点击喇叭按钮");
@@ -471,12 +568,16 @@ const SoundFX = {
   },
 
   async unlock() {
-    this.ensure();
-    if (!this.context) {
-      return;
-    }
-    if (this.context.state === "suspended") {
-      await this.context.resume();
+    try {
+      this.ensure();
+      if (!this.context) {
+        return;
+      }
+      if (this.context.state === "suspended") {
+        await this.context.resume();
+      }
+    } catch (err) {
+      Debug.log("warn", "soundfx unlock failed", { error: err.message || err });
     }
   },
 
@@ -506,14 +607,22 @@ const SoundFX = {
   },
 
   async playSuccess() {
-    await this.unlock();
-    await this.playTone({ frequency: 740, duration: 0.12, type: "sine", gain: 0.14 });
-    await this.playTone({ frequency: 960, duration: 0.14, type: "sine", gain: 0.12 });
+    try {
+      await this.unlock();
+      await this.playTone({ frequency: 740, duration: 0.12, type: "sine", gain: 0.14 });
+      await this.playTone({ frequency: 960, duration: 0.14, type: "sine", gain: 0.12 });
+    } catch (err) {
+      Debug.log("warn", "soundfx playSuccess failed", { error: err.message || err });
+    }
   },
 
   async playError() {
-    await this.unlock();
-    await this.playTone({ frequency: 240, duration: 0.2, type: "triangle", gain: 0.16 });
+    try {
+      await this.unlock();
+      await this.playTone({ frequency: 240, duration: 0.2, type: "triangle", gain: 0.16 });
+    } catch (err) {
+      Debug.log("warn", "soundfx playError failed", { error: err.message || err });
+    }
   },
 };
 
@@ -1390,12 +1499,20 @@ const Engine = {
     currentTask: null,
     currentModeType: "",
     currentWrongRecorded: false,
+    transitioning: false,
   },
 
   start(day) {
     const safeDay = setLastDay(day);
     const queues = buildStageQueues(safeDay);
     const stageOrder = buildStageOrder(queues);
+    Debug.log("info", "engine start", {
+      day: safeDay,
+      review: queues[Stage.REVIEW].length,
+      new: queues[Stage.NEW].length,
+      spell: queues[Stage.SPELL].length,
+      meaning: queues[Stage.MEANING].length,
+    });
     if (stageOrder.length === 0) {
       showNotice("当前关卡没有可用单词。");
       return;
@@ -1422,6 +1539,7 @@ const Engine = {
       currentTask: null,
       currentModeType: "",
       currentWrongRecorded: false,
+      transitioning: false,
     };
     UI.dayLabel.textContent = String(safeDay);
     UI.primaryBtn.textContent = "重新开始";
@@ -1432,6 +1550,10 @@ const Engine = {
   startReviewOnly(day) {
     const safeDay = setLastDay(day);
     const reviewItems = Review.getAllWrongItems();
+    Debug.log("info", "engine review start", {
+      day: safeDay,
+      count: reviewItems.length,
+    });
     if (!reviewItems.length) {
       showNotice("今日没有需要复习的单词。");
       return;
@@ -1462,6 +1584,7 @@ const Engine = {
       currentTask: null,
       currentModeType: "",
       currentWrongRecorded: false,
+      transitioning: false,
     };
     UI.dayLabel.textContent = String(safeDay);
     UI.primaryBtn.textContent = "重新开始";
@@ -1492,6 +1615,7 @@ const Engine = {
     this.state.currentItem = item;
     this.state.currentQuestion = null;
     this.state.spelling = null;
+    this.state.transitioning = false;
     UI.prompt.classList.remove("missing-display");
     if (!preserveWrong) {
       this.state.currentWrongRecorded = false;
@@ -1733,6 +1857,9 @@ const Engine = {
   },
 
   async handleMissingLetterPick(letter) {
+    if (this.state.transitioning) {
+      return;
+    }
     const mode = this.state.spellMode;
     const question = this.state.currentQuestion;
     if (!mode || !question || mode.modeType !== "missing_letter") {
@@ -1755,6 +1882,9 @@ const Engine = {
   },
 
   handleFixWrongSelect(index) {
+    if (this.state.transitioning) {
+      return;
+    }
     const mode = this.state.spellMode;
     const question = this.state.currentQuestion;
     if (!mode || !question || mode.modeType !== "fix_wrong") {
@@ -1765,6 +1895,9 @@ const Engine = {
   },
 
   async handleFixWrongReplace(letter) {
+    if (this.state.transitioning) {
+      return;
+    }
     const mode = this.state.spellMode;
     const question = this.state.currentQuestion;
     if (!mode || !question || mode.modeType !== "fix_wrong") {
@@ -1782,6 +1915,9 @@ const Engine = {
   },
 
   pickSpellingTile(tileId) {
+    if (this.state.transitioning) {
+      return;
+    }
     const spelling = this.state.spelling;
     if (!spelling) {
       return;
@@ -1806,6 +1942,9 @@ const Engine = {
   },
 
   removeSpellingTile(index) {
+    if (this.state.transitioning) {
+      return;
+    }
     const spelling = this.state.spelling;
     if (!spelling) {
       return;
@@ -1861,6 +2000,9 @@ const Engine = {
   },
 
   async checkSpelling() {
+    if (this.state.transitioning) {
+      return;
+    }
     const spelling = this.state.spelling;
     if (!spelling) {
       return;
@@ -1875,6 +2017,9 @@ const Engine = {
   },
 
   async handleChoiceAnswer(button, isCorrect, correct) {
+    if (this.state.transitioning) {
+      return;
+    }
     const buttons = Array.from(UI.options.querySelectorAll(".option"));
     for (const btn of buttons) {
       btn.disabled = true;
@@ -1900,28 +2045,41 @@ const Engine = {
       await this.resolveSpellTask(this.state.currentTask, isCorrect);
       return;
     }
-    if (isCorrect) {
-      this.state.score += 1;
-      if (stage === Stage.REVIEW) {
-        Review.recordCorrect(item);
-      }
-      this.state.stageCleared += 1;
-      this.updateProgress();
-      addCoins(COIN_REWARD);
-      await SoundFX.playSuccess();
-      this.state.stageQueue.shift();
-      this.nextTurn();
+    if (this.state.transitioning) {
+      Debug.log("warn", "advanceChoice ignored", { stage });
       return;
     }
-    this.state.score -= 1;
-    this.state.errors += 1;
-    if (!this.state.currentWrongRecorded) {
-      Review.recordWrong(item, wrongTypeForStage(stage));
-      this.state.currentWrongRecorded = true;
+    this.state.transitioning = true;
+    try {
+      if (isCorrect) {
+        this.state.score += 1;
+        if (stage === Stage.REVIEW) {
+          Review.recordCorrect(item);
+        }
+        this.state.stageCleared += 1;
+        this.updateProgress();
+        addCoins(COIN_REWARD);
+        await SoundFX.playSuccess();
+        this.state.stageQueue.shift();
+        this.nextTurn();
+        return;
+      }
+      this.state.score -= 1;
+      this.state.errors += 1;
+      if (!this.state.currentWrongRecorded) {
+        Review.recordWrong(item, wrongTypeForStage(stage));
+        this.state.currentWrongRecorded = true;
+      }
+      this.updateProgress();
+      await SoundFX.playError();
+      this.renderQuestion(item, { preserveWrong: true });
+    } catch (err) {
+      Debug.log("error", "advanceChoice failed", { error: err.message || err });
+      flashHint("发生错误，已继续下一题");
+      this.nextTurn();
+    } finally {
+      this.state.transitioning = false;
     }
-    this.updateProgress();
-    await SoundFX.playError();
-    this.renderQuestion(item, { preserveWrong: true });
   },
 
   enqueueSpellTasks(tasks) {
@@ -1968,6 +2126,11 @@ const Engine = {
     if (!task || !task.item) {
       return;
     }
+    if (this.state.transitioning) {
+      Debug.log("warn", "resolveSpellTask ignored", { word: task.item.en });
+      return;
+    }
+    this.state.transitioning = true;
     SpellStats.record(task.item, isCorrect, task.modeType);
     if (!isCorrect && task.isPrimary && !task.remedialScheduled) {
       task.remedialScheduled = true;
@@ -1978,26 +2141,34 @@ const Engine = {
       }
     }
 
-    if (isCorrect) {
-      this.state.score += 1;
-      this.state.stageCleared += 1;
-      this.updateProgress();
-      addCoins(COIN_REWARD);
-      await SoundFX.playSuccess();
-      this.state.stageQueue.shift();
-      this.nextTurn();
-      return;
-    }
+    try {
+      if (isCorrect) {
+        this.state.score += 1;
+        this.state.stageCleared += 1;
+        this.updateProgress();
+        addCoins(COIN_REWARD);
+        await SoundFX.playSuccess();
+        this.state.stageQueue.shift();
+        this.nextTurn();
+        return;
+      }
 
-    this.state.score -= 1;
-    this.state.errors += 1;
-    if (!task.reviewRecorded) {
-      Review.recordWrong(task.item, wrongTypeForStage(Stage.SPELL));
-      task.reviewRecorded = true;
+      this.state.score -= 1;
+      this.state.errors += 1;
+      if (!task.reviewRecorded) {
+        Review.recordWrong(task.item, wrongTypeForStage(Stage.SPELL));
+        task.reviewRecorded = true;
+      }
+      this.updateProgress();
+      await SoundFX.playError();
+      this.renderQuestion(task, { preserveWrong: true });
+    } catch (err) {
+      Debug.log("error", "resolveSpellTask failed", { error: err.message || err });
+      flashHint("发生错误，已继续下一题");
+      this.nextTurn();
+    } finally {
+      this.state.transitioning = false;
     }
-    this.updateProgress();
-    await SoundFX.playError();
-    this.renderQuestion(task, { preserveWrong: true });
   },
 
   updateProgress() {
@@ -2213,9 +2384,8 @@ UI.primaryBtn.addEventListener("click", () => {
   showStartScreen(getInitialDay());
 });
 
-UI.audioBtn.addEventListener("click", () => {
-  AudioPlayer.unlocked = true;
-  AudioPlayer.autoBlocked = false;
+UI.audioBtn.addEventListener("click", async () => {
+  await unlockAudioOnce("audio-button");
   AudioPlayer.playForItem(Engine.state.currentItem);
 });
 
@@ -2252,12 +2422,28 @@ UI.backBtn?.addEventListener("click", () => {
   window.location.href = "index.html";
 });
 
+Debug.init();
+window.addEventListener("error", (event) => {
+  Debug.log("error", "window error", {
+    message: event.message,
+    source: event.filename,
+    line: event.lineno,
+    col: event.colno,
+  });
+});
+window.addEventListener("unhandledrejection", (event) => {
+  Debug.log("error", "unhandledrejection", {
+    reason: event.reason && event.reason.message ? event.reason.message : String(event.reason),
+  });
+});
+
 async function bootApp() {
   if (bootInFlight) {
     return;
   }
   bootInFlight = true;
   showLoading();
+  Debug.log("info", "boot start");
   try {
     if ("serviceWorker" in navigator) {
       try {
@@ -2269,7 +2455,7 @@ async function bootApp() {
         // ignore sw registration errors
       }
     }
-    await Data.load();
+    await Data.load({ noCache: true });
     Review.load();
     SpellStats.load();
     DayStats.load();
@@ -2295,7 +2481,9 @@ async function bootApp() {
     } else {
       showStartScreen(getInitialDay());
     }
+    Debug.log("info", "boot ready", { day: targetDay || getInitialDay() });
   } catch (err) {
+    Debug.log("error", "boot failed", { error: err.message || err });
     showError(err.message || "加载失败，请刷新重试。");
   } finally {
     bootInFlight = false;
