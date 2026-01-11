@@ -308,12 +308,14 @@ async function unlockAudioOnce(source = "unknown") {
   audioUnlockInFlight = true;
   Debug.log("info", "unlockAudio start", { source });
   try {
-    await SoundFX.unlock();
     AudioPlayer.ensure();
     if (AudioPlayer.audio) {
       AudioPlayer.audio.src = SILENT_AUDIO;
       AudioPlayer.audio.volume = 0;
-      await AudioPlayer.audio.play();
+      const playPromise = AudioPlayer.audio.play();
+      if (playPromise) {
+        await playPromise;
+      }
       AudioPlayer.audio.pause();
       AudioPlayer.audio.currentTime = 0;
       AudioPlayer.audio.volume = 1;
@@ -321,6 +323,7 @@ async function unlockAudioOnce(source = "unknown") {
     AudioPlayer.unlocked = true;
     AudioPlayer.autoBlocked = false;
     audioUnlocked = true;
+    SoundFX.unlock();
     Debug.log("info", "unlockAudio done");
     return true;
   } catch (err) {
@@ -1857,6 +1860,7 @@ const Engine = {
   },
 
   async handleMissingLetterPick(letter) {
+    unlockAudioOnce("spell-pick");
     if (this.state.transitioning) {
       return;
     }
@@ -1882,6 +1886,7 @@ const Engine = {
   },
 
   handleFixWrongSelect(index) {
+    unlockAudioOnce("spell-fix-select");
     if (this.state.transitioning) {
       return;
     }
@@ -1895,6 +1900,7 @@ const Engine = {
   },
 
   async handleFixWrongReplace(letter) {
+    unlockAudioOnce("spell-fix-replace");
     if (this.state.transitioning) {
       return;
     }
@@ -1915,6 +1921,7 @@ const Engine = {
   },
 
   pickSpellingTile(tileId) {
+    unlockAudioOnce("spell-tile");
     if (this.state.transitioning) {
       return;
     }
@@ -1942,6 +1949,7 @@ const Engine = {
   },
 
   removeSpellingTile(index) {
+    unlockAudioOnce("spell-remove");
     if (this.state.transitioning) {
       return;
     }
@@ -2000,6 +2008,7 @@ const Engine = {
   },
 
   async checkSpelling() {
+    unlockAudioOnce("spell-check");
     if (this.state.transitioning) {
       return;
     }
@@ -2017,6 +2026,7 @@ const Engine = {
   },
 
   async handleChoiceAnswer(button, isCorrect, correct) {
+    unlockAudioOnce("choice");
     if (this.state.transitioning) {
       return;
     }
@@ -2051,28 +2061,30 @@ const Engine = {
     }
     this.state.transitioning = true;
     try {
-      if (isCorrect) {
-        this.state.score += 1;
-        if (stage === Stage.REVIEW) {
-          Review.recordCorrect(item);
-        }
-        this.state.stageCleared += 1;
-        this.updateProgress();
-        addCoins(COIN_REWARD);
-        await SoundFX.playSuccess();
-        this.state.stageQueue.shift();
-        this.nextTurn();
-        return;
+    if (isCorrect) {
+      this.state.score += 1;
+      if (stage === Stage.REVIEW) {
+        Review.recordCorrect(item);
       }
+      this.state.stageCleared += 1;
+      this.updateProgress();
+      addCoins(COIN_REWARD);
+      Debug.log("info", "answer correct", { stage });
+      SoundFX.playSuccess();
+      this.state.stageQueue.shift();
+      this.nextTurn();
+      return;
+    }
       this.state.score -= 1;
       this.state.errors += 1;
-      if (!this.state.currentWrongRecorded) {
-        Review.recordWrong(item, wrongTypeForStage(stage));
-        this.state.currentWrongRecorded = true;
-      }
-      this.updateProgress();
-      await SoundFX.playError();
-      this.renderQuestion(item, { preserveWrong: true });
+    if (!this.state.currentWrongRecorded) {
+      Review.recordWrong(item, wrongTypeForStage(stage));
+      this.state.currentWrongRecorded = true;
+    }
+    this.updateProgress();
+    Debug.log("info", "answer wrong", { stage });
+    SoundFX.playError();
+    this.renderQuestion(item, { preserveWrong: true });
     } catch (err) {
       Debug.log("error", "advanceChoice failed", { error: err.message || err });
       flashHint("发生错误，已继续下一题");
@@ -2147,7 +2159,8 @@ const Engine = {
         this.state.stageCleared += 1;
         this.updateProgress();
         addCoins(COIN_REWARD);
-        await SoundFX.playSuccess();
+        Debug.log("info", "spell correct", { mode: task.modeType });
+        SoundFX.playSuccess();
         this.state.stageQueue.shift();
         this.nextTurn();
         return;
@@ -2160,7 +2173,8 @@ const Engine = {
         task.reviewRecorded = true;
       }
       this.updateProgress();
-      await SoundFX.playError();
+      Debug.log("info", "spell wrong", { mode: task.modeType });
+      SoundFX.playError();
       this.renderQuestion(task, { preserveWrong: true });
     } catch (err) {
       Debug.log("error", "resolveSpellTask failed", { error: err.message || err });
@@ -2323,6 +2337,7 @@ function showStartScreen(selectedDay = null) {
   start.className = "primary";
   start.textContent = "开始闯关";
   start.addEventListener("click", () => {
+    unlockAudioOnce("start");
     hideOverlay();
     Engine.start(day);
   });
@@ -2381,6 +2396,7 @@ function showNotice(message) {
 }
 
 UI.primaryBtn.addEventListener("click", () => {
+  unlockAudioOnce("primary");
   showStartScreen(getInitialDay());
 });
 
