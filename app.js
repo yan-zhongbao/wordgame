@@ -1864,24 +1864,31 @@ const Engine = {
     if (this.state.transitioning) {
       return;
     }
-    const mode = this.state.spellMode;
-    const question = this.state.currentQuestion;
-    if (!mode || !question || mode.modeType !== "missing_letter") {
-      return;
-    }
-    const fillIndices = question.missingTemplateIndices || question.missingIndices || [];
-    const nextIndex = mode.nextIndex;
-    if (nextIndex >= fillIndices.length) {
-      return;
-    }
-    const fillIndex = fillIndices[nextIndex];
-    mode.filled[fillIndex] = letter;
-    mode.nextIndex += 1;
-    renderSpellPrompt(mode.promptZh || "", mode.filled.join(""));
-    if (mode.nextIndex >= fillIndices.length) {
-      const filledWord = mode.filled.join("");
-      const isCorrect = Question.normalizeWord(filledWord) === question.target;
-      await this.resolveSpellTask(mode.task, isCorrect);
+    try {
+      const mode = this.state.spellMode;
+      const question = this.state.currentQuestion;
+      if (!mode || !question || mode.modeType !== "missing_letter") {
+        return;
+      }
+      const fillIndices = question.missingTemplateIndices || question.missingIndices || [];
+      const nextIndex = mode.nextIndex;
+      if (nextIndex >= fillIndices.length) {
+        return;
+      }
+      const fillIndex = fillIndices[nextIndex];
+      mode.filled[fillIndex] = letter;
+      mode.nextIndex += 1;
+      renderSpellPrompt(mode.promptZh || "", mode.filled.join(""));
+      if (mode.nextIndex >= fillIndices.length) {
+        const filledWord = mode.filled.join("");
+        const isCorrect = Question.normalizeWord(filledWord) === question.target;
+        await this.resolveSpellTask(mode.task, isCorrect);
+      }
+    } catch (err) {
+      Debug.log("error", "handleMissingLetterPick failed", { error: err.message || err });
+      this.state.transitioning = false;
+      flashHint("发生错误，已继续下一题");
+      this.nextTurn();
     }
   },
 
@@ -1904,20 +1911,27 @@ const Engine = {
     if (this.state.transitioning) {
       return;
     }
-    const mode = this.state.spellMode;
-    const question = this.state.currentQuestion;
-    if (!mode || !question || mode.modeType !== "fix_wrong") {
-      return;
+    try {
+      const mode = this.state.spellMode;
+      const question = this.state.currentQuestion;
+      if (!mode || !question || mode.modeType !== "fix_wrong") {
+        return;
+      }
+      if (mode.selectedIndex === null) {
+        flashHint("先点一个错误字母");
+        return;
+      }
+      const letters = question.wrongWord.split("");
+      letters[mode.selectedIndex] = letter;
+      const fixed = letters.join("");
+      const isCorrect = Question.normalizeWord(fixed) === question.target;
+      await this.resolveSpellTask(mode.task, isCorrect);
+    } catch (err) {
+      Debug.log("error", "handleFixWrongReplace failed", { error: err.message || err });
+      this.state.transitioning = false;
+      flashHint("发生错误，已继续下一题");
+      this.nextTurn();
     }
-    if (mode.selectedIndex === null) {
-      flashHint("先点一个错误字母");
-      return;
-    }
-    const letters = question.wrongWord.split("");
-    letters[mode.selectedIndex] = letter;
-    const fixed = letters.join("");
-    const isCorrect = Question.normalizeWord(fixed) === question.target;
-    await this.resolveSpellTask(mode.task, isCorrect);
   },
 
   pickSpellingTile(tileId) {
@@ -2012,17 +2026,24 @@ const Engine = {
     if (this.state.transitioning) {
       return;
     }
-    const spelling = this.state.spelling;
-    if (!spelling) {
-      return;
+    try {
+      const spelling = this.state.spelling;
+      if (!spelling) {
+        return;
+      }
+      if (spelling.selected.some((id) => id === undefined)) {
+        return;
+      }
+      const answer = spelling.selected.map((tileId) => spelling.tiles[tileId]).join("");
+      const normalized = Question.normalizeWord(answer);
+      const isCorrect = normalized === spelling.targetNormalized;
+      await this.resolveSpellTask(this.state.currentTask, isCorrect);
+    } catch (err) {
+      Debug.log("error", "checkSpelling failed", { error: err.message || err });
+      this.state.transitioning = false;
+      flashHint("发生错误，已继续下一题");
+      this.nextTurn();
     }
-    if (spelling.selected.some((id) => id === undefined)) {
-      return;
-    }
-    const answer = spelling.selected.map((tileId) => spelling.tiles[tileId]).join("");
-    const normalized = Question.normalizeWord(answer);
-    const isCorrect = normalized === spelling.targetNormalized;
-    await this.resolveSpellTask(this.state.currentTask, isCorrect);
   },
 
   async handleChoiceAnswer(button, isCorrect, correct) {
@@ -2030,22 +2051,29 @@ const Engine = {
     if (this.state.transitioning) {
       return;
     }
-    const buttons = Array.from(UI.options.querySelectorAll(".option"));
-    for (const btn of buttons) {
-      btn.disabled = true;
-      if (btn.textContent === correct) {
-        btn.classList.add("correct");
+    try {
+      const buttons = Array.from(UI.options.querySelectorAll(".option"));
+      for (const btn of buttons) {
+        btn.disabled = true;
+        if (btn.textContent === correct) {
+          btn.classList.add("correct");
+        }
       }
-    }
-    const isSpellStage = this.state.stage === Stage.SPELL;
-    if (!isCorrect) {
-      button.classList.add("wrong");
-      UI.hint.textContent = isSpellStage ? "再试一次" : "再来一次";
-    } else {
-      UI.hint.textContent = "答对了！";
-    }
+      const isSpellStage = this.state.stage === Stage.SPELL;
+      if (!isCorrect) {
+        button.classList.add("wrong");
+        UI.hint.textContent = isSpellStage ? "再试一次" : "再来一次";
+      } else {
+        UI.hint.textContent = "答对了！";
+      }
 
-    await this.advanceChoice(isCorrect);
+      await this.advanceChoice(isCorrect);
+    } catch (err) {
+      Debug.log("error", "handleChoiceAnswer failed", { error: err.message || err });
+      this.state.transitioning = false;
+      flashHint("发生错误，已继续下一题");
+      this.nextTurn();
+    }
   },
 
   async advanceChoice(isCorrect) {

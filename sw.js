@@ -1,4 +1,5 @@
-const CACHE_NAME = "wordgame-v69";
+const CACHE_NAME = "wordgame-v71";
+const AUDIO_CACHE = "wordgame-audio";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -120,6 +121,10 @@ async function precacheAudio(cache) {
     const urls = buildAudioUrls(words);
     for (const url of urls) {
       try {
+        const cached = await cache.match(url);
+        if (cached) {
+          continue;
+        }
         const res = await fetch(url);
         if (res.ok) {
           await cache.put(url, res.clone());
@@ -139,7 +144,8 @@ self.addEventListener("install", (event) => {
     (async () => {
       const cache = await caches.open(CACHE_NAME);
       await cache.addAll(CORE_ASSETS);
-      await precacheAudio(cache);
+      const audioCache = await caches.open(AUDIO_CACHE);
+      await precacheAudio(audioCache);
     })()
   );
 });
@@ -155,7 +161,9 @@ self.addEventListener("activate", (event) => {
     (async () => {
       const keys = await caches.keys();
       await Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys
+          .filter((key) => key !== CACHE_NAME && key !== AUDIO_CACHE)
+          .map((key) => caches.delete(key))
       );
       await self.clients.claim();
     })()
@@ -174,6 +182,7 @@ self.addEventListener("fetch", (event) => {
       const cached = cacheOverride ? null : await cache.match(request);
       const url = new URL(request.url);
       const isWords = url.pathname.endsWith("/words.json");
+      const isAudio = url.pathname.includes("/audio/");
       if (isWords) {
         try {
           const response = await fetch(request);
@@ -186,14 +195,27 @@ self.addEventListener("fetch", (event) => {
           return fallback || Response.error();
         }
       }
+      if (isAudio) {
+        const audioCache = await caches.open(AUDIO_CACHE);
+        const audioCached = await audioCache.match(request);
+        if (audioCached) {
+          return audioCached;
+        }
+        try {
+          const response = await fetch(request);
+          if (response.ok) {
+            await audioCache.put(request, response.clone());
+          }
+          return response;
+        } catch (err) {
+          return audioCached || Response.error();
+        }
+      }
       if (cached) {
         return cached;
       }
       try {
         const response = await fetch(request);
-        if (response.ok && url.pathname.includes("/audio/")) {
-          await cache.put(request, response.clone());
-        }
         return response;
       } catch (err) {
         if (cacheOverride) {
