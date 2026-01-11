@@ -1,31 +1,35 @@
 ﻿
+const TD_ROOT = document.getElementById("tdView") || document;
+const tdQuery = (selector) => TD_ROOT.querySelector(selector);
+const tdQueryAll = (selector) => Array.from(TD_ROOT.querySelectorAll(selector));
+
 const UI = {
-  dayValue: document.getElementById("dayValue"),
-  bagValue: document.getElementById("bagValue"),
-  coinValue: document.getElementById("coinValue"),
-  bossValue: document.getElementById("bossValue"),
-  starBar: document.getElementById("starBar"),
-  seedTray: document.getElementById("seedTray"),
-  restartBtn: document.getElementById("restartBtn"),
-  backBtn: document.getElementById("backBtn"),
-  hoeBtn: document.getElementById("hoeBtn"),
-  keyBtn: document.getElementById("keyBtn"),
-  hornBtn: document.getElementById("hornBtn"),
-  batonBtn: document.getElementById("batonBtn"),
-  field: document.getElementById("field"),
-  bagArea: document.getElementById("bagArea"),
-  enemyArea: document.getElementById("enemyArea"),
-  plantSlots: Array.from(document.querySelectorAll(".plant-slot")),
-  enemyLayer: document.getElementById("enemyLayer"),
-  bulletLayer: document.getElementById("bulletLayer"),
-  impactLayer: document.getElementById("impactLayer"),
-  letterQueue: document.getElementById("letterQueue"),
-  messageText: document.getElementById("messageText"),
-  overlay: document.getElementById("overlay"),
-  overlayTitle: document.getElementById("overlayTitle"),
-  overlayBody: document.getElementById("overlayBody"),
-  overlayRestart: document.getElementById("overlayRestart"),
-  overlayBack: document.getElementById("overlayBack"),
+  dayValue: tdQuery("#dayValue"),
+  bagValue: tdQuery("#bagValue"),
+  coinValue: tdQuery("#coinValue"),
+  bossValue: tdQuery("#bossValue"),
+  starBar: tdQuery("#starBar"),
+  seedTray: tdQuery("#seedTray"),
+  restartBtn: tdQuery("#restartBtn"),
+  backBtn: tdQuery("#backBtn"),
+  hoeBtn: tdQuery("#hoeBtn"),
+  keyBtn: tdQuery("#keyBtn"),
+  hornBtn: tdQuery("#hornBtn"),
+  batonBtn: tdQuery("#batonBtn"),
+  field: tdQuery("#field"),
+  bagArea: tdQuery("#bagArea"),
+  enemyArea: tdQuery("#enemyArea"),
+  plantSlots: tdQueryAll(".plant-slot"),
+  enemyLayer: tdQuery("#enemyLayer"),
+  bulletLayer: tdQuery("#bulletLayer"),
+  impactLayer: tdQuery("#impactLayer"),
+  letterQueue: tdQuery("#letterQueue"),
+  messageText: tdQuery("#messageText"),
+  overlay: tdQuery("#overlay"),
+  overlayTitle: tdQuery("#overlayTitle"),
+  overlayBody: tdQuery("#overlayBody"),
+  overlayRestart: tdQuery("#overlayRestart"),
+  overlayBack: tdQuery("#overlayBack"),
 };
 
 const CONFIG = {
@@ -393,6 +397,8 @@ function preventTouchScroll(event) {
 const TD = {
   day: 1,
   wordPool: [],
+  initialized: false,
+  uiBound: false,
   reviewWeights: {},
   enemyQueue: [],
   enemies: [],
@@ -468,13 +474,13 @@ function extractBagName(text) {
 }
 
 function applyI18n() {
-  document.querySelectorAll("[data-i18n]").forEach((node) => {
+  TD_ROOT.querySelectorAll("[data-i18n]").forEach((node) => {
     const key = node.dataset.i18n;
     if (TEXT[key]) {
       node.textContent = TEXT[key];
     }
   });
-  document.querySelectorAll("[data-i18n-aria]").forEach((node) => {
+  TD_ROOT.querySelectorAll("[data-i18n-aria]").forEach((node) => {
     const key = node.dataset.i18nAria;
     if (TEXT[key]) {
       node.setAttribute("aria-label", TEXT[key]);
@@ -2586,9 +2592,17 @@ async function loadWords(day) {
 }
 
 function bindUI() {
+  if (TD.uiBound) {
+    return;
+  }
+  TD.uiBound = true;
   UI.restartBtn?.addEventListener("click", () => resetGame());
   UI.backBtn?.addEventListener("click", () => {
-    window.location.href = "index.html";
+    if (window.AppNav && typeof window.AppNav.show === "function") {
+      window.AppNav.show("home");
+    } else {
+      window.location.href = "index.html";
+    }
   });
   UI.hoeBtn?.addEventListener("pointerdown", (event) => {
     if (TD.coins < CONFIG.hoeCost) {
@@ -2620,7 +2634,11 @@ function bindUI() {
   });
   UI.overlayRestart?.addEventListener("click", () => resetGame());
   UI.overlayBack?.addEventListener("click", () => {
-    window.location.href = "index.html";
+    if (window.AppNav && typeof window.AppNav.show === "function") {
+      window.AppNav.show("home");
+    } else {
+      window.location.href = "index.html";
+    }
   });
   const unlockAudioOnce = () => {
     SoundFX.unlock();
@@ -2630,13 +2648,18 @@ function bindUI() {
   window.addEventListener("touchstart", unlockAudioOnce, { once: true });
 }
 
-async function init() {
-  applyI18n();
-  initSlots();
-  renderSeedTray();
-  initLetterQueue();
-  buildWordWeights();
-  const day = getDayFromQuery() || 1;
+async function startDay(dayOverride) {
+  if (!TD.initialized) {
+    applyI18n();
+    initSlots();
+    renderSeedTray();
+    initLetterQueue();
+    buildWordWeights();
+    bindUI();
+    requestAnimationFrame(gameLoop);
+    TD.initialized = true;
+  }
+  const day = Number.isFinite(dayOverride) ? dayOverride : getDayFromQuery() || 1;
   TD.day = day;
   TD.coins = loadCoins();
   TD.errors = 0;
@@ -2651,10 +2674,15 @@ async function init() {
   } catch (err) {
     showMessage(TEXT.loadFail);
   }
+  resetGame();
   showMessage(TEXT.startHint);
-  bindUI();
   updateCoinUI();
-  requestAnimationFrame(gameLoop);
 }
 
-document.addEventListener("DOMContentLoaded", init);
+window.TDApp = { startDay };
+
+if (!document.getElementById("homeView")) {
+  document.addEventListener("DOMContentLoaded", () => {
+    startDay(getDayFromQuery() || 1);
+  });
+}

@@ -1,26 +1,29 @@
+const PRACTICE_ROOT = document.getElementById("practiceView") || document;
+const practiceQuery = (selector) => PRACTICE_ROOT.querySelector(selector);
+
 const UI = {
-  dayLabel: document.getElementById("dayLabel"),
-  progressFill: document.getElementById("progressFill"),
-  starPreview: document.getElementById("starPreview"),
-  scoreValue: document.getElementById("scoreValue"),
-  coinValue: document.getElementById("coinValue"),
-  stageLabel: document.getElementById("stageLabel"),
-  prompt: document.getElementById("prompt"),
-  hint: document.getElementById("hint"),
-  audioBtn: document.getElementById("audioBtn"),
-  updateBtn: document.getElementById("updateBtn"),
-  backBtn: document.getElementById("backBtn"),
-  options: document.getElementById("options"),
-  statusText: document.getElementById("statusText"),
-  primaryBtn: document.getElementById("primaryBtn"),
-  overlay: document.getElementById("overlay"),
-  panelTitle: document.getElementById("panelTitle"),
-  panelBody: document.getElementById("panelBody"),
-  panelActions: document.getElementById("panelActions"),
-  audioGate: document.getElementById("audioGate"),
-  audioGateStatus: document.getElementById("audioGateStatus"),
-  audioGateEnable: document.getElementById("audioGateEnable"),
-  audioGateSkip: document.getElementById("audioGateSkip"),
+  dayLabel: practiceQuery("#dayLabel"),
+  progressFill: practiceQuery("#progressFill"),
+  starPreview: practiceQuery("#starPreview"),
+  scoreValue: practiceQuery("#scoreValue"),
+  coinValue: practiceQuery("#coinValue"),
+  stageLabel: practiceQuery("#stageLabel"),
+  prompt: practiceQuery("#prompt"),
+  hint: practiceQuery("#hint"),
+  audioBtn: practiceQuery("#audioBtn"),
+  updateBtn: practiceQuery("#updateBtn"),
+  backBtn: practiceQuery("#backBtn"),
+  options: practiceQuery("#options"),
+  statusText: practiceQuery("#statusText"),
+  primaryBtn: practiceQuery("#primaryBtn"),
+  overlay: practiceQuery("#overlay"),
+  panelTitle: practiceQuery("#panelTitle"),
+  panelBody: practiceQuery("#panelBody"),
+  panelActions: practiceQuery("#panelActions"),
+  audioGate: practiceQuery("#audioGate"),
+  audioGateStatus: practiceQuery("#audioGateStatus"),
+  audioGateEnable: practiceQuery("#audioGateEnable"),
+  audioGateSkip: practiceQuery("#audioGateSkip"),
 };
 
 const Debug = {
@@ -242,6 +245,8 @@ let swRegistration = null;
 let coinBalance = 0;
 let audioUnlockBound = false;
 let bootInFlight = false;
+let bootPromise = null;
+let appReady = false;
 let audioUnlockInFlight = false;
 let audioUnlocked = false;
 let unlockAudioElement = null;
@@ -2522,7 +2527,11 @@ function showStartScreen(selectedDay = null) {
   back.className = "primary ghost";
   back.textContent = "返回关卡列表";
   back.addEventListener("click", () => {
-    window.location.href = "index.html";
+    if (window.AppNav && typeof window.AppNav.show === "function") {
+      window.AppNav.show("home");
+    } else {
+      window.location.href = "index.html";
+    }
   });
   UI.panelActions.appendChild(back);
   showOverlay();
@@ -2589,7 +2598,11 @@ UI.updateBtn?.addEventListener("click", async () => {
 });
 
 UI.backBtn?.addEventListener("click", () => {
-  window.location.href = "index.html";
+  if (window.AppNav && typeof window.AppNav.show === "function") {
+    window.AppNav.show("home");
+  } else {
+    window.location.href = "index.html";
+  }
 });
 
 Debug.init();
@@ -2609,7 +2622,7 @@ window.addEventListener("unhandledrejection", (event) => {
 
 async function bootApp() {
   if (bootInFlight) {
-    return;
+    return bootPromise;
   }
   bootInFlight = true;
   showLoading();
@@ -2638,9 +2651,9 @@ async function bootApp() {
     }
     const dayFromQuery = getDayFromQuery();
     const dayFromSession = dayFromQuery ? null : getDayFromSession();
-  if (dayFromSession && window.sessionStorage) {
-    sessionStorage.removeItem(SESSION_KEYS.nextDay);
-  }
+    if (dayFromSession && window.sessionStorage) {
+      sessionStorage.removeItem(SESSION_KEYS.nextDay);
+    }
     const targetDay = dayFromQuery ?? dayFromSession;
     if (targetDay && Data.getDay(targetDay).length === 0) {
       await Data.load({ noCache: true, cacheBust: true });
@@ -2655,6 +2668,7 @@ async function bootApp() {
     } else {
       showStartScreen(getInitialDay());
     }
+    appReady = true;
     Debug.log("info", "boot ready", { day: targetDay || getInitialDay() });
   } catch (err) {
     Debug.log("error", "boot failed", { error: err.message || err });
@@ -2663,6 +2677,28 @@ async function bootApp() {
     bootInFlight = false;
   }
 }
+
+function ensureReady() {
+  if (appReady) {
+    return Promise.resolve();
+  }
+  if (bootPromise) {
+    return bootPromise;
+  }
+  bootPromise = bootApp();
+  return bootPromise;
+}
+
+window.PracticeApp = {
+  async startDay(day) {
+    await ensureReady();
+    if (Number.isFinite(day)) {
+      Engine.start(day);
+    } else {
+      showStartScreen(getInitialDay());
+    }
+  },
+};
 
 document.addEventListener("DOMContentLoaded", bootApp);
 window.addEventListener("pageshow", (event) => {

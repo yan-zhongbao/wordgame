@@ -1,12 +1,30 @@
-﻿const UI = {
-  dayList: document.getElementById("dayList"),
-  coinValue: document.getElementById("coinValue"),
-  updateBtn: document.getElementById("updateBtn"),
-  listHint: document.getElementById("listHint"),
+﻿const HOME_ROOT = document.getElementById("homeView") || document;
+const homeQuery = (selector) => HOME_ROOT.querySelector(selector);
+
+const UI = {
+  dayList: homeQuery("#dayList"),
+  coinValue: homeQuery("#coinValue"),
+  updateBtn: homeQuery("#updateBtn"),
+  listHint: homeQuery("#listHint"),
   versionTag: document.getElementById("versionTag"),
   debugPanel: document.getElementById("debugPanel"),
   debugBody: document.getElementById("debugBody"),
   debugToggle: document.getElementById("debugToggle"),
+};
+
+const VIEWS = {
+  home: document.getElementById("homeView"),
+  practice: document.getElementById("practiceView"),
+  td: document.getElementById("tdView"),
+  snake: document.getElementById("snakeView"),
+  wordsearch: document.getElementById("wordsearchView"),
+};
+
+const STYLE_LINKS = {
+  practice: document.getElementById("practiceCss"),
+  td: document.getElementById("tdCss"),
+  snake: document.getElementById("snakeCss"),
+  wordsearch: document.getElementById("wordsearchCss"),
 };
 
 const Debug = {
@@ -44,6 +62,54 @@ const Debug = {
     logger(line);
   },
 };
+
+const AppNav = {
+  current: "home",
+
+  setStyle(view) {
+    Object.entries(STYLE_LINKS).forEach(([key, link]) => {
+      if (!link) {
+        return;
+      }
+      link.disabled = key !== view;
+    });
+  },
+
+  show(view, options = {}) {
+    const target = VIEWS[view];
+    if (!target) {
+      return;
+    }
+    Object.values(VIEWS).forEach((node) => {
+      if (!node) {
+        return;
+      }
+      node.classList.toggle("active", node === target);
+    });
+    this.current = view;
+    this.setStyle(view);
+    document.body.dataset.view = view;
+    if (view === "practice") {
+      if (window.PracticeApp && typeof window.PracticeApp.startDay === "function") {
+        window.PracticeApp.startDay(options.day);
+      }
+      return;
+    }
+    if (view === "td" && window.TDApp?.startDay) {
+      window.TDApp.startDay(options.day);
+      return;
+    }
+    if (view === "snake" && window.SnakeApp?.startDay) {
+      window.SnakeApp.startDay(options.day);
+      return;
+    }
+    if (view === "wordsearch" && window.WordSearchApp?.startDay) {
+      window.WordSearchApp.startDay(options.day);
+    }
+  },
+};
+
+window.AppNav = AppNav;
 
 const STORAGE_KEYS = {
   coins: "wg-td-coins",
@@ -249,15 +315,16 @@ async function loadVersionTag() {
   }
 }
 
-function createGameLink({ href, title, iconClass }) {
-  const link = document.createElement("a");
+function createGameLink({ title, iconClass, onClick }) {
+  const link = document.createElement("button");
   link.className = "game-link";
-  link.href = href;
+  link.type = "button";
   link.title = title;
   link.setAttribute("aria-label", title);
   const icon = document.createElement("span");
   icon.className = `game-icon ${iconClass}`;
   link.appendChild(icon);
+  link.addEventListener("click", onClick);
   return link;
 }
 
@@ -293,23 +360,23 @@ function renderDayList(words, reviewRecords, dayStats) {
       gameLinks.className = "game-links";
       gameLinks.appendChild(
         createGameLink({
-          href: `td.html?day=${day}`,
           title: "单词大战作业",
           iconClass: "td-icon",
+          onClick: () => AppNav.show("td", { day }),
         })
       );
       gameLinks.appendChild(
         createGameLink({
-          href: `snake.html?day=${day}`,
           title: "贪吃蛇记忆",
           iconClass: "snake-icon",
+          onClick: () => AppNav.show("snake", { day }),
         })
       );
       gameLinks.appendChild(
         createGameLink({
-          href: `wordsearch.html?day=${day}`,
           title: "单词寻宝",
           iconClass: "search-icon",
+          onClick: () => AppNav.show("wordsearch", { day }),
         })
       );
       actions.appendChild(gameLinks);
@@ -325,7 +392,7 @@ function renderDayList(words, reviewRecords, dayStats) {
       } catch (err) {
         // ignore storage errors
       }
-      window.location.href = `practice.html?day=${day}`;
+      AppNav.show("practice", { day });
     });
 
     actions.appendChild(start);
@@ -371,7 +438,7 @@ async function updateAppCache() {
   }
 }
 
-UI.updateBtn.addEventListener("click", () => {
+UI.updateBtn?.addEventListener("click", () => {
   updateAppCache();
 });
 
@@ -405,6 +472,7 @@ async function init() {
   }
   initInFlight = true;
   Debug.log("info", "init start");
+  AppNav.show("home");
   updateCoinUI();
   loadVersionTag();
   try {

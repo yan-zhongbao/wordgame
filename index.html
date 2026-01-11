@@ -13,6 +13,10 @@
     <link rel="apple-touch-icon" href="assets/pwa/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="assets/pwa/icon-512.png" />
+    <link rel="stylesheet" href="practice.css" id="practiceCss" disabled />
+    <link rel="stylesheet" href="td.css" id="tdCss" disabled />
+    <link rel="stylesheet" href="snake.css" id="snakeCss" disabled />
+    <link rel="stylesheet" href="wordsearch.css" id="wordsearchCss" disabled />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -32,6 +36,16 @@
 
       * {
         box-sizing: border-box;
+      }
+
+      .view {
+        display: none;
+        min-height: 100vh;
+        min-height: 100svh;
+      }
+
+      .view.active {
+        display: block;
       }
 
       body {
@@ -242,6 +256,9 @@
         align-items: center;
         justify-content: center;
         text-decoration: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
       }
 
       .game-link:hover {
@@ -355,27 +372,286 @@
     </style>
   </head>
   <body>
-    <div class="app">
+    <div id="homeView" class="view active">
+      <div class="app">
+        <header class="topbar">
+          <div class="brand">
+            <div class="title">Word Quest</div>
+            <div class="subtitle">Choose Your Level</div>
+          </div>
+          <div class="top-actions">
+            <div class="coin-block"><span class="coin-icon"></span><span id="coinValue">0</span></div>
+            <button class="update-btn" id="updateBtn">更新</button>
+          </div>
+        </header>
+
+        <main class="content">
+          <section class="card">
+            <div>
+              <div class="card-title">选择关卡</div>
+              <div class="card-sub">查看单词数量、错词数量和挑战质量</div>
+            </div>
+            <div id="dayList" class="day-list"></div>
+            <div id="listHint" class="list-hint"></div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div id="practiceView" class="view">
+      <div class="app">
+        <header class="topbar">
+          <div class="brand">
+            <div class="title">Word Quest</div>
+            <div class="subtitle">21-Day Adventure</div>
+          </div>
+          <div class="day-info">
+            <div class="day-label">Day <span id="dayLabel">1</span></div>
+            <div class="progress">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="score">分数 <span id="scoreValue">0</span></div>
+            <div class="stars" id="starPreview">
+              <span class="star">★</span>
+              <span class="star">★</span>
+              <span class="star">★</span>
+            </div>
+            <div class="coin-block"><span class="coin-icon"></span><span id="coinValue">0</span></div>
+          </div>
+          <button class="audio-btn" id="audioBtn" disabled>🔊</button>
+          <button class="update-btn" id="backBtn">返回</button>
+        </header>
+
+        <main class="stage">
+          <section class="card">
+            <div class="stage-label" id="stageLabel">Stage 0 · 复活区</div>
+            <div class="prompt" id="prompt">准备开始挑战</div>
+            <div class="hint" id="hint">从错误复活区开始，再进入新词识记</div>
+          </section>
+          <section class="options" id="options"></section>
+        </main>
+
+        <footer class="footer">
+          <div class="status" id="statusText">等待开始</div>
+          <button class="primary" id="primaryBtn">开始</button>
+        </footer>
+      </div>
+
+      <div class="overlay hidden" id="overlay">
+        <div class="panel">
+          <div class="panel-title" id="panelTitle"></div>
+          <div class="panel-body" id="panelBody"></div>
+          <div class="panel-actions" id="panelActions"></div>
+        </div>
+      </div>
+
+      <div class="audio-gate hidden" id="audioGate">
+        <div id="audioGateStatus">声音未启用</div>
+        <button id="audioGateEnable">启用声音</button>
+        <button class="ghost" id="audioGateSkip">无声模式</button>
+      </div>
+    </div>
+
+    <div id="tdView" class="view">
       <header class="topbar">
         <div class="brand">
-          <div class="title">Word Quest</div>
-          <div class="subtitle">Choose Your Level</div>
+          <div class="brand-title">Word vs Homework TD</div>
+          <div class="brand-subtitle" data-i18n="brandSubtitle"></div>
         </div>
-        <div class="top-actions">
-          <div class="coin-block"><span class="coin-icon"></span><span id="coinValue">0</span></div>
-          <button class="update-btn" id="updateBtn">更新</button>
+        <div class="status">
+          <div><span data-i18n="dayLabel"></span> <span id="dayValue">1</span></div>
+          <div>
+            <span class="status-icon notebook-icon" data-i18n-aria="bagLabel"></span>
+            <span id="bagValue">0</span>/30
+          </div>
+          <div>
+            <span class="status-icon coin-icon" data-i18n-aria="coinLabel"></span>
+            <span id="coinValue">0</span>
+          </div>
+          <div>
+            <span class="status-icon skull-icon" data-i18n-aria="bossLabel"></span>
+            <span id="bossValue">0</span>/8
+          </div>
+          <div class="stars" id="starBar">
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="restartBtn" class="ghost" data-i18n="restart"></button>
+          <button id="backBtn" class="primary" data-i18n="back"></button>
         </div>
       </header>
 
-      <main class="content">
-        <section class="card">
-          <div>
-            <div class="card-title">选择关卡</div>
-            <div class="card-sub">查看单词数量、错词数量和挑战质量</div>
-          </div>
-          <div id="dayList" class="day-list"></div>
-          <div id="listHint" class="list-hint"></div>
+      <main class="layout">
+        <section id="ammoArea" class="ammo-area">
+          <div id="letterQueue" class="letter-queue"></div>
         </section>
+        <section id="field" data-i18n-aria="battlefield">
+          <div class="track-line"></div>
+          <div id="bagColumn" class="bag-column">
+            <div id="seedPanel" class="zone seed-panel">
+              <div id="seedTray" class="seed-tray"></div>
+            </div>
+            <div id="bagArea" class="zone">
+              <div class="bag-slot">
+                <div class="bag-icon"></div>
+                <div class="bag-text" data-i18n="bagText"></div>
+              </div>
+            </div>
+            <div class="bag-tools">
+              <button id="hoeBtn" class="tool-btn" title="移除炮台" type="button">
+                <span class="tool-icon hoe-icon"></span>
+                <span class="tool-cost">-20<span class="coin-mini"></span></span>
+              </button>
+              <button id="keyBtn" class="tool-btn" title="钥匙填空" type="button">
+                <span class="tool-icon key-icon"></span>
+                <span class="tool-cost">-50<span class="coin-mini"></span></span>
+              </button>
+              <button id="hornBtn" class="tool-btn" title="召唤Boss" type="button">
+                <span class="tool-icon horn-icon"></span>
+                <span class="tool-cost">-50<span class="coin-mini"></span></span>
+              </button>
+              <button id="batonBtn" class="tool-btn" title="指挥填充" type="button">
+                <span class="tool-icon baton-icon"></span>
+                <span class="tool-cost">-500<span class="coin-mini"></span></span>
+              </button>
+            </div>
+          </div>
+          <div id="plantArea" class="zone">
+            <div class="plant-grid">
+              <div class="plant-slot" data-slot="0"></div>
+              <div class="plant-slot" data-slot="1"></div>
+              <div class="plant-slot" data-slot="2"></div>
+              <div class="plant-slot" data-slot="3"></div>
+              <div class="plant-slot" data-slot="4"></div>
+              <div class="plant-slot" data-slot="5"></div>
+            </div>
+          </div>
+          <div id="attackArea" class="zone">
+            <div class="attack-guide" data-i18n="attackGuide"></div>
+            <div class="message-block">
+              <div class="panel-title" data-i18n="hintTitle"></div>
+              <div id="messageText" class="message"></div>
+            </div>
+          </div>
+          <div id="enemyArea" class="zone"></div>
+          <div id="enemyLayer"></div>
+          <div id="bulletLayer"></div>
+          <div id="impactLayer"></div>
+        </section>
+      </main>
+
+      <div id="overlay" class="overlay hidden">
+        <div class="overlay-card">
+          <div id="overlayTitle" class="overlay-title"></div>
+          <div id="overlayBody" class="overlay-body"></div>
+          <div class="overlay-actions">
+            <button id="overlayRestart" class="primary" data-i18n="restartOverlay"></button>
+            <button id="overlayBack" class="ghost" data-i18n="backOverlay"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="snakeView" class="view">
+      <header class="topbar">
+        <div class="title">
+          <div class="title-main">贪吃蛇记忆</div>
+          <div class="title-sub">拖动蛇头按顺序吃字母</div>
+        </div>
+        <div class="stats">
+          <div>Day <span id="dayValue">1</span></div>
+          <div>单词 <span id="wordValue">0</span>/<span id="wordTotal">0</span></div>
+          <div>等级 <span id="levelValue">1</span></div>
+          <div class="stars" id="starBar">
+            <span class="star">☆</span>
+            <span class="star">☆</span>
+            <span class="star">☆</span>
+          </div>
+          <div class="coin-block"><span class="coin-icon"></span><span id="coinValue">0</span></div>
+        </div>
+        <div class="tools">
+          <button id="freezeBtn" class="tool-btn" type="button" title="冻结 10 秒">
+            <span class="tool-icon ice-icon"></span>
+            <span class="tool-cost">-20</span>
+          </button>
+          <button id="speedBtn" class="tool-btn" type="button" title="加速 50 秒">
+            <span class="tool-icon wheel-icon"></span>
+            <span class="tool-cost">-30</span>
+          </button>
+          <button id="aimBtn" class="tool-btn" type="button" title="自动锁定">
+            <span class="tool-icon scope-icon"></span>
+            <span class="tool-cost">-50</span>
+          </button>
+        </div>
+        <button id="backBtn" class="ghost">返回主页</button>
+      </header>
+
+      <main class="main">
+        <section class="playfield" id="playfield">
+          <div class="word-display" id="targetWord"></div>
+          <div class="effect-status" id="effectStatus"></div>
+          <div class="message" id="messageText"></div>
+        </section>
+      </main>
+    </div>
+
+    <div id="wordsearchView" class="view">
+      <header class="topbar">
+        <div class="title">
+          <div class="title-main">单词寻宝</div>
+          <div class="title-sub">涂抹连线找出单词</div>
+        </div>
+        <div class="stats">
+          <div>Day <span id="dayValue">1</span></div>
+          <div>已找 <span id="foundValue">0</span>/<span id="totalValue">0</span></div>
+          <div class="stars" id="starBar">
+            <span class="star">☆</span>
+            <span class="star">☆</span>
+            <span class="star">☆</span>
+          </div>
+          <div class="coin-block"><span class="coin-icon"></span><span id="coinValue">0</span></div>
+        </div>
+        <div class="tools">
+          <button id="flashBtn" class="tool-btn" type="button" title="手电筒">
+            <span class="tool-icon flashlight-icon"></span>
+            <span class="tool-cost">-10</span>
+          </button>
+          <button id="speakerBtn" class="tool-btn" type="button" title="字母点名机">
+            <span class="tool-icon speaker-icon"></span>
+            <span class="tool-cost">-10</span>
+          </button>
+          <button id="xrayBtn" class="tool-btn" type="button" title="X光机">
+            <span class="tool-icon xray-icon"></span>
+            <span class="tool-cost">-50</span>
+          </button>
+          <button id="handBtn" class="tool-btn" type="button" title="举手提示">
+            <span class="tool-icon hand-icon"></span>
+            <span class="tool-cost">-10</span>
+          </button>
+          <button id="bombBtn" class="tool-btn" type="button" title="炸弹">
+            <span class="tool-icon bomb-icon"></span>
+            <span class="tool-cost">-10</span>
+          </button>
+          <button id="radarBtn" class="tool-btn" type="button" title="雷达">
+            <span class="tool-icon radar-icon"></span>
+            <span class="tool-cost">-5</span>
+          </button>
+        </div>
+        <button id="backBtn" class="ghost">返回主页</button>
+      </header>
+
+      <main class="layout">
+        <section class="grid-panel">
+          <div id="grid" class="grid"></div>
+          <div id="messageText" class="message"></div>
+        </section>
+        <aside class="word-panel">
+          <div class="panel-title">中文词库</div>
+          <div id="wordList" class="word-list"></div>
+        </aside>
       </main>
     </div>
 
@@ -385,5 +661,9 @@
       <pre class="debug-body" id="debugBody"></pre>
     </div>
     <script src="index.js"></script>
+    <script src="app.js"></script>
+    <script src="td.js"></script>
+    <script src="snake.js"></script>
+    <script src="wordsearch.js"></script>
   </body>
 </html>

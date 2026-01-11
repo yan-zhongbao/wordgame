@@ -1,18 +1,21 @@
+const SNAKE_ROOT = document.getElementById("snakeView") || document;
+const snakeQuery = (selector) => SNAKE_ROOT.querySelector(selector);
+
 const UI = {
-  field: document.getElementById("playfield"),
-  targetWord: document.getElementById("targetWord"),
-  message: document.getElementById("messageText"),
-  dayValue: document.getElementById("dayValue"),
-  wordValue: document.getElementById("wordValue"),
-  wordTotal: document.getElementById("wordTotal"),
-  levelValue: document.getElementById("levelValue"),
-  starBar: document.getElementById("starBar"),
-  coinValue: document.getElementById("coinValue"),
-  freezeBtn: document.getElementById("freezeBtn"),
-  speedBtn: document.getElementById("speedBtn"),
-  aimBtn: document.getElementById("aimBtn"),
-  backBtn: document.getElementById("backBtn"),
-  effectStatus: document.getElementById("effectStatus"),
+  field: snakeQuery("#playfield"),
+  targetWord: snakeQuery("#targetWord"),
+  message: snakeQuery("#messageText"),
+  dayValue: snakeQuery("#dayValue"),
+  wordValue: snakeQuery("#wordValue"),
+  wordTotal: snakeQuery("#wordTotal"),
+  levelValue: snakeQuery("#levelValue"),
+  starBar: snakeQuery("#starBar"),
+  coinValue: snakeQuery("#coinValue"),
+  freezeBtn: snakeQuery("#freezeBtn"),
+  speedBtn: snakeQuery("#speedBtn"),
+  aimBtn: snakeQuery("#aimBtn"),
+  backBtn: snakeQuery("#backBtn"),
+  effectStatus: snakeQuery("#effectStatus"),
 };
 
 const CONFIG = {
@@ -48,6 +51,8 @@ const state = {
   level: 1,
   wordSpeedBoost: 0,
   errors: 0,
+  initialized: false,
+  eventsBound: false,
   head: { x: 0, y: 0, targetX: 0, targetY: 0 },
   segments: [],
   tailBadge: null,
@@ -906,8 +911,16 @@ function setTarget(event) {
 }
 
 function bindEvents() {
+  if (state.eventsBound) {
+    return;
+  }
+  state.eventsBound = true;
   UI.backBtn.addEventListener("click", () => {
-    window.location.href = "index.html";
+    if (window.AppNav && typeof window.AppNav.show === "function") {
+      window.AppNav.show("home");
+    } else {
+      window.location.href = "index.html";
+    }
   });
   UI.freezeBtn?.addEventListener("click", () => {
     startFreeze();
@@ -934,14 +947,47 @@ function bindEvents() {
   });
 }
 
-async function init() {
-  state.day = getDayFromQuery();
-  UI.dayValue.textContent = String(state.day);
-  state.coins = loadCoins();
+function resetScene() {
+  state.wordIndex = 0;
+  state.sequence = [];
+  state.progress = 0;
+  state.safeProgress = 0;
+  state.currentWordLetters = 0;
+  state.level = 1;
+  state.wordSpeedBoost = 0;
   state.errors = 0;
+  state.segments = [];
+  state.tailBadge = null;
+  state.bubbles = [];
+  state.dragging = false;
+  state.completed = false;
+  state.freezeUntil = 0;
+  state.speedUntil = 0;
+  state.snipeUntil = 0;
+  state.snipeTargetId = null;
+  state.lastTime = 0;
+  if (UI.field) {
+    UI.field
+      .querySelectorAll(".snake-head, .snake-seg, .tail-badge, .letter-bubble")
+      .forEach((node) => node.remove());
+  }
+}
+
+async function startDay(dayOverride) {
+  if (!state.initialized) {
+    bindEvents();
+    requestAnimationFrame(gameLoop);
+    state.initialized = true;
+  }
+  const day = Number.isFinite(dayOverride) ? dayOverride : getDayFromQuery();
+  state.day = day;
+  if (UI.dayValue) {
+    UI.dayValue.textContent = String(state.day);
+  }
+  state.coins = loadCoins();
   updateCoinUI();
   updateStarUI();
-  bindEvents();
+  resetScene();
   try {
     state.words = await loadWords(state.day);
   } catch (err) {
@@ -962,7 +1008,12 @@ async function init() {
   setWordSequence(currentWord());
   initBubbles();
   showMessage("拖动蛇头吃字母");
-  requestAnimationFrame(gameLoop);
 }
 
-document.addEventListener("DOMContentLoaded", init);
+window.SnakeApp = { startDay };
+
+if (!document.getElementById("homeView")) {
+  document.addEventListener("DOMContentLoaded", () => {
+    startDay(getDayFromQuery());
+  });
+}

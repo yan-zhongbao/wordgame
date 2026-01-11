@@ -1,19 +1,22 @@
-﻿const UI = {
-  grid: document.getElementById("grid"),
-  wordList: document.getElementById("wordList"),
-  message: document.getElementById("messageText"),
-  dayValue: document.getElementById("dayValue"),
-  foundValue: document.getElementById("foundValue"),
-  totalValue: document.getElementById("totalValue"),
-  starBar: document.getElementById("starBar"),
-  coinValue: document.getElementById("coinValue"),
-  flashBtn: document.getElementById("flashBtn"),
-  speakerBtn: document.getElementById("speakerBtn"),
-  xrayBtn: document.getElementById("xrayBtn"),
-  handBtn: document.getElementById("handBtn"),
-  bombBtn: document.getElementById("bombBtn"),
-  radarBtn: document.getElementById("radarBtn"),
-  backBtn: document.getElementById("backBtn"),
+﻿const WORDSEARCH_ROOT = document.getElementById("wordsearchView") || document;
+const wsQuery = (selector) => WORDSEARCH_ROOT.querySelector(selector);
+
+const UI = {
+  grid: wsQuery("#grid"),
+  wordList: wsQuery("#wordList"),
+  message: wsQuery("#messageText"),
+  dayValue: wsQuery("#dayValue"),
+  foundValue: wsQuery("#foundValue"),
+  totalValue: wsQuery("#totalValue"),
+  starBar: wsQuery("#starBar"),
+  coinValue: wsQuery("#coinValue"),
+  flashBtn: wsQuery("#flashBtn"),
+  speakerBtn: wsQuery("#speakerBtn"),
+  xrayBtn: wsQuery("#xrayBtn"),
+  handBtn: wsQuery("#handBtn"),
+  bombBtn: wsQuery("#bombBtn"),
+  radarBtn: wsQuery("#radarBtn"),
+  backBtn: wsQuery("#backBtn"),
 };
 
 const CONFIG = {
@@ -57,6 +60,8 @@ const state = {
   xrayActive: false,
   speakerActive: false,
   speakerLetter: "",
+  initialized: false,
+  eventsBound: false,
 };
 
 const AudioFX = {
@@ -729,8 +734,16 @@ function useRadar() {
 }
 
 function bindEvents() {
+  if (state.eventsBound) {
+    return;
+  }
+  state.eventsBound = true;
   UI.backBtn.addEventListener("click", () => {
-    window.location.href = "index.html";
+    if (window.AppNav && typeof window.AppNav.show === "function") {
+      window.AppNav.show("home");
+    } else {
+      window.location.href = "index.html";
+    }
   });
   UI.flashBtn.addEventListener("click", () => {
     useFlashlight();
@@ -777,22 +790,47 @@ function bindEvents() {
   });
 }
 
-async function init() {
-  state.day = getDayFromQuery();
-  UI.dayValue.textContent = String(state.day);
-  state.coins = loadCoins();
+function resetScene() {
+  state.grid = [];
+  state.words = [];
+  state.selecting = false;
+  state.start = null;
+  state.selection = [];
+  state.lastSelection = [];
   state.errors = 0;
   state.completed = false;
+  state.xrayActive = false;
+  state.speakerActive = false;
+  state.speakerLetter = "";
+  if (UI.grid) {
+    UI.grid.innerHTML = "";
+  }
+  if (UI.wordList) {
+    UI.wordList.innerHTML = "";
+  }
+}
+
+async function startDay(dayOverride) {
+  if (!state.initialized) {
+    bindEvents();
+    state.initialized = true;
+  }
+  const day = Number.isFinite(dayOverride) ? dayOverride : getDayFromQuery();
+  state.day = day;
+  if (UI.dayValue) {
+    UI.dayValue.textContent = String(state.day);
+  }
+  state.coins = loadCoins();
   updateCoinUI();
   updateStarUI();
-  bindEvents();
+  resetScene();
   initGrid();
   try {
     const words = await loadWords(state.day);
     const sorted = [...words].sort((a, b) => b.en.length - a.en.length);
     const placed = [];
     sorted.forEach((entry) => {
-    const item = { ...entry, positions: [], found: false, dir: "-", colorIndex: placed.length };
+      const item = { ...entry, positions: [], found: false, dir: "-", colorIndex: placed.length };
       if (placeWord(item)) {
         placed.push(item);
       }
@@ -806,5 +844,11 @@ async function init() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", init);
+window.WordSearchApp = { startDay };
+
+if (!document.getElementById("homeView")) {
+  document.addEventListener("DOMContentLoaded", () => {
+    startDay(getDayFromQuery());
+  });
+}
 

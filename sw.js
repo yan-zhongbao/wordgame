@@ -1,13 +1,15 @@
-const CACHE_NAME = "wordgame-v75";
+const CACHE_NAME = "wordgame-v76";
 const AUDIO_CACHE = "wordgame-audio";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./index.js",
   "./practice.html",
+  "./practice.css",
   "./app.js",
   "./words.json",
   "./manifest.json",
+  "./clear.html",
   "./snake.html",
   "./snake.js",
   "./snake.css",
