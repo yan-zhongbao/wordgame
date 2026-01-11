@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>清理缓存</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: #f7f0e6;
+        color: #1c1a16;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .card {
+        width: min(420px, 90vw);
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.15);
+        text-align: center;
+      }
+      .title {
+        font-size: 18px;
+        margin-bottom: 8px;
+      }
+      .desc {
+        font-size: 14px;
+        color: #5c554b;
+        margin-bottom: 16px;
+      }
+      .status {
+        font-size: 13px;
+        color: #2f7d74;
+        margin-bottom: 16px;
+      }
+      button {
+        border: none;
+        padding: 10px 16px;
+        border-radius: 10px;
+        background: #e86f3a;
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="title">清理缓存与离线服务</div>
+      <div class="desc">用于解决更新卡住或版本不刷新问题。</div>
+      <div class="status" id="status">准备中...</div>
+      <button id="clearBtn">立即清理</button>
+    </div>
+    <script>
+      const statusEl = document.getElementById("status");
+      const btn = document.getElementById("clearBtn");
+      async function clearAll() {
+        statusEl.textContent = "正在清理...";
+        try {
+          if ("serviceWorker" in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map((reg) => reg.unregister()));
+          }
+          if ("caches" in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map((key) => caches.delete(key)));
+          }
+          statusEl.textContent = "清理完成，正在刷新...";
+          setTimeout(() => {
+            window.location.href = `index.html?fresh=${Date.now()}`;
+          }, 300);
+        } catch (err) {
+          statusEl.textContent = "清理失败，请重试";
+        }
+      }
+      btn.addEventListener("click", clearAll);
+      clearAll();
+    </script>
+  </body>
+</html>
