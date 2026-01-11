@@ -1,3 +1,5 @@
+(() => {
+"use strict";
 ﻿const WORDSEARCH_ROOT = document.getElementById("wordsearchView") || document;
 const wsQuery = (selector) => WORDSEARCH_ROOT.querySelector(selector);
 
@@ -852,3 +854,5 @@ if (!document.getElementById("homeView")) {
   });
 }
 
+
+})();

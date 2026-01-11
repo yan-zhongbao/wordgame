@@ -1,3 +1,5 @@
+(() => {
+"use strict";
 const PRACTICE_ROOT = document.getElementById("practiceView") || document;
 const practiceQuery = (selector) => PRACTICE_ROOT.querySelector(selector);
 
@@ -2713,3 +2715,5 @@ window.addEventListener("pageshow", (event) => {
     bootApp();
   }
 });
+
+})();

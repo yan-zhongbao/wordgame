@@ -1,3 +1,5 @@
+(() => {
+"use strict";
 const SNAKE_ROOT = document.getElementById("snakeView") || document;
 const snakeQuery = (selector) => SNAKE_ROOT.querySelector(selector);
 
@@ -1017,3 +1019,5 @@ if (!document.getElementById("homeView")) {
     startDay(getDayFromQuery());
   });
 }
+
+})();

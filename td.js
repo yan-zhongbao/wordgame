@@ -1,3 +1,5 @@
+(() => {
+"use strict";
 ﻿
 const TD_ROOT = document.getElementById("tdView") || document;
 const tdQuery = (selector) => TD_ROOT.querySelector(selector);
@@ -2686,3 +2688,5 @@ if (!document.getElementById("homeView")) {
     startDay(getDayFromQuery() || 1);
   });
 }
+
+})();

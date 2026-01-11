@@ -1,3 +1,5 @@
+(() => {
+"use strict";
 ﻿const HOME_ROOT = document.getElementById("homeView") || document;
 const homeQuery = (selector) => HOME_ROOT.querySelector(selector);
 
@@ -516,3 +518,5 @@ document.addEventListener("visibilitychange", () => {
     init();
   }
 });
+
+})();
