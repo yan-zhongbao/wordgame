@@ -1,6 +1,6 @@
 (() => {
 "use strict";
-﻿
+
 const TD_ROOT = document.getElementById("tdView") || document;
 const tdQuery = (selector) => TD_ROOT.querySelector(selector);
 const tdQueryAll = (selector) => Array.from(TD_ROOT.querySelectorAll(selector));

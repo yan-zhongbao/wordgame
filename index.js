@@ -1,6 +1,6 @@
 (() => {
 "use strict";
-﻿const HOME_ROOT = document.getElementById("homeView") || document;
+const HOME_ROOT = document.getElementById("homeView") || document;
 const homeQuery = (selector) => HOME_ROOT.querySelector(selector);
 
 const UI = {

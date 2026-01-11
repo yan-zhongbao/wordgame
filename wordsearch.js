@@ -1,6 +1,6 @@
 (() => {
 "use strict";
-﻿const WORDSEARCH_ROOT = document.getElementById("wordsearchView") || document;
+const WORDSEARCH_ROOT = document.getElementById("wordsearchView") || document;
 const wsQuery = (selector) => WORDSEARCH_ROOT.querySelector(selector);
 
 const UI = {

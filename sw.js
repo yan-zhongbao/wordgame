@@ -1,4 +1,4 @@
-const CACHE_NAME = "wordgame-v77";
+const CACHE_NAME = "wordgame-v78";
 const AUDIO_CACHE = "wordgame-audio";
 const CORE_ASSETS = [
   "./",
@@ -181,10 +181,20 @@ self.addEventListener("fetch", (event) => {
     (async () => {
       const cache = await caches.open(CACHE_NAME);
       const cacheOverride = request.cache === "no-store";
-      const cached = cacheOverride ? null : await cache.match(request);
       const url = new URL(request.url);
       const isWords = url.pathname.endsWith("/words.json");
       const isAudio = url.pathname.includes("/audio/");
+      const isHtml =
+        request.mode === "navigate" ||
+        url.pathname.endsWith(".html") ||
+        url.pathname === "/" ||
+        url.pathname.endsWith("/index.html");
+      const isScript =
+        request.destination === "script" || url.pathname.endsWith(".js");
+      const isStyle =
+        request.destination === "style" || url.pathname.endsWith(".css");
+      const useNetworkFirst = isHtml || isScript || isStyle || cacheOverride;
+      const cached = cacheOverride ? null : await cache.match(request);
       if (isWords) {
         try {
           const response = await fetch(request);
@@ -213,19 +223,31 @@ self.addEventListener("fetch", (event) => {
           return audioCached || Response.error();
         }
       }
+      if (useNetworkFirst) {
+        try {
+          const response = await fetch(request);
+          if (response && response.ok) {
+            await cache.put(request, response.clone());
+            return response;
+          }
+          if (cached) {
+            return cached;
+          }
+          return response;
+        } catch (err) {
+          return cached || Response.error();
+        }
+      }
       if (cached) {
         return cached;
       }
       try {
         const response = await fetch(request);
+        if (response && response.ok) {
+          await cache.put(request, response.clone());
+        }
         return response;
       } catch (err) {
-        if (cacheOverride) {
-          const fallback = await cache.match(request);
-          if (fallback) {
-            return fallback;
-          }
-        }
         return cached || Response.error();
       }
     })()
