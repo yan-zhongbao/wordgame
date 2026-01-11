@@ -2572,9 +2572,15 @@ function showNotice(message) {
   showOverlay();
 }
 
-UI.primaryBtn.addEventListener("click", () => {
+UI.primaryBtn.addEventListener("click", async () => {
   unlockAudioOnce("primary");
-  showStartScreen(getInitialDay());
+  await ensureReady();
+  const day = getDayFromSession() ?? getInitialDay();
+  if (Number.isFinite(day)) {
+    Engine.start(day);
+  } else {
+    showStartScreen(getInitialDay());
+  }
 });
 
 UI.audioBtn.addEventListener("click", async () => {
