@@ -1503,6 +1503,28 @@ const Engine = {
     currentModeType: "",
     currentWrongRecorded: false,
     transitioning: false,
+    transitionTimer: null,
+  },
+
+  startTransitionGuard(label) {
+    this.clearTransitionGuard();
+    this.state.transitionTimer = window.setTimeout(() => {
+      Debug.log("error", "transition timeout", {
+        label,
+        stage: this.state.stage,
+        day: this.state.day,
+      });
+      this.state.transitioning = false;
+      this.state.transitionTimer = null;
+      this.nextTurn();
+    }, 1500);
+  },
+
+  clearTransitionGuard() {
+    if (this.state.transitionTimer) {
+      clearTimeout(this.state.transitionTimer);
+      this.state.transitionTimer = null;
+    }
   },
 
   start(day) {
@@ -1543,6 +1565,7 @@ const Engine = {
       currentModeType: "",
       currentWrongRecorded: false,
       transitioning: false,
+      transitionTimer: null,
     };
     UI.dayLabel.textContent = String(safeDay);
     UI.primaryBtn.textContent = "重新开始";
@@ -1588,6 +1611,7 @@ const Engine = {
       currentModeType: "",
       currentWrongRecorded: false,
       transitioning: false,
+      transitionTimer: null,
     };
     UI.dayLabel.textContent = String(safeDay);
     UI.primaryBtn.textContent = "重新开始";
@@ -1596,6 +1620,10 @@ const Engine = {
   },
 
   nextTurn() {
+    Debug.log("info", "nextTurn", {
+      stage: this.state.stage,
+      queue: this.state.stageQueue.length,
+    });
     while (this.state.stageQueue.length === 0) {
       if (this.state.stageIndex >= this.state.stageOrder.length - 1) {
         this.finish();
@@ -1609,6 +1637,10 @@ const Engine = {
       this.state.stageAnswered = 0;
     }
     const entry = this.state.stageQueue[0];
+    Debug.log("info", "render entry", {
+      stage: this.state.stage,
+      word: entry && entry.item ? entry.item.en : entry && entry.en,
+    });
     this.renderQuestion(entry);
   },
 
@@ -1619,7 +1651,9 @@ const Engine = {
     this.state.currentQuestion = null;
     this.state.spelling = null;
     this.state.transitioning = false;
+    this.clearTransitionGuard();
     UI.prompt.classList.remove("missing-display");
+    Debug.log("info", "renderQuestion", { stage, word: item ? item.en : "" });
     if (!preserveWrong) {
       this.state.currentWrongRecorded = false;
     }
@@ -2051,6 +2085,10 @@ const Engine = {
     if (this.state.transitioning) {
       return;
     }
+    Debug.log("info", "handleChoiceAnswer", {
+      stage: this.state.stage,
+      correct: isCorrect,
+    });
     try {
       const buttons = Array.from(UI.options.querySelectorAll(".option"));
       for (const btn of buttons) {
@@ -2088,12 +2126,14 @@ const Engine = {
       return;
     }
     this.state.transitioning = true;
+    this.startTransitionGuard("advanceChoice");
+    Debug.log("info", "advanceChoice", { stage, correct: isCorrect });
     try {
-    if (isCorrect) {
-      this.state.score += 1;
-      if (stage === Stage.REVIEW) {
-        Review.recordCorrect(item);
-      }
+      if (isCorrect) {
+        this.state.score += 1;
+        if (stage === Stage.REVIEW) {
+          Review.recordCorrect(item);
+        }
       this.state.stageCleared += 1;
       this.updateProgress();
       addCoins(COIN_REWARD);
@@ -2119,6 +2159,7 @@ const Engine = {
       this.nextTurn();
     } finally {
       this.state.transitioning = false;
+      this.clearTransitionGuard();
     }
   },
 
@@ -2171,6 +2212,8 @@ const Engine = {
       return;
     }
     this.state.transitioning = true;
+    this.startTransitionGuard("resolveSpellTask");
+    Debug.log("info", "resolveSpellTask", { mode: task.modeType, correct: isCorrect });
     SpellStats.record(task.item, isCorrect, task.modeType);
     if (!isCorrect && task.isPrimary && !task.remedialScheduled) {
       task.remedialScheduled = true;
@@ -2210,6 +2253,7 @@ const Engine = {
       this.nextTurn();
     } finally {
       this.state.transitioning = false;
+      this.clearTransitionGuard();
     }
   },
 
