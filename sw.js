@@ -1,4 +1,4 @@
-const CACHE_NAME = "wordgame-v73";
+const CACHE_NAME = "wordgame-v74";
 const AUDIO_CACHE = "wordgame-audio";
 const CORE_ASSETS = [
   "./",

@@ -236,6 +236,7 @@ let audioUnlockBound = false;
 let bootInFlight = false;
 let audioUnlockInFlight = false;
 let audioUnlocked = false;
+let unlockAudioElement = null;
 
 const COIN_REWARD = 5;
 
@@ -308,18 +309,18 @@ async function unlockAudioOnce(source = "unknown") {
   audioUnlockInFlight = true;
   Debug.log("info", "unlockAudio start", { source });
   try {
-    AudioPlayer.ensure();
-    if (AudioPlayer.audio) {
-      AudioPlayer.audio.src = SILENT_AUDIO;
-      AudioPlayer.audio.volume = 0;
-      const playPromise = AudioPlayer.audio.play();
-      if (playPromise) {
-        await playPromise;
-      }
-      AudioPlayer.audio.pause();
-      AudioPlayer.audio.currentTime = 0;
-      AudioPlayer.audio.volume = 1;
+    if (!unlockAudioElement) {
+      unlockAudioElement = new Audio(SILENT_AUDIO);
+      unlockAudioElement.preload = "auto";
     }
+    unlockAudioElement.muted = true;
+    unlockAudioElement.volume = 0;
+    const playPromise = unlockAudioElement.play();
+    if (playPromise) {
+      await playPromise;
+    }
+    unlockAudioElement.pause();
+    unlockAudioElement.currentTime = 0;
     AudioPlayer.unlocked = true;
     AudioPlayer.autoBlocked = false;
     audioUnlocked = true;
@@ -327,6 +328,12 @@ async function unlockAudioOnce(source = "unknown") {
     Debug.log("info", "unlockAudio done");
     return true;
   } catch (err) {
+    if (unlockAudioElement) {
+      unlockAudioElement.muted = true;
+      unlockAudioElement.volume = 0;
+      unlockAudioElement.pause();
+      unlockAudioElement.currentTime = 0;
+    }
     Debug.log("warn", "unlockAudio failed", { error: err.message || err });
     return false;
   } finally {
@@ -481,8 +488,14 @@ const AudioPlayer = {
     if (!this.audio) {
       this.audio = new Audio();
       this.audio.preload = "auto";
+      this.audio.muted = false;
+      this.audio.volume = 1;
       this.audio.addEventListener("play", () => {
-        Debug.log("info", "audio play", { src: this.audio.src });
+      Debug.log("info", "audio play", {
+        src: this.audio.src,
+        volume: this.audio.volume,
+        muted: this.audio.muted,
+      });
       });
       this.audio.addEventListener("ended", () => {
         Debug.log("info", "audio ended", { src: this.audio.src });
@@ -531,6 +544,8 @@ const AudioPlayer = {
     this.ensure();
     try {
       Debug.log("info", "audio play request", { src, auto });
+      this.audio.muted = false;
+      this.audio.volume = 1;
       this.audio.onerror = () => {
         if (!auto) {
           flashHint("音频播放失败");
@@ -545,9 +560,15 @@ const AudioPlayer = {
       this.unlocked = true;
       this.autoBlocked = false;
     } catch (err) {
-      Debug.log("warn", "audio play failed", { src, error: err.message || err });
+      Debug.log("warn", "audio play failed", {
+        src,
+        error: err.message || err,
+        name: err && err.name ? err.name : "",
+      });
       if (auto && err && err.name === "NotAllowedError") {
         this.autoBlocked = true;
+        this.unlocked = false;
+        audioUnlocked = false;
         flashHint("浏览器阻止自动播放，请点击喇叭按钮");
       }
     }
