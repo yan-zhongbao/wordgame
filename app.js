@@ -246,6 +246,7 @@ let hintToken = 0;
 let swRegistration = null;
 let coinBalance = 0;
 let audioUnlockBound = false;
+let audioUnlockHandler = null;
 let bootInFlight = false;
 let bootPromise = null;
 let appReady = false;
@@ -298,23 +299,28 @@ function speakEnglish(text) {
   window.speechSynthesis.speak(utterance);
 }
 
-function bindAudioUnlock() {
-  if (audioUnlockBound) {
+function bindAudioUnlock(force = false) {
+  if (audioUnlockBound && !force) {
     return;
   }
   audioUnlockBound = true;
-  const handler = async () => {
+  if (audioUnlockHandler) {
+    window.removeEventListener("pointerdown", audioUnlockHandler, true);
+    window.removeEventListener("touchstart", audioUnlockHandler, true);
+  }
+  audioUnlockHandler = async () => {
     const success = await unlockAudioOnce("gesture");
     if (success) {
       if (Engine.state.currentItem) {
         AudioPlayer.playForItem(Engine.state.currentItem, { auto: true });
       }
-      window.removeEventListener("pointerdown", handler, true);
-      window.removeEventListener("touchstart", handler, true);
+      window.removeEventListener("pointerdown", audioUnlockHandler, true);
+      window.removeEventListener("touchstart", audioUnlockHandler, true);
+      audioUnlockHandler = null;
     }
   };
-  window.addEventListener("pointerdown", handler, true);
-  window.addEventListener("touchstart", handler, true);
+  window.addEventListener("pointerdown", audioUnlockHandler, true);
+  window.addEventListener("touchstart", audioUnlockHandler, true);
 }
 
 async function unlockAudioOnce(source = "unknown") {
@@ -327,6 +333,8 @@ async function unlockAudioOnce(source = "unknown") {
     if (!unlockAudioElement) {
       unlockAudioElement = new Audio(SILENT_AUDIO);
       unlockAudioElement.preload = "auto";
+      unlockAudioElement.playsInline = true;
+      unlockAudioElement.setAttribute("playsinline", "");
     }
     unlockAudioElement.muted = true;
     unlockAudioElement.volume = 0;
@@ -351,10 +359,34 @@ async function unlockAudioOnce(source = "unknown") {
       unlockAudioElement.currentTime = 0;
     }
     Debug.log("warn", "unlockAudio failed", { error: err.message || err });
+    resetAudioUnlock("unlock-failed");
     return false;
   } finally {
     audioUnlockInFlight = false;
   }
+}
+
+function isAudioBlockedError(err) {
+  if (!err) {
+    return false;
+  }
+  const name = err.name || "";
+  const message = String(err.message || "").toLowerCase();
+  return (
+    name === "NotAllowedError" ||
+    name === "AbortError" ||
+    message.includes("not allowed") ||
+    message.includes("denied") ||
+    message.includes("audio device")
+  );
+}
+
+function resetAudioUnlock(reason) {
+  audioUnlocked = false;
+  AudioPlayer.unlocked = false;
+  AudioPlayer.autoBlocked = true;
+  Debug.log("warn", "audio unlock reset", { reason });
+  bindAudioUnlock(true);
 }
 
 function flashHint(message, duration = 1200) {
@@ -502,6 +534,13 @@ function isStandaloneMode() {
   );
 }
 
+function handleAudioResume(reason) {
+  if (!isStandaloneMode()) {
+    return;
+  }
+  resetAudioUnlock(reason);
+}
+
 const AudioGate = {
   init() {
     if (!UI.audioGate || !UI.audioGateEnable || !UI.audioGateSkip) {
@@ -554,6 +593,8 @@ const AudioPlayer = {
       this.audio.preload = "auto";
       this.audio.muted = false;
       this.audio.volume = 1;
+      this.audio.playsInline = true;
+      this.audio.setAttribute("playsinline", "");
       this.audio.addEventListener("play", () => {
       Debug.log("info", "audio play", {
         src: this.audio.src,
@@ -629,6 +670,9 @@ const AudioPlayer = {
         error: err.message || err,
         name: err && err.name ? err.name : "",
       });
+      if (isAudioBlockedError(err)) {
+        resetAudioUnlock("play-failed");
+      }
       if (auto && err && err.name === "NotAllowedError") {
         this.autoBlocked = true;
         this.unlocked = false;
@@ -670,6 +714,9 @@ const SoundFX = {
       }
     } catch (err) {
       Debug.log("warn", "soundfx unlock failed", { error: err.message || err });
+      if (isAudioBlockedError(err)) {
+        resetAudioUnlock("soundfx-unlock-failed");
+      }
     }
   },
 
@@ -2723,14 +2770,22 @@ window.PracticeApp = {
 document.addEventListener("DOMContentLoaded", bootApp);
 window.addEventListener("pageshow", (event) => {
   if (event.persisted) {
+    handleAudioResume("pageshow");
     bootApp();
     return;
   }
+  handleAudioResume("pageshow");
   const dayFromQuery = getDayFromQuery();
   const dayFromSession = dayFromQuery ? null : getDayFromSession();
   const targetDay = dayFromQuery ?? dayFromSession;
   if (targetDay && Engine.state.day !== targetDay) {
     bootApp();
+  }
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    handleAudioResume("visibility");
   }
 });
 
