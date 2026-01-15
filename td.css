@@ -1066,3 +1066,105 @@ button:active {
     top: 60%;
   }
 }
+
+@media (max-width: 640px) and (orientation: portrait) {
+  body {
+    touch-action: manipulation;
+  }
+
+  .topbar {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .brand-title {
+    font-size: 18px;
+  }
+
+  .brand-subtitle {
+    font-size: 12px;
+  }
+
+  .status {
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  .actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .layout {
+    gap: 12px;
+    padding: 0 12px 12px;
+  }
+
+  #field {
+    padding: 10px;
+    min-height: 0;
+  }
+
+  .bag-column {
+    max-width: none;
+  }
+
+  .bag-tools {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .tool-btn {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .seed-token {
+    min-height: 36px;
+  }
+
+  .seed-label {
+    font-size: 11px;
+  }
+
+  .ammo-area {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .letter-queue {
+    max-width: 120px;
+    gap: 6px;
+  }
+
+  .letter-bubble {
+    max-width: 58px;
+    min-width: 44px;
+    font-size: 18px;
+  }
+
+  .message {
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  .attack-guide {
+    font-size: 12px;
+  }
+
+  .overlay-card {
+    width: min(320px, 92vw);
+    padding: 18px;
+  }
+
+  .overlay-title {
+    font-size: 20px;
+  }
+
+  .overlay-body {
+    font-size: 14px;
+  }
+}

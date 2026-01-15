@@ -126,6 +126,36 @@ const SESSION_KEYS = {
 
 let swRegistration = null;
 let initInFlight = false;
+let lastTouchEnd = 0;
+let touchMoved = false;
+
+function preventDoubleTapZoom() {
+  document.addEventListener(
+    "touchstart",
+    () => {
+      touchMoved = false;
+    },
+    { passive: true }
+  );
+  document.addEventListener(
+    "touchmove",
+    () => {
+      touchMoved = true;
+    },
+    { passive: true }
+  );
+  document.addEventListener(
+    "touchend",
+    (event) => {
+      const now = Date.now();
+      if (!touchMoved && now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    },
+    { passive: false }
+  );
+}
 
 function loadCoins() {
   const raw = localStorage.getItem(STORAGE_KEYS.coins);
@@ -503,6 +533,7 @@ async function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+preventDoubleTapZoom();
 window.addEventListener("pageshow", (event) => {
   if (event.persisted || (UI.dayList && UI.dayList.children.length === 0)) {
     init();

@@ -2,7 +2,10 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
     <title>Word Quest · 关卡选择</title>
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#f0822e" />
@@ -36,6 +39,13 @@
 
       * {
         box-sizing: border-box;
+      }
+
+      html,
+      body {
+        touch-action: manipulation;
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
       }
 
       .view {
@@ -367,6 +377,59 @@
 
         .start-btn {
           width: 100%;
+        }
+      }
+
+      @media (max-width: 640px) and (orientation: portrait) {
+        .app {
+          padding: 18px 14px 20px;
+          gap: 14px;
+        }
+
+        .topbar {
+          gap: 10px;
+        }
+
+        .brand .title {
+          font-size: 22px;
+        }
+
+        .brand .subtitle {
+          font-size: 12px;
+          letter-spacing: 1px;
+        }
+
+        .top-actions {
+          width: 100%;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        .card {
+          padding: 16px;
+          border-radius: 20px;
+        }
+
+        .day-row {
+          gap: 10px;
+        }
+
+        .day-title {
+          font-size: 15px;
+        }
+
+        .day-meta {
+          font-size: 13px;
+        }
+
+        .day-actions {
+          justify-content: flex-start;
+        }
+
+        .game-link {
+          width: 36px;
+          height: 36px;
         }
       }
     </style>

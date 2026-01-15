@@ -667,3 +667,94 @@
           align-items: flex-start;
         }
       }
+
+      @media (max-width: 640px) and (orientation: portrait) {
+        .app {
+          padding: 16px 14px 18px;
+          gap: 14px;
+        }
+
+        .topbar {
+          gap: 12px;
+        }
+
+        .brand .title {
+          font-size: 22px;
+        }
+
+        .brand .subtitle {
+          font-size: 12px;
+          letter-spacing: 1px;
+        }
+
+        .day-info {
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .progress {
+          width: 120px;
+        }
+
+        .stars {
+          font-size: 16px;
+        }
+
+        .coin-block,
+        .score {
+          font-size: 13px;
+        }
+
+        .audio-btn {
+          width: 40px;
+          height: 40px;
+        }
+
+        .card {
+          padding: 16px;
+          border-radius: 20px;
+        }
+
+        .prompt {
+          font-size: clamp(22px, 7vw, 30px);
+        }
+
+        .prompt-zh {
+          font-size: clamp(20px, 6vw, 28px);
+        }
+
+        .prompt-en {
+          font-size: clamp(18px, 5.6vw, 24px);
+        }
+
+        .options {
+          gap: 10px;
+        }
+
+        .option {
+          padding: 14px 12px;
+          font-size: 16px;
+        }
+
+        .tiles {
+          gap: 8px;
+        }
+
+        .tile {
+          padding: 10px 12px;
+          font-size: 15px;
+        }
+
+        .panel {
+          padding: 20px;
+          border-radius: 20px;
+        }
+
+        .panel-title {
+          font-size: 22px;
+        }
+
+        .day-grid {
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+      }

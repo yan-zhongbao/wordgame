@@ -329,3 +329,62 @@ button {
     letter-spacing: 2px;
   }
 }
+
+@media (max-width: 640px) and (orientation: portrait) {
+  body {
+    touch-action: manipulation;
+  }
+
+  .topbar {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .title-main {
+    font-size: 18px;
+  }
+
+  .title-sub {
+    font-size: 12px;
+  }
+
+  .stats {
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  .tools {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tool-btn {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .main {
+    padding: 0 12px 12px;
+  }
+
+  .playfield {
+    min-height: 58vh;
+    border-radius: 16px;
+  }
+
+  .word-display {
+    top: 10px;
+    padding: 8px 12px;
+    border-radius: 14px;
+  }
+
+  .word-zh {
+    font-size: 14px;
+  }
+
+  .word-en {
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+}
