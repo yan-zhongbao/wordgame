@@ -1,4 +1,4 @@
-const CACHE_NAME = "wordgame-v84";
+const CACHE_NAME = "wordgame-v85";
 const AUDIO_CACHE = "wordgame-audio";
 const CORE_ASSETS = [
   "./",
@@ -57,6 +57,8 @@ const CORE_ASSETS = [
   "./audio/td/hit2.wav",
   "./audio/td/hit3.wav",
   "./audio/td/explode.wav",
+  "./audio/td/coin.wav",
+  "./audio/td/firework.wav",
   "./audio/td/voice_fail.mp3",
   "./audio/td/voice_bag_2.mp3",
   "./audio/td/voice_bag_3.mp3",
