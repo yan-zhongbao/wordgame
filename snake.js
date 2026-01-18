@@ -67,6 +67,7 @@ const state = {
   snipeUntil: 0,
   snipeTargetId: null,
   lastTime: 0,
+  loopStarted: false,
 };
 
 const STORAGE_KEYS = {
@@ -888,6 +889,10 @@ function gameLoop(timestamp) {
   if (!state.lastTime) {
     state.lastTime = timestamp;
   }
+  if (!UI.field || !state.head.el) {
+    requestAnimationFrame(gameLoop);
+    return;
+  }
   const delta = (timestamp - state.lastTime) / 1000;
   state.lastTime = timestamp;
   if (!state.completed) {
@@ -898,6 +903,14 @@ function gameLoop(timestamp) {
     checkCollisions();
   }
   updateEffectStatus(timestamp);
+  requestAnimationFrame(gameLoop);
+}
+
+function startLoop() {
+  if (state.loopStarted) {
+    return;
+  }
+  state.loopStarted = true;
   requestAnimationFrame(gameLoop);
 }
 
@@ -978,7 +991,6 @@ function resetScene() {
 async function startDay(dayOverride) {
   if (!state.initialized) {
     bindEvents();
-    requestAnimationFrame(gameLoop);
     state.initialized = true;
   }
   const day = Number.isFinite(dayOverride) ? dayOverride : getDayFromQuery();
@@ -1010,6 +1022,7 @@ async function startDay(dayOverride) {
   setWordSequence(currentWord());
   initBubbles();
   showMessage("拖动蛇头吃字母");
+  startLoop();
 }
 
 window.SnakeApp = { startDay };
