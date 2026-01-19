@@ -255,6 +255,7 @@ let audioUnlocked = false;
 let unlockAudioElement = null;
 
 const COIN_REWARD = 5;
+const SPELL_RETRY_DELAY = 5000;
 
 const SILENT_AUDIO =
   "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
@@ -412,24 +413,27 @@ function escapeHtml(text) {
     .replace(/>/g, "&gt;");
 }
 
-function formatPhraseDisplay(text) {
+function formatPhraseDisplay(text, wrongIndices = null) {
   let html = "";
   const raw = String(text || "");
-  for (const ch of raw) {
+  for (let i = 0; i < raw.length; i += 1) {
+    const ch = raw[i];
+    const markWrong = wrongIndices && wrongIndices.has(i);
     if (ch === " ") {
       html += '<span class="phrase-gap"></span>';
     } else if (ch === "/") {
       html += '<span class="phrase-slash">/</span>';
     } else {
-      html += escapeHtml(ch);
+      const safe = escapeHtml(ch);
+      html += markWrong ? `<span class="spell-wrong-char">${safe}</span>` : safe;
     }
   }
   return html;
 }
 
-function renderSpellPrompt(zh, display) {
+function renderSpellPrompt(zh, display, wrongIndices = null) {
   const zhText = zh || "";
-  const displayHtml = formatPhraseDisplay(display || "");
+  const displayHtml = formatPhraseDisplay(display || "", wrongIndices);
   if (!displayHtml) {
     setPromptText(zhText);
     return;
@@ -1642,7 +1646,7 @@ const Engine = {
     transitionTimer: null,
   },
 
-  startTransitionGuard(label) {
+  startTransitionGuard(label, delayMs = 1500) {
     this.clearTransitionGuard();
     this.state.transitionTimer = window.setTimeout(() => {
       Debug.log("error", "transition timeout", {
@@ -1653,7 +1657,7 @@ const Engine = {
       this.state.transitioning = false;
       this.state.transitionTimer = null;
       this.nextTurn();
-    }, 1500);
+    }, delayMs);
   },
 
   clearTransitionGuard() {
@@ -1688,6 +1692,8 @@ const Engine = {
       queues,
       spellCycles: new Map(),
       flashToken: 0,
+      spellRetryToken: 0,
+      spellRetryTimer: null,
       errors: 0,
       score: 0,
       stageTotal: queues[stage].length,
@@ -1734,6 +1740,8 @@ const Engine = {
       queues: { [Stage.SPELL]: reviewTasks },
       spellCycles: new Map(),
       flashToken: 0,
+      spellRetryToken: 0,
+      spellRetryTimer: null,
       errors: 0,
       score: 0,
       stageTotal: reviewTasks.length,
@@ -1788,6 +1796,13 @@ const Engine = {
     this.state.spelling = null;
     this.state.transitioning = false;
     this.clearTransitionGuard();
+    if (this.state.spellRetryTimer) {
+      clearTimeout(this.state.spellRetryTimer);
+      this.state.spellRetryTimer = null;
+    }
+    if (typeof this.state.spellRetryToken === "number") {
+      this.state.spellRetryToken += 1;
+    }
     UI.prompt.classList.remove("missing-display");
     Debug.log("info", "renderQuestion", { stage, word: item ? item.en : "" });
     if (!preserveWrong) {
@@ -2029,6 +2044,87 @@ const Engine = {
     this.updateSpellingSlots();
   },
 
+  disableSpellInputs() {
+    UI.options.querySelectorAll("button").forEach((button) => {
+      button.disabled = true;
+    });
+  },
+
+  markSpellWrong(task) {
+    this.disableSpellInputs();
+    const mode = this.state.spellMode;
+    const question = this.state.currentQuestion;
+    if (!mode || !question) {
+      return;
+    }
+    if (mode.modeType === "missing_letter") {
+      const displayText = mode.filled.join("");
+      const template = task.item && task.item.en ? task.item.en.toLowerCase() : displayText;
+      const templateIndices = [];
+      for (let i = 0; i < template.length; i += 1) {
+        if (/[a-z]/i.test(template[i])) {
+          templateIndices.push(i);
+        }
+      }
+      const targetLetters = String(question.target || "").split("");
+      const expected = displayText.split("");
+      templateIndices.forEach((pos, index) => {
+        if (targetLetters[index]) {
+          expected[pos] = targetLetters[index];
+        }
+      });
+      const wrongIndices = new Set();
+      for (let i = 0; i < expected.length; i += 1) {
+        if (!/[a-z]/i.test(expected[i])) {
+          continue;
+        }
+        if (displayText[i] && displayText[i] !== expected[i]) {
+          wrongIndices.add(i);
+        }
+      }
+      renderSpellPrompt(mode.promptZh || "", displayText, wrongIndices);
+      return;
+    }
+    if (
+      mode.modeType === "phoneme_select" ||
+      mode.modeType === "letter_order" ||
+      mode.modeType === FLASH_MODE
+    ) {
+      const spelling = this.state.spelling;
+      if (!spelling) {
+        return;
+      }
+      spelling.wrongIndices = [];
+      spelling.selected.forEach((tileId, index) => {
+        if (tileId === undefined) {
+          return;
+        }
+        const picked = spelling.tiles[tileId];
+        const expected = spelling.chunks[index];
+        if (picked !== expected) {
+          spelling.wrongIndices.push(index);
+        }
+      });
+      this.updateSpellingSlots();
+    }
+  },
+
+  scheduleSpellRetry(task) {
+    if (this.state.spellRetryTimer) {
+      clearTimeout(this.state.spellRetryTimer);
+      this.state.spellRetryTimer = null;
+    }
+    const token = (this.state.spellRetryToken || 0) + 1;
+    this.state.spellRetryToken = token;
+    this.state.spellRetryTimer = window.setTimeout(() => {
+      if (this.state.spellRetryToken !== token) {
+        return;
+      }
+      this.state.spellRetryTimer = null;
+      this.renderQuestion(task, { preserveWrong: true });
+    }, SPELL_RETRY_DELAY);
+  },
+
   async handleMissingLetterPick(letter) {
     unlockAudioOnce("spell-pick");
     if (this.state.transitioning) {
@@ -2186,6 +2282,9 @@ const Engine = {
       } else {
         slot.textContent = spelling.tiles[tileId];
         slot.addEventListener("click", () => this.removeSpellingTile(index));
+        if (Array.isArray(spelling.wrongIndices) && spelling.wrongIndices.includes(index)) {
+          slot.classList.add("wrong");
+        }
       }
       spelling.slotsEl.appendChild(slot);
     });
@@ -2348,7 +2447,8 @@ const Engine = {
       return;
     }
     this.state.transitioning = true;
-    this.startTransitionGuard("resolveSpellTask");
+    const guardDelay = isCorrect ? 1500 : SPELL_RETRY_DELAY + 1000;
+    this.startTransitionGuard("resolveSpellTask", guardDelay);
     Debug.log("info", "resolveSpellTask", { mode: task.modeType, correct: isCorrect });
     SpellStats.record(task.item, isCorrect, task.modeType);
     if (!isCorrect && task.isPrimary && !task.remedialScheduled) {
@@ -2360,6 +2460,7 @@ const Engine = {
       }
     }
 
+    let keepTransition = !isCorrect;
     try {
       if (isCorrect) {
         this.state.score += 1;
@@ -2382,14 +2483,18 @@ const Engine = {
       this.updateProgress();
       Debug.log("info", "spell wrong", { mode: task.modeType });
       SoundFX.playError();
-      this.renderQuestion(task, { preserveWrong: true });
+      this.markSpellWrong(task);
+      this.scheduleSpellRetry(task);
     } catch (err) {
       Debug.log("error", "resolveSpellTask failed", { error: err.message || err });
+      keepTransition = false;
       flashHint("发生错误，已继续下一题");
       this.nextTurn();
     } finally {
-      this.state.transitioning = false;
-      this.clearTransitionGuard();
+      if (!keepTransition) {
+        this.state.transitioning = false;
+        this.clearTransitionGuard();
+      }
     }
   },
 

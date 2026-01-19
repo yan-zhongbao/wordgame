@@ -360,6 +360,17 @@
         border: 1px dashed rgba(52, 41, 28, 0.18);
       }
 
+      .slot.wrong {
+        border: 2px solid #c6483c;
+        color: #c6483c;
+        background: #fff4f2;
+      }
+
+      .spell-wrong-char {
+        color: #c6483c;
+        font-weight: 700;
+      }
+
       .slot-gap {
         width: 24px;
         height: 32px;
