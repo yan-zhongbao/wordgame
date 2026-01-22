@@ -177,11 +177,19 @@ const Storage = {
   },
 
   save(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (err) {
+      // ignore storage errors
+    }
   },
 
   remove(key) {
-    localStorage.removeItem(key);
+    try {
+      localStorage.removeItem(key);
+    } catch (err) {
+      // ignore storage errors
+    }
   },
 };
 
@@ -2864,10 +2872,30 @@ function ensureReady() {
 window.PracticeApp = {
   async startDay(day) {
     await ensureReady();
-    if (Number.isFinite(day)) {
-      Engine.start(day);
-    } else {
+    const targetDay = Number.isFinite(day)
+      ? Math.floor(day)
+      : getDayFromSession() ?? getLastDay();
+    if (!Number.isFinite(targetDay)) {
       showStartScreen(getInitialDay());
+      return;
+    }
+    Engine.start(targetDay);
+    if (
+      Engine.state.day !== targetDay ||
+      !Engine.state.stageQueue ||
+      Engine.state.stageQueue.length === 0
+    ) {
+      Debug.log("warn", "startDay retry", {
+        targetDay,
+        actualDay: Engine.state.day,
+        queue: Engine.state.stageQueue ? Engine.state.stageQueue.length : 0,
+      });
+      try {
+        await Data.load({ noCache: true, cacheBust: true });
+      } catch (err) {
+        Debug.log("warn", "startDay reload failed", { error: err.message || err });
+      }
+      Engine.start(targetDay);
     }
   },
 };
