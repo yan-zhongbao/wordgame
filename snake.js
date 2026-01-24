@@ -68,6 +68,9 @@ const state = {
   snipeTargetId: null,
   lastTime: 0,
   loopStarted: false,
+  loopId: null,
+  active: false,
+  handlers: null,
 };
 
 const STORAGE_KEYS = {
@@ -156,6 +159,13 @@ function showMessage(text) {
   if (UI.message) {
     UI.message.textContent = text;
   }
+}
+
+function confirmExit() {
+  if (window.AppConfirm) {
+    return window.AppConfirm("确定退出当前关卡？退出将回到主页。");
+  }
+  return Promise.resolve(window.confirm("确定退出当前关卡？退出将回到主页。"));
 }
 
 function vibrate(pattern) {
@@ -886,11 +896,14 @@ function layoutFinalSnake() {
 }
 
 function gameLoop(timestamp) {
+  if (!state.loopStarted) {
+    return;
+  }
   if (!state.lastTime) {
     state.lastTime = timestamp;
   }
   if (!UI.field || !state.head.el) {
-    requestAnimationFrame(gameLoop);
+    state.loopId = requestAnimationFrame(gameLoop);
     return;
   }
   const delta = (timestamp - state.lastTime) / 1000;
@@ -903,7 +916,7 @@ function gameLoop(timestamp) {
     checkCollisions();
   }
   updateEffectStatus(timestamp);
-  requestAnimationFrame(gameLoop);
+  state.loopId = requestAnimationFrame(gameLoop);
 }
 
 function startLoop() {
@@ -911,7 +924,18 @@ function startLoop() {
     return;
   }
   state.loopStarted = true;
-  requestAnimationFrame(gameLoop);
+  state.loopId = requestAnimationFrame(gameLoop);
+}
+
+function stopLoop() {
+  if (!state.loopStarted) {
+    return;
+  }
+  state.loopStarted = false;
+  if (state.loopId !== null) {
+    cancelAnimationFrame(state.loopId);
+    state.loopId = null;
+  }
 }
 
 function setTarget(event) {
@@ -930,36 +954,77 @@ function bindEvents() {
     return;
   }
   state.eventsBound = true;
-  UI.backBtn.addEventListener("click", () => {
-    if (window.AppNav && typeof window.AppNav.show === "function") {
-      window.AppNav.show("home");
-    } else {
-      window.location.href = "index.html";
-    }
-  });
-  UI.freezeBtn?.addEventListener("click", () => {
-    startFreeze();
-  });
-  UI.speedBtn?.addEventListener("click", () => {
-    startSpeedBoost();
-  });
-  UI.aimBtn?.addEventListener("click", () => {
-    startSnipe();
-  });
-  UI.field.addEventListener("pointerdown", (event) => {
-    state.dragging = true;
-    AudioFX.unlock();
-    setTarget(event);
-  });
-  window.addEventListener("pointermove", (event) => {
-    if (!state.dragging) {
-      return;
-    }
-    setTarget(event);
-  });
-  window.addEventListener("pointerup", () => {
-    state.dragging = false;
-  });
+  const handlers = {
+    back: async () => {
+      if (!(await confirmExit())) {
+        return;
+      }
+      if (window.AppNav && typeof window.AppNav.show === "function") {
+        window.AppNav.show("home");
+      } else {
+        window.location.href = "index.html";
+      }
+    },
+    freeze: () => {
+      if (!state.active) {
+        return;
+      }
+      startFreeze();
+    },
+    speed: () => {
+      if (!state.active) {
+        return;
+      }
+      startSpeedBoost();
+    },
+    aim: () => {
+      if (!state.active) {
+        return;
+      }
+      startSnipe();
+    },
+    pointerDown: (event) => {
+      if (!state.active) {
+        return;
+      }
+      state.dragging = true;
+      AudioFX.unlock();
+      setTarget(event);
+    },
+    pointerMove: (event) => {
+      if (!state.active || !state.dragging) {
+        return;
+      }
+      setTarget(event);
+    },
+    pointerUp: () => {
+      state.dragging = false;
+    },
+  };
+  state.handlers = handlers;
+  UI.backBtn.addEventListener("click", handlers.back);
+  UI.freezeBtn?.addEventListener("click", handlers.freeze);
+  UI.speedBtn?.addEventListener("click", handlers.speed);
+  UI.aimBtn?.addEventListener("click", handlers.aim);
+  UI.field.addEventListener("pointerdown", handlers.pointerDown);
+  window.addEventListener("pointermove", handlers.pointerMove);
+  window.addEventListener("pointerup", handlers.pointerUp);
+}
+
+function unbindEvents() {
+  if (!state.eventsBound || !state.handlers) {
+    return;
+  }
+  const handlers = state.handlers;
+  UI.backBtn.removeEventListener("click", handlers.back);
+  UI.freezeBtn?.removeEventListener("click", handlers.freeze);
+  UI.speedBtn?.removeEventListener("click", handlers.speed);
+  UI.aimBtn?.removeEventListener("click", handlers.aim);
+  UI.field.removeEventListener("pointerdown", handlers.pointerDown);
+  window.removeEventListener("pointermove", handlers.pointerMove);
+  window.removeEventListener("pointerup", handlers.pointerUp);
+  state.handlers = null;
+  state.eventsBound = false;
 }
 
 function resetScene() {
@@ -993,6 +1058,10 @@ async function startDay(dayOverride) {
     bindEvents();
     state.initialized = true;
   }
+  state.active = true;
+  state.dragging = false;
+  stopLoop();
+  state.lastTime = 0;
   const day = Number.isFinite(dayOverride) ? dayOverride : getDayFromQuery();
   state.day = day;
   if (UI.dayValue) {
@@ -1025,7 +1094,24 @@ async function startDay(dayOverride) {
   startLoop();
 }
 
-window.SnakeApp = { startDay };
+function pause() {
+  state.active = false;
+  state.dragging = false;
+  stopLoop();
+}
+
+function destroy() {
+  pause();
+  resetScene();
+  unbindEvents();
+  state.initialized = false;
+}
+
+window.SnakeApp = {
+  startDay,
+  pause,
+  destroy,
+};
 
 if (!document.getElementById("homeView")) {
   document.addEventListener("DOMContentLoaded", () => {

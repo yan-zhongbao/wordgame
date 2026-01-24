@@ -409,6 +409,13 @@ function flashHint(message, duration = 1200) {
   }, duration);
 }
 
+function confirmExit() {
+  if (window.AppConfirm) {
+    return window.AppConfirm("确定退出当前关卡？退出将回到主页。");
+  }
+  return Promise.resolve(window.confirm("确定退出当前关卡？退出将回到主页。"));
+}
+
 function setPromptText(text) {
   UI.prompt.classList.remove("prompt-split");
   UI.prompt.textContent = text || "";
@@ -2777,7 +2784,11 @@ UI.updateBtn?.addEventListener("click", async () => {
   }
 });
 
-UI.backBtn?.addEventListener("click", () => {
+UI.backBtn?.addEventListener("click", async () => {
+  const ok = await confirmExit();
+  if (!ok) {
+    return;
+  }
   if (window.AppNav && typeof window.AppNav.show === "function") {
     window.AppNav.show("home");
   } else {
@@ -2897,6 +2908,24 @@ window.PracticeApp = {
       }
       Engine.start(targetDay);
     }
+  },
+  pause() {
+    Engine.state.transitioning = false;
+    Engine.clearTransitionGuard();
+    if (Engine.state.spellRetryTimer) {
+      clearTimeout(Engine.state.spellRetryTimer);
+      Engine.state.spellRetryTimer = null;
+    }
+    if (typeof Engine.state.spellRetryToken === "number") {
+      Engine.state.spellRetryToken += 1;
+    }
+    Engine.state.flashToken += 1;
+    if (AudioPlayer.audio && !AudioPlayer.audio.paused) {
+      AudioPlayer.audio.pause();
+    }
+  },
+  destroy() {
+    this.pause();
   },
 };
 

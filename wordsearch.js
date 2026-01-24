@@ -64,6 +64,9 @@ const state = {
   speakerLetter: "",
   initialized: false,
   eventsBound: false,
+  active: false,
+  timers: [],
+  handlers: null,
 };
 
 const AudioFX = {
@@ -131,6 +134,13 @@ function showMessage(text) {
   if (UI.message) {
     UI.message.textContent = text;
   }
+}
+
+function confirmExit() {
+  if (window.AppConfirm) {
+    return window.AppConfirm("确定退出当前关卡？退出将回到主页。");
+  }
+  return Promise.resolve(window.confirm("确定退出当前关卡？退出将回到主页。"));
 }
 
 function vibrate(pattern) {
@@ -238,7 +248,7 @@ function launchFireworks() {
       { once: true }
     );
   }
-  window.setTimeout(() => container.remove(), 1500);
+  registerTimer(window.setTimeout(() => container.remove(), 1500), "timeout");
 }
 
 async function handleCompletion() {
@@ -548,6 +558,22 @@ function flashCell(cell) {
   cell.el.classList.add("flash");
 }
 
+function registerTimer(id, type) {
+  state.timers.push({ id, type });
+  return id;
+}
+
+function clearTimers() {
+  state.timers.forEach((timer) => {
+    if (timer.type === "interval") {
+      clearInterval(timer.id);
+    } else {
+      clearTimeout(timer.id);
+    }
+  });
+  state.timers = [];
+}
+
 function useFlashlight() {
   if (!spendCoins(CONFIG.flashCost)) {
     return;
@@ -560,13 +586,16 @@ function useFlashlight() {
   const target = remaining[Math.floor(Math.random() * remaining.length)];
   const cell = state.grid[target.positions[0].row][target.positions[0].col];
   let count = 0;
-  const timer = window.setInterval(() => {
-    flashCell(cell);
-    count += 1;
-    if (count >= CONFIG.flashTimes) {
-      clearInterval(timer);
-    }
-  }, 300);
+  const timer = registerTimer(
+    window.setInterval(() => {
+      flashCell(cell);
+      count += 1;
+      if (count >= CONFIG.flashTimes) {
+        clearInterval(timer);
+      }
+    }, 300),
+    "interval"
+  );
 }
 
 function useSpeaker() {
@@ -600,12 +629,15 @@ function highlightLetter(letter) {
     }
   });
   state.speakerLetter = target;
-  window.setTimeout(() => {
-    state.grid.flat().forEach((cell) => cell.el.classList.remove("announce"));
-    state.speakerActive = false;
-    state.speakerLetter = "";
-    updateCoinUI();
-  }, CONFIG.speakerMs);
+  registerTimer(
+    window.setTimeout(() => {
+      state.grid.flat().forEach((cell) => cell.el.classList.remove("announce"));
+      state.speakerActive = false;
+      state.speakerLetter = "";
+      updateCoinUI();
+    }, CONFIG.speakerMs),
+    "timeout"
+  );
 }
 
 function collectWordCells() {
@@ -677,12 +709,15 @@ function useXray() {
     const [row, col] = key.split("-").map(Number);
     state.grid[row][col].el.classList.add("xray-cell");
   });
-  window.setTimeout(() => {
-    UI.grid.classList.remove("xray");
-    state.xrayActive = false;
-    state.grid.flat().forEach((cell) => cell.el.classList.remove("xray-cell"));
-    updateCoinUI();
-  }, CONFIG.xrayMs);
+  registerTimer(
+    window.setTimeout(() => {
+      UI.grid.classList.remove("xray");
+      state.xrayActive = false;
+      state.grid.flat().forEach((cell) => cell.el.classList.remove("xray-cell"));
+      updateCoinUI();
+    }, CONFIG.xrayMs),
+    "timeout"
+  );
 }
 
 function useHand() {
@@ -700,9 +735,12 @@ function useHand() {
     const cell = state.grid[pos.row][pos.col];
     cell.el.classList.add("hand");
   });
-  window.setTimeout(() => {
-    state.grid.flat().forEach((cell) => cell.el.classList.remove("hand"));
-  }, CONFIG.handMs);
+  registerTimer(
+    window.setTimeout(() => {
+      state.grid.flat().forEach((cell) => cell.el.classList.remove("hand"));
+    }, CONFIG.handMs),
+    "timeout"
+  );
 }
 
 function useBomb() {
@@ -740,56 +778,112 @@ function bindEvents() {
     return;
   }
   state.eventsBound = true;
-  UI.backBtn.addEventListener("click", () => {
-    if (window.AppNav && typeof window.AppNav.show === "function") {
-      window.AppNav.show("home");
-    } else {
-      window.location.href = "index.html";
-    }
-  });
-  UI.flashBtn.addEventListener("click", () => {
-    useFlashlight();
-  });
-  UI.speakerBtn.addEventListener("click", () => {
-    useSpeaker();
-  });
-  UI.xrayBtn.addEventListener("click", () => {
-    useXray();
-  });
-  UI.handBtn.addEventListener("click", () => {
-    useHand();
-  });
-  UI.bombBtn.addEventListener("click", () => {
-    useBomb();
-  });
-  UI.radarBtn.addEventListener("click", () => {
-    useRadar();
-  });
-  UI.grid.addEventListener("pointerdown", (event) => {
-    AudioFX.unlock();
-    const cell = getCellFromPoint(event.clientX, event.clientY);
-    if (!cell) {
-      return;
-    }
-    if (state.speakerActive) {
-      highlightLetter(cell.char);
-      return;
-    }
-    startSelection(cell);
-  });
-  window.addEventListener("pointermove", (event) => {
-    if (!state.selecting) {
-      return;
-    }
-    const cell = getCellFromPoint(event.clientX, event.clientY);
-    if (!cell) {
-      return;
-    }
-    updateSelection(cell);
-  });
-  window.addEventListener("pointerup", () => {
-    endSelection();
-  });
+  const handlers = {
+    back: async () => {
+      if (!(await confirmExit())) {
+        return;
+      }
+      if (window.AppNav && typeof window.AppNav.show === "function") {
+        window.AppNav.show("home");
+      } else {
+        window.location.href = "index.html";
+      }
+    },
+    flash: () => {
+      if (!state.active) {
+        return;
+      }
+      useFlashlight();
+    },
+    speaker: () => {
+      if (!state.active) {
+        return;
+      }
+      useSpeaker();
+    },
+    xray: () => {
+      if (!state.active) {
+        return;
+      }
+      useXray();
+    },
+    hand: () => {
+      if (!state.active) {
+        return;
+      }
+      useHand();
+    },
+    bomb: () => {
+      if (!state.active) {
+        return;
+      }
+      useBomb();
+    },
+    radar: () => {
+      if (!state.active) {
+        return;
+      }
+      useRadar();
+    },
+    pointerDown: (event) => {
+      if (!state.active) {
+        return;
+      }
+      AudioFX.unlock();
+      const cell = getCellFromPoint(event.clientX, event.clientY);
+      if (!cell) {
+        return;
+      }
+      if (state.speakerActive) {
+        highlightLetter(cell.char);
+        return;
+      }
+      startSelection(cell);
+    },
+    pointerMove: (event) => {
+      if (!state.active || !state.selecting) {
+        return;
+      }
+      const cell = getCellFromPoint(event.clientX, event.clientY);
+      if (!cell) {
+        return;
+      }
+      updateSelection(cell);
+    },
+    pointerUp: () => {
+      endSelection();
+    },
+  };
+  state.handlers = handlers;
+  UI.backBtn.addEventListener("click", handlers.back);
+  UI.flashBtn.addEventListener("click", handlers.flash);
+  UI.speakerBtn.addEventListener("click", handlers.speaker);
+  UI.xrayBtn.addEventListener("click", handlers.xray);
+  UI.handBtn.addEventListener("click", handlers.hand);
+  UI.bombBtn.addEventListener("click", handlers.bomb);
+  UI.radarBtn.addEventListener("click", handlers.radar);
+  UI.grid.addEventListener("pointerdown", handlers.pointerDown);
+  window.addEventListener("pointermove", handlers.pointerMove);
+  window.addEventListener("pointerup", handlers.pointerUp);
+}
+
+function unbindEvents() {
+  if (!state.eventsBound || !state.handlers) {
+    return;
+  }
+  const handlers = state.handlers;
+  UI.backBtn.removeEventListener("click", handlers.back);
+  UI.flashBtn.removeEventListener("click", handlers.flash);
+  UI.speakerBtn.removeEventListener("click", handlers.speaker);
+  UI.xrayBtn.removeEventListener("click", handlers.xray);
+  UI.handBtn.removeEventListener("click", handlers.hand);
+  UI.bombBtn.removeEventListener("click", handlers.bomb);
+  UI.radarBtn.removeEventListener("click", handlers.radar);
+  UI.grid.removeEventListener("pointerdown", handlers.pointerDown);
+  window.removeEventListener("pointermove", handlers.pointerMove);
+  window.removeEventListener("pointerup", handlers.pointerUp);
+  state.handlers = null;
+  state.eventsBound = false;
 }
 
 function resetScene() {
@@ -819,6 +913,10 @@ async function startDay(dayOverride) {
   }
   const day = Number.isFinite(dayOverride) ? dayOverride : getDayFromQuery();
   state.day = day;
+  state.active = true;
+  state.selecting = false;
+  clearSelection();
+  clearTimers();
   if (UI.dayValue) {
     UI.dayValue.textContent = String(state.day);
   }
@@ -846,7 +944,25 @@ async function startDay(dayOverride) {
   }
 }
 
-window.WordSearchApp = { startDay };
+function pause() {
+  state.active = false;
+  state.selecting = false;
+  clearSelection();
+  clearTimers();
+}
+
+function destroy() {
+  pause();
+  resetScene();
+  unbindEvents();
+  state.initialized = false;
+}
+
+window.WordSearchApp = {
+  startDay,
+  pause,
+  destroy,
+};
 
 if (!document.getElementById("homeView")) {
   document.addEventListener("DOMContentLoaded", () => {

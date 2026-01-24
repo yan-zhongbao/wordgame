@@ -92,6 +92,12 @@
         gap: 4px;
       }
 
+      .title-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
       .brand .title {
         font-family: "Fraunces", "PingFang SC", serif;
         font-size: 28px;
@@ -202,6 +208,12 @@
         color: var(--ink);
         box-shadow: 0 10px 20px rgba(23, 18, 9, 0.12);
         cursor: pointer;
+      }
+
+      .back-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 12px;
       }
 
       .stage {

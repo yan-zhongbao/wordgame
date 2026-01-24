@@ -39,6 +39,11 @@ button {
   box-shadow: 0 10px 18px rgba(60, 40, 20, 0.15);
 }
 
+.back-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
 .topbar {
   display: flex;
   flex-wrap: wrap;
@@ -51,6 +56,12 @@ button {
 .title-main {
   font-size: 22px;
   font-weight: 700;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .title-sub {

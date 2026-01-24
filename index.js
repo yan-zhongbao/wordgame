@@ -12,6 +12,12 @@ const UI = {
   debugPanel: document.getElementById("debugPanel"),
   debugBody: document.getElementById("debugBody"),
   debugToggle: document.getElementById("debugToggle"),
+  directPass: document.getElementById("directPass"),
+  jumpOverlay: document.getElementById("jumpOverlay"),
+  jumpTd: document.getElementById("jumpTd"),
+  jumpSnake: document.getElementById("jumpSnake"),
+  jumpSearch: document.getElementById("jumpSearch"),
+  jumpCancel: document.getElementById("jumpCancel"),
 };
 
 const VIEWS = {
@@ -65,6 +71,202 @@ const Debug = {
   },
 };
 
+const ConfirmDialog = {
+  overlay: document.getElementById("confirmOverlay"),
+  title: document.getElementById("confirmTitle"),
+  message: document.getElementById("confirmMessage"),
+  okBtn: document.getElementById("confirmOk"),
+  cancelBtn: document.getElementById("confirmCancel"),
+  pending: null,
+
+  init() {
+    if (!this.overlay || !this.okBtn || !this.cancelBtn) {
+      return;
+    }
+    const resolve = (value) => {
+      if (!this.pending) {
+        return;
+      }
+      const { done } = this.pending;
+      this.pending = null;
+      this.overlay.classList.add("hidden");
+      done(value);
+    };
+    this.okBtn.addEventListener("click", () => resolve(true));
+    this.cancelBtn.addEventListener("click", () => resolve(false));
+    this.overlay.addEventListener("click", (event) => {
+      if (event.target === this.overlay) {
+        resolve(false);
+      }
+    });
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && this.pending) {
+        resolve(false);
+      }
+    });
+  },
+
+  show(message, { okText = "退出", cancelText = "继续" } = {}) {
+    if (!this.overlay || !this.okBtn || !this.cancelBtn) {
+      return Promise.resolve(window.confirm(message || "确定退出？"));
+    }
+    if (this.pending) {
+      this.pending.done(false);
+    }
+    if (this.message) {
+      this.message.textContent = message || "确定退出？";
+    }
+    if (this.okBtn) {
+      this.okBtn.textContent = okText;
+    }
+    if (this.cancelBtn) {
+      this.cancelBtn.textContent = cancelText;
+    }
+    this.overlay.classList.remove("hidden");
+    return new Promise((resolve) => {
+      this.pending = { done: resolve };
+    });
+  },
+};
+
+const JumpDialog = {
+  currentDay: null,
+
+  init() {
+    if (!UI.jumpOverlay || !UI.jumpCancel) {
+      return;
+    }
+    UI.jumpCancel.addEventListener("click", () => this.hide());
+    UI.jumpOverlay.addEventListener("click", (event) => {
+      if (event.target === UI.jumpOverlay) {
+        this.hide();
+      }
+    });
+    UI.jumpTd?.addEventListener("click", () => this.choose("td"));
+    UI.jumpSnake?.addEventListener("click", () => this.choose("snake"));
+    UI.jumpSearch?.addEventListener("click", () => this.choose("wordsearch"));
+  },
+
+  open(day) {
+    this.currentDay = day;
+    if (UI.jumpOverlay) {
+      UI.jumpOverlay.classList.remove("hidden");
+    }
+  },
+
+  hide() {
+    this.currentDay = null;
+    if (UI.jumpOverlay) {
+      UI.jumpOverlay.classList.add("hidden");
+    }
+  },
+
+  choose(view) {
+    if (!this.currentDay) {
+      return;
+    }
+    if (!spendCoins(DIRECT_PASS_COST)) {
+      return;
+    }
+    const day = this.currentDay;
+    this.hide();
+    AppNav.show(view, { day });
+  },
+};
+
+const DirectPass = {
+  dragging: false,
+  pointerId: null,
+  ghost: null,
+  targetRow: null,
+  targetDay: null,
+
+  init() {
+    if (!UI.directPass) {
+      return;
+    }
+    UI.directPass.addEventListener("pointerdown", (event) => this.onDown(event));
+    window.addEventListener("pointermove", (event) => this.onMove(event));
+    window.addEventListener("pointerup", (event) => this.onUp(event));
+    window.addEventListener("pointercancel", (event) => this.onUp(event));
+  },
+
+  onDown(event) {
+    if (!UI.directPass || UI.directPass.classList.contains("disabled")) {
+      setHint("金币不足");
+      return;
+    }
+    if (AppNav.current !== "home") {
+      return;
+    }
+    this.dragging = true;
+    this.pointerId = event.pointerId;
+    UI.directPass.setPointerCapture(event.pointerId);
+    this.ghost = UI.directPass.cloneNode(true);
+    this.ghost.classList.add("direct-ghost");
+    document.body.appendChild(this.ghost);
+    this.updateGhost(event.clientX, event.clientY);
+    event.preventDefault();
+  },
+
+  onMove(event) {
+    if (!this.dragging || event.pointerId !== this.pointerId) {
+      return;
+    }
+    this.updateGhost(event.clientX, event.clientY);
+    const element = document.elementFromPoint(event.clientX, event.clientY);
+    const row = element ? element.closest(".day-row") : null;
+    if (row !== this.targetRow) {
+      if (this.targetRow) {
+        this.targetRow.classList.remove("drop-target");
+      }
+      this.targetRow = row;
+      this.targetDay = row ? Number(row.dataset.day) : null;
+      if (this.targetRow) {
+        this.targetRow.classList.add("drop-target");
+      }
+    }
+    event.preventDefault();
+  },
+
+  onUp(event) {
+    if (!this.dragging || event.pointerId !== this.pointerId) {
+      return;
+    }
+    this.dragging = false;
+    if (UI.directPass && this.pointerId !== null) {
+      try {
+        UI.directPass.releasePointerCapture(this.pointerId);
+      } catch (err) {
+        // ignore
+      }
+    }
+    this.pointerId = null;
+    if (this.ghost) {
+      this.ghost.remove();
+      this.ghost = null;
+    }
+    if (this.targetRow) {
+      this.targetRow.classList.remove("drop-target");
+    }
+    const day = this.targetDay;
+    this.targetRow = null;
+    this.targetDay = null;
+    if (day) {
+      JumpDialog.open(day);
+    }
+    event.preventDefault();
+  },
+
+  updateGhost(x, y) {
+    if (!this.ghost) {
+      return;
+    }
+    this.ghost.style.left = `${x}px`;
+    this.ghost.style.top = `${y}px`;
+  },
+};
+
 const AppNav = {
   current: "home",
 
@@ -81,6 +283,12 @@ const AppNav = {
     const target = VIEWS[view];
     if (!target) {
       return;
+    }
+    if (this.current && this.current !== view) {
+      const currentApp = getViewApp(this.current);
+      if (currentApp && typeof currentApp.pause === "function") {
+        currentApp.pause();
+      }
     }
     Object.values(VIEWS).forEach((node) => {
       if (!node) {
@@ -112,6 +320,23 @@ const AppNav = {
 };
 
 window.AppNav = AppNav;
+window.AppConfirm = (message, options) => ConfirmDialog.show(message, options);
+
+function getViewApp(view) {
+  if (view === "practice") {
+    return window.PracticeApp || null;
+  }
+  if (view === "td") {
+    return window.TDApp || null;
+  }
+  if (view === "snake") {
+    return window.SnakeApp || null;
+  }
+  if (view === "wordsearch") {
+    return window.WordSearchApp || null;
+  }
+  return null;
+}
 
 const STORAGE_KEYS = {
   coins: "wg-td-coins",
@@ -123,6 +348,8 @@ const STORAGE_KEYS = {
 const SESSION_KEYS = {
   nextDay: "wg-next-day",
 };
+
+const DIRECT_PASS_COST = 300;
 
 let swRegistration = null;
 let initInFlight = false;
@@ -166,9 +393,32 @@ function loadCoins() {
   return value;
 }
 
+function saveCoins(value) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.coins, String(value));
+  } catch (err) {
+    // ignore storage errors
+  }
+}
+
+function spendCoins(amount) {
+  const current = loadCoins();
+  if (current < amount) {
+    setHint("金币不足");
+    return false;
+  }
+  saveCoins(current - amount);
+  updateCoinUI();
+  return true;
+}
+
 function updateCoinUI() {
   if (UI.coinValue) {
     UI.coinValue.textContent = String(loadCoins());
+  }
+  if (UI.directPass) {
+    const enough = loadCoins() >= DIRECT_PASS_COST;
+    UI.directPass.classList.toggle("disabled", !enough);
   }
 }
 
@@ -375,6 +625,7 @@ function renderDayList(words, reviewRecords, dayStats) {
 
     const row = document.createElement("div");
     row.className = "day-row";
+    row.dataset.day = String(day);
 
     const title = document.createElement("div");
     title.className = "day-title";
@@ -475,6 +726,9 @@ UI.updateBtn?.addEventListener("click", () => {
 });
 
 Debug.init();
+ConfirmDialog.init();
+JumpDialog.init();
+DirectPass.init();
 window.addEventListener("error", (event) => {
   Debug.log("error", "window error", {
     message: event.message,

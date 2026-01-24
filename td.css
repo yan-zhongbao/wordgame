@@ -71,6 +71,12 @@ button:active {
   font-weight: 700;
 }
 
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .brand-subtitle {
   font-size: 14px;
   color: var(--muted);
@@ -124,6 +130,11 @@ button:active {
 .actions {
   display: flex;
   gap: 12px;
+}
+
+.back-btn {
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
 .layout {

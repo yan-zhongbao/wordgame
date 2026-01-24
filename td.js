@@ -426,6 +426,10 @@ const TD = {
   lastTime: 0,
   spawnTimer: 0,
   removeLeftNext: true,
+  loopStarted: false,
+  loopId: null,
+  active: false,
+  handlers: null,
 };
 
 const TASKS = [
@@ -683,6 +687,13 @@ function showMessage(text) {
   if (UI.messageText) {
     UI.messageText.textContent = text;
   }
+}
+
+function confirmExit() {
+  if (window.AppConfirm) {
+    return window.AppConfirm("确定退出当前关卡？退出将回到主页。");
+  }
+  return Promise.resolve(window.confirm("确定退出当前关卡？退出将回到主页。"));
 }
 
 function loadCoins() {
@@ -2380,12 +2391,20 @@ function updateGrowth(now) {
 }
 
 function gameLoop(timestamp) {
+  if (!TD.loopStarted) {
+    return;
+  }
   if (!TD.lastTime) {
     TD.lastTime = timestamp;
   }
   const delta = (timestamp - TD.lastTime) / 1000;
   TD.lastTime = timestamp;
   if (!TD.running) {
+    TD.loopId = requestAnimationFrame(gameLoop);
+    return;
+  }
+  if (!TD.active) {
+    TD.loopId = requestAnimationFrame(gameLoop);
     return;
   }
   updateGrowth(timestamp);
@@ -2398,7 +2417,26 @@ function gameLoop(timestamp) {
   if (TD.victoryActive && !TD.victoryOverlayShown && TD.victoryTurretsLeft <= 0) {
     finishVictory();
   }
-  requestAnimationFrame(gameLoop);
+  TD.loopId = requestAnimationFrame(gameLoop);
+}
+
+function startLoop() {
+  if (TD.loopStarted) {
+    return;
+  }
+  TD.loopStarted = true;
+  TD.loopId = requestAnimationFrame(gameLoop);
+}
+
+function stopLoop() {
+  if (!TD.loopStarted) {
+    return;
+  }
+  TD.loopStarted = false;
+  if (TD.loopId !== null) {
+    cancelAnimationFrame(TD.loopId);
+    TD.loopId = null;
+  }
 }
 
 function showOverlay(title, body) {
@@ -2555,7 +2593,9 @@ function resetGame() {
   hideOverlay();
   showMessage(TEXT.startHint);
   if (!wasRunning) {
-    requestAnimationFrame(gameLoop);
+    if (TD.active) {
+      startLoop();
+    }
   }
 }
 
@@ -2598,56 +2638,112 @@ function bindUI() {
     return;
   }
   TD.uiBound = true;
-  UI.restartBtn?.addEventListener("click", () => resetGame());
-  UI.backBtn?.addEventListener("click", () => {
-    if (window.AppNav && typeof window.AppNav.show === "function") {
-      window.AppNav.show("home");
-    } else {
-      window.location.href = "index.html";
-    }
-  });
-  UI.hoeBtn?.addEventListener("pointerdown", (event) => {
-    if (TD.coins < CONFIG.hoeCost) {
-      showMessage(TEXT.toolNoCoin);
-      return;
-    }
-    startDrag("tool", { tool: "hoe" }, UI.hoeBtn, event);
-  });
-  UI.keyBtn?.addEventListener("pointerdown", (event) => {
-    if (TD.coins < CONFIG.keyCost) {
-      showMessage(TEXT.toolNoCoin);
-      return;
-    }
-    startDrag("tool", { tool: "key" }, UI.keyBtn, event);
-  });
-  UI.hornBtn?.addEventListener("pointerdown", (event) => {
-    if (TD.coins < CONFIG.hornCost) {
-      showMessage(TEXT.toolNoCoin);
-      return;
-    }
-    startDrag("tool", { tool: "horn" }, UI.hornBtn, event);
-  });
-  UI.batonBtn?.addEventListener("pointerdown", (event) => {
-    if (TD.coins < CONFIG.batonCost) {
-      showMessage(TEXT.toolNoCoin);
-      return;
-    }
-    startDrag("tool", { tool: "baton" }, UI.batonBtn, event);
-  });
-  UI.overlayRestart?.addEventListener("click", () => resetGame());
-  UI.overlayBack?.addEventListener("click", () => {
-    if (window.AppNav && typeof window.AppNav.show === "function") {
-      window.AppNav.show("home");
-    } else {
-      window.location.href = "index.html";
-    }
-  });
-  const unlockAudioOnce = () => {
-    SoundFX.unlock();
-    AudioBank.unlock();
+  const handlers = {
+    restart: () => {
+      if (!TD.active) {
+        return;
+      }
+      resetGame();
+    },
+    back: async () => {
+      if (!(await confirmExit())) {
+        return;
+      }
+      if (window.AppNav && typeof window.AppNav.show === "function") {
+        window.AppNav.show("home");
+      } else {
+        window.location.href = "index.html";
+      }
+    },
+    hoe: (event) => {
+      if (!TD.active) {
+        return;
+      }
+      if (TD.coins < CONFIG.hoeCost) {
+        showMessage(TEXT.toolNoCoin);
+        return;
+      }
+      startDrag("tool", { tool: "hoe" }, UI.hoeBtn, event);
+    },
+    key: (event) => {
+      if (!TD.active) {
+        return;
+      }
+      if (TD.coins < CONFIG.keyCost) {
+        showMessage(TEXT.toolNoCoin);
+        return;
+      }
+      startDrag("tool", { tool: "key" }, UI.keyBtn, event);
+    },
+    horn: (event) => {
+      if (!TD.active) {
+        return;
+      }
+      if (TD.coins < CONFIG.hornCost) {
+        showMessage(TEXT.toolNoCoin);
+        return;
+      }
+      startDrag("tool", { tool: "horn" }, UI.hornBtn, event);
+    },
+    baton: (event) => {
+      if (!TD.active) {
+        return;
+      }
+      if (TD.coins < CONFIG.batonCost) {
+        showMessage(TEXT.toolNoCoin);
+        return;
+      }
+      startDrag("tool", { tool: "baton" }, UI.batonBtn, event);
+    },
+    overlayRestart: () => {
+      if (!TD.active) {
+        return;
+      }
+      resetGame();
+    },
+    overlayBack: async () => {
+      if (!(await confirmExit())) {
+        return;
+      }
+      if (window.AppNav && typeof window.AppNav.show === "function") {
+        window.AppNav.show("home");
+      } else {
+        window.location.href = "index.html";
+      }
+    },
+    unlockAudioOnce: () => {
+      SoundFX.unlock();
+      AudioBank.unlock();
+    },
   };
-  window.addEventListener("pointerdown", unlockAudioOnce, { once: true });
-  window.addEventListener("touchstart", unlockAudioOnce, { once: true });
+  TD.handlers = handlers;
+  UI.restartBtn?.addEventListener("click", handlers.restart);
+  UI.backBtn?.addEventListener("click", handlers.back);
+  UI.hoeBtn?.addEventListener("pointerdown", handlers.hoe);
+  UI.keyBtn?.addEventListener("pointerdown", handlers.key);
+  UI.hornBtn?.addEventListener("pointerdown", handlers.horn);
+  UI.batonBtn?.addEventListener("pointerdown", handlers.baton);
+  UI.overlayRestart?.addEventListener("click", handlers.overlayRestart);
+  UI.overlayBack?.addEventListener("click", handlers.overlayBack);
+  window.addEventListener("pointerdown", handlers.unlockAudioOnce, { once: true });
+  window.addEventListener("touchstart", handlers.unlockAudioOnce, { once: true });
+}
+
+function unbindUI() {
+  if (!TD.uiBound || !TD.handlers) {
+    return;
+  }
+  const handlers = TD.handlers;
+  UI.restartBtn?.removeEventListener("click", handlers.restart);
+  UI.backBtn?.removeEventListener("click", handlers.back);
+  UI.hoeBtn?.removeEventListener("pointerdown", handlers.hoe);
+  UI.keyBtn?.removeEventListener("pointerdown", handlers.key);
+  UI.hornBtn?.removeEventListener("pointerdown", handlers.horn);
+  UI.batonBtn?.removeEventListener("pointerdown", handlers.baton);
+  UI.overlayRestart?.removeEventListener("click", handlers.overlayRestart);
+  UI.overlayBack?.removeEventListener("click", handlers.overlayBack);
+  TD.handlers = null;
+  TD.uiBound = false;
 }
 
 async function startDay(dayOverride) {
@@ -2658,11 +2754,13 @@ async function startDay(dayOverride) {
     initLetterQueue();
     buildWordWeights();
     bindUI();
-    requestAnimationFrame(gameLoop);
     TD.initialized = true;
   }
   const day = Number.isFinite(dayOverride) ? dayOverride : getDayFromQuery() || 1;
   TD.day = day;
+  TD.active = true;
+  stopLoop();
+  TD.lastTime = 0;
   TD.coins = loadCoins();
   TD.errors = 0;
   if (UI.dayValue) {
@@ -2679,9 +2777,26 @@ async function startDay(dayOverride) {
   resetGame();
   showMessage(TEXT.startHint);
   updateCoinUI();
+  startLoop();
 }
 
-window.TDApp = { startDay };
+function pause() {
+  TD.active = false;
+  stopLoop();
+}
+
+function destroy() {
+  pause();
+  resetGame();
+  unbindUI();
+  TD.initialized = false;
+}
+
+window.TDApp = {
+  startDay,
+  pause,
+  destroy,
+};
 
 if (!document.getElementById("homeView")) {
   document.addEventListener("DOMContentLoaded", () => {

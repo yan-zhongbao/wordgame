@@ -300,6 +300,126 @@
         font-size: 13px;
       }
 
+      .day-row.drop-target {
+        outline: 2px dashed rgba(232, 111, 58, 0.6);
+        outline-offset: 2px;
+        box-shadow: 0 12px 26px rgba(232, 111, 58, 0.18);
+      }
+
+      .direct-pass {
+        position: fixed;
+        right: 16px;
+        bottom: 64px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 16px;
+        background: #fff4df;
+        box-shadow: 0 16px 28px rgba(60, 40, 20, 0.18);
+        font-weight: 600;
+        color: var(--ink);
+        cursor: grab;
+        z-index: 6;
+        user-select: none;
+      }
+
+      .direct-pass.disabled {
+        opacity: 0.5;
+        filter: grayscale(0.6);
+        cursor: not-allowed;
+      }
+
+      .direct-pass:active {
+        cursor: grabbing;
+      }
+
+      .direct-icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: radial-gradient(circle at top, #fff, #f1b259);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+      }
+
+      .direct-cost {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        color: #6e4c2a;
+      }
+
+      .direct-ghost {
+        position: fixed;
+        z-index: 10;
+        pointer-events: none;
+        opacity: 0.85;
+        transform: translate(-50%, -50%);
+      }
+
+      .jump-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(18, 16, 12, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 19;
+      }
+
+      .jump-overlay.hidden {
+        display: none;
+      }
+
+      .jump-card {
+        width: min(380px, 92vw);
+        background: #fffaf3;
+        border-radius: 22px;
+        padding: 22px;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .jump-title {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .jump-sub {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .jump-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .jump-actions button {
+        border: none;
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        background: #f1e6d8;
+        color: var(--ink);
+      }
+
+      .jump-actions .primary {
+        background: linear-gradient(135deg, var(--accent) 0%, #f0a44b 100%);
+        color: #fff;
+        box-shadow: 0 10px 20px rgba(232, 111, 58, 0.25);
+      }
+
       .version-tag {
         position: fixed;
         right: 14px;
@@ -369,15 +489,79 @@
           align-items: flex-start;
         }
 
-        .day-actions {
-          width: 100%;
-          justify-content: space-between;
-          flex-wrap: wrap;
-        }
+      .day-actions {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
 
-        .start-btn {
-          width: 100%;
-        }
+      .start-btn {
+        width: 100%;
+      }
+    }
+
+      .confirm-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(18, 16, 12, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 20;
+      }
+
+      .confirm-overlay.hidden {
+        display: none;
+      }
+
+      .confirm-card {
+        width: min(360px, 92vw);
+        background: #fffaf3;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .confirm-title {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .confirm-message {
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .confirm-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+      }
+
+      .confirm-actions button {
+        border: none;
+        padding: 8px 14px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .confirm-cancel {
+        background: #f1e6d8;
+        color: var(--ink);
+      }
+
+      .confirm-ok {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: 0 10px 20px rgba(232, 111, 58, 0.25);
       }
 
       @media (max-width: 640px) and (orientation: portrait) {
@@ -459,13 +643,21 @@
           </section>
         </main>
       </div>
+      <div class="direct-pass" id="directPass" role="button" aria-label="直通车">
+        <span class="direct-icon">🚆</span>
+        <span>直通车</span>
+        <span class="direct-cost">-300 <span class="coin-icon"></span></span>
+      </div>
     </div>
 
     <div id="practiceView" class="view">
       <div class="app">
         <header class="topbar">
           <div class="brand">
-            <div class="title">Word Quest</div>
+            <div class="title-row">
+              <div class="title">Word Quest</div>
+              <button class="back-btn update-btn" id="backBtn">返回</button>
+            </div>
             <div class="subtitle">21-Day Adventure</div>
           </div>
           <div class="day-info">
@@ -482,7 +674,6 @@
             <div class="coin-block"><span class="coin-icon"></span><span id="coinValue">0</span></div>
           </div>
           <button class="audio-btn" id="audioBtn" disabled>🔊</button>
-          <button class="update-btn" id="backBtn">返回</button>
         </header>
 
         <main class="stage">
@@ -518,7 +709,10 @@
     <div id="tdView" class="view">
       <header class="topbar">
         <div class="brand">
-          <div class="brand-title">Word vs Homework TD</div>
+          <div class="brand-row">
+            <div class="brand-title">Word vs Homework TD</div>
+            <button id="backBtn" class="ghost back-btn" data-i18n="back"></button>
+          </div>
           <div class="brand-subtitle" data-i18n="brandSubtitle"></div>
         </div>
         <div class="status">
@@ -543,7 +737,6 @@
         </div>
         <div class="actions">
           <button id="restartBtn" class="ghost" data-i18n="restart"></button>
-          <button id="backBtn" class="primary" data-i18n="back"></button>
         </div>
       </header>
 
@@ -621,7 +814,10 @@
     <div id="snakeView" class="view">
       <header class="topbar">
         <div class="title">
-          <div class="title-main">贪吃蛇记忆</div>
+          <div class="title-row">
+            <div class="title-main">贪吃蛇记忆</div>
+            <button id="backBtn" class="ghost back-btn">返回</button>
+          </div>
           <div class="title-sub">拖动蛇头按顺序吃字母</div>
         </div>
         <div class="stats">
@@ -649,7 +845,6 @@
             <span class="tool-cost">-50</span>
           </button>
         </div>
-        <button id="backBtn" class="ghost">返回主页</button>
       </header>
 
       <main class="main">
@@ -664,7 +859,10 @@
     <div id="wordsearchView" class="view">
       <header class="topbar">
         <div class="title">
-          <div class="title-main">单词寻宝</div>
+          <div class="title-row">
+            <div class="title-main">单词寻宝</div>
+            <button id="backBtn" class="ghost back-btn">返回</button>
+          </div>
           <div class="title-sub">涂抹连线找出单词</div>
         </div>
         <div class="stats">
@@ -703,7 +901,6 @@
             <span class="tool-cost">-5</span>
           </button>
         </div>
-        <button id="backBtn" class="ghost">返回主页</button>
       </header>
 
       <main class="layout">
@@ -716,6 +913,32 @@
           <div id="wordList" class="word-list"></div>
         </aside>
       </main>
+    </div>
+
+    <div class="confirm-overlay hidden" id="confirmOverlay" aria-modal="true" role="dialog">
+      <div class="confirm-card">
+        <div class="confirm-title" id="confirmTitle">提示</div>
+        <div class="confirm-message" id="confirmMessage">确定退出当前关卡？退出将回到主页。</div>
+        <div class="confirm-actions">
+          <button class="confirm-cancel" id="confirmCancel">继续</button>
+          <button class="confirm-ok" id="confirmOk">退出</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="jump-overlay hidden" id="jumpOverlay" aria-modal="true" role="dialog">
+      <div class="jump-card">
+        <div class="jump-title">直通车</div>
+        <div class="jump-sub">选择进入的游戏（消耗 300 金币）</div>
+        <div class="jump-actions">
+          <button class="primary" id="jumpTd">单词大战作业</button>
+          <button class="primary" id="jumpSnake">贪吃蛇记忆</button>
+          <button class="primary" id="jumpSearch">单词寻宝</button>
+        </div>
+        <div class="jump-actions">
+          <button id="jumpCancel">取消</button>
+        </div>
+      </div>
     </div>
 
     <div class="version-tag" id="versionTag"></div>
