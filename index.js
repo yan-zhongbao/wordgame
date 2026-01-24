@@ -202,8 +202,13 @@ const DirectPass = {
     this.dragging = true;
     this.pointerId = event.pointerId;
     UI.directPass.setPointerCapture(event.pointerId);
+    const rect = UI.directPass.getBoundingClientRect();
     this.ghost = UI.directPass.cloneNode(true);
     this.ghost.classList.add("direct-ghost");
+    this.ghost.style.width = `${rect.width}px`;
+    this.ghost.style.height = `${rect.height}px`;
+    this.ghost.style.right = "auto";
+    this.ghost.style.bottom = "auto";
     document.body.appendChild(this.ghost);
     this.updateGhost(event.clientX, event.clientY);
     event.preventDefault();
