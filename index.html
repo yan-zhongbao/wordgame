@@ -198,6 +198,33 @@
         font-size: 14px;
       }
 
+      .card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .semester-select {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .semester-select select {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text, #1f2937);
+        padding: 8px 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        background: #fff;
+        cursor: pointer;
+      }
+
       .day-list {
         display: flex;
         flex-direction: column;
@@ -636,9 +663,15 @@
 
         <main class="content">
           <section class="card">
-            <div>
-              <div class="card-title">选择关卡</div>
-              <div class="card-sub">查看单词数量、错词数量和挑战质量</div>
+            <div class="card-head">
+              <div>
+                <div class="card-title">选择关卡</div>
+                <div class="card-sub">查看单词数量、错词数量和挑战质量</div>
+              </div>
+              <label class="semester-select">
+                <span class="semester-label">学期</span>
+                <select id="semesterSelect" aria-label="选择学期"></select>
+              </label>
             </div>
             <div id="dayList" class="day-list"></div>
             <div id="listHint" class="list-hint"></div>
@@ -663,7 +696,7 @@
             <div class="subtitle">21-Day Adventure</div>
           </div>
           <div class="day-info">
-            <div class="day-label">Day <span id="dayLabel">1</span></div>
+            <div class="day-label"><span id="dayLabel">Day 1</span></div>
             <div class="progress">
               <div class="progress-fill" id="progressFill"></div>
             </div>
@@ -718,7 +751,7 @@
           <div class="brand-subtitle" data-i18n="brandSubtitle"></div>
         </div>
         <div class="status">
-          <div><span data-i18n="dayLabel"></span> <span id="dayValue">1</span></div>
+          <div><span id="dayValue">Day 1</span></div>
           <div>
             <span class="status-icon notebook-icon" data-i18n-aria="bagLabel"></span>
             <span id="bagValue">0</span>/30
@@ -823,7 +856,7 @@
           <div class="title-sub">拖动蛇头按顺序吃字母</div>
         </div>
         <div class="stats">
-          <div>Day <span id="dayValue">1</span></div>
+          <div><span id="dayValue">Day 1</span></div>
           <div>单词 <span id="wordValue">0</span>/<span id="wordTotal">0</span></div>
           <div>等级 <span id="levelValue">1</span></div>
           <div class="stars" id="starBar">
@@ -868,7 +901,7 @@
           <div class="title-sub">涂抹连线找出单词</div>
         </div>
         <div class="stats">
-          <div>Day <span id="dayValue">1</span></div>
+          <div><span id="dayValue">Day 1</span></div>
           <div>已找 <span id="foundValue">0</span>/<span id="totalValue">0</span></div>
           <div class="stars" id="starBar">
             <span class="star">☆</span>
@@ -948,6 +981,7 @@
     <div class="debug-panel" id="debugPanel">
       <pre class="debug-body" id="debugBody"></pre>
     </div>
+    <script src="semesters.js"></script>
     <script src="index.js"></script>
     <script src="app.js"></script>
     <script src="td.js"></script>

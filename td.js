@@ -2618,14 +2618,15 @@ function getDayFromQuery() {
   if (value < 1) {
     return 1;
   }
-  if (value > 21) {
-    return 21;
+  const maxDay = WG.maxDay();
+  if (value > maxDay) {
+    return maxDay;
   }
   return value;
 }
 
 async function loadWords(day) {
-  const response = await fetch("words.json");
+  const response = await fetch(WG.wordsFile());
   if (!response.ok) {
     throw new Error(TEXT.loadFail);
   }
@@ -2764,7 +2765,7 @@ async function startDay(dayOverride) {
   TD.coins = loadCoins();
   TD.errors = 0;
   if (UI.dayValue) {
-    UI.dayValue.textContent = String(day);
+    UI.dayValue.textContent = WG.dayLabel(day);
   }
   updateCoinUI();
   updateStarUI();

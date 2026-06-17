@@ -1,13 +1,16 @@
-const CACHE_NAME = "wordgame-v93";
+const CACHE_NAME = "wordgame-v96";
 const AUDIO_CACHE = "wordgame-audio";
+const WORDS_FILES = ["words.json", "words.4b.json"];
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./index.js",
+  "./semesters.js",
   "./practice.html",
   "./practice.css",
   "./app.js",
   "./words.json",
+  "./words.4b.json",
   "./manifest.json",
   "./clear.html",
   "./snake.html",
@@ -117,12 +120,25 @@ const buildAudioUrls = (words) =>
 
 async function precacheAudio(cache) {
   try {
-    const response = await fetch("words.json");
-    if (!response.ok) {
-      return;
+    const seen = new Set();
+    const urls = [];
+    for (const file of WORDS_FILES) {
+      try {
+        const response = await fetch(file);
+        if (!response.ok) {
+          continue;
+        }
+        const words = await response.json();
+        for (const url of buildAudioUrls(words)) {
+          if (!seen.has(url)) {
+            seen.add(url);
+            urls.push(url);
+          }
+        }
+      } catch (err) {
+        // ignore a missing word file
+      }
     }
-    const words = await response.json();
-    const urls = buildAudioUrls(words);
     for (const url of urls) {
       try {
         const cached = await cache.match(url);
@@ -184,7 +200,7 @@ self.addEventListener("fetch", (event) => {
       const cache = await caches.open(CACHE_NAME);
       const cacheOverride = request.cache === "no-store";
       const url = new URL(request.url);
-      const isWords = url.pathname.endsWith("/words.json");
+      const isWords = /\/words(\.[a-z0-9]+)?\.json$/.test(url.pathname);
       const isAudio = url.pathname.includes("/audio/");
       const isHtml =
         request.mode === "navigate" ||

@@ -1,0 +1,1353 @@
+[
+  {
+    "day": 1,
+    "en": "doctor",
+    "zh": "医生",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "fireman",
+    "zh": "消防员",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "farmer",
+    "zh": "农民",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "cook",
+    "zh": "厨师",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "police",
+    "zh": "警察",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "fire",
+    "zh": "火",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "police station",
+    "zh": "警察局",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 1,
+    "en": "work at night",
+    "zh": "在夜间工作",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 1,
+    "en": "police officer",
+    "zh": "警察",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 2,
+    "en": "field",
+    "zh": "田野，田地",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "use",
+    "zh": "使用",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "brush",
+    "zh": "刷子",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "writer",
+    "zh": "作家",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "worker",
+    "zh": "工人",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "aunt",
+    "zh": "阿姨",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "fire station",
+    "zh": "消防站",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 2,
+    "en": "keep safe",
+    "zh": "保障安全",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 3,
+    "en": "uncle",
+    "zh": "叔叔",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "night",
+    "zh": "夜晚",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "driver",
+    "zh": "司机",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "taxi",
+    "zh": "出租车",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "safe",
+    "zh": "安全的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "nurse",
+    "zh": "护士",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "work in",
+    "zh": "在……工作",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 3,
+    "en": "take people home",
+    "zh": "送人们回家",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 4,
+    "en": "bake",
+    "zh": "烘，烤",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "postman",
+    "zh": "邮递员",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "poor",
+    "zh": "贫穷的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "bring",
+    "zh": "带来，拿来",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "letter",
+    "zh": "信",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "brighten",
+    "zh": "使更明亮",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "night owl",
+    "zh": "夜猫子，喜欢熬夜的人",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 4,
+    "en": "cook food",
+    "zh": "烹饪食物",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 5,
+    "en": "laugh",
+    "zh": "大笑",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "sad",
+    "zh": "伤心的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "cry",
+    "zh": "哭",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "angry",
+    "zh": "生气的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "frown",
+    "zh": "皱眉",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "scared",
+    "zh": "恐惧的，害怕的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "take part in",
+    "zh": "参加",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 5,
+    "en": "shout at",
+    "zh": "对…大喊大叫",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "shake",
+    "zh": "发抖",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 6,
+    "en": "excited",
+    "zh": "兴奋的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 6,
+    "en": "next",
+    "zh": "接下来的，下一个的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 6,
+    "en": "cough",
+    "zh": "咳",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 6,
+    "en": "better",
+    "zh": "好转的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 6,
+    "en": "gift",
+    "zh": "礼物",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 6,
+    "en": "next time",
+    "zh": "下一次",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "walk on the street",
+    "zh": "在街上走",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 7,
+    "en": "surprised",
+    "zh": "吃惊的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "practice",
+    "zh": "练习",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "should",
+    "zh": "应该（情态动词）",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "break",
+    "zh": "使…破裂",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "huge",
+    "zh": "巨大的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "make a ship",
+    "zh": "制作船",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 8,
+    "en": "worried",
+    "zh": "担心的，焦虑的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "worry",
+    "zh": "担心，担忧",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "street",
+    "zh": "街道",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "hit",
+    "zh": "撞击",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "feel",
+    "zh": "感觉，感到",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "opera",
+    "zh": "戏剧",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "ship model",
+    "zh": "船模",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 9,
+    "en": "talent",
+    "zh": "天资，天赋",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "act",
+    "zh": "扮演，演出",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "magic",
+    "zh": "魔术，戏法",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "shine",
+    "zh": "表现突出，出众",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "puzzle",
+    "zh": "拼图游戏",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "dancer",
+    "zh": "舞蹈演员",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "do puzzles",
+    "zh": "玩拼图",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 9,
+    "en": "be good at",
+    "zh": "擅长……",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 9,
+    "en": "do magic",
+    "zh": "变魔术",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 9,
+    "en": "win the show",
+    "zh": "赢得比赛",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 9,
+    "en": "make sb shine",
+    "zh": "让某人脱颖而出",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 9,
+    "en": "fly well",
+    "zh": "飞得好",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 9,
+    "en": "swim well",
+    "zh": "游得好",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 10,
+    "en": "win",
+    "zh": "获胜，赢",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "just",
+    "zh": "就，只是",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "duck",
+    "zh": "鸭子",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "boy",
+    "zh": "男孩，儿子",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "anything",
+    "zh": "任何事情，无论何事",
+    "pos": "pron.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "enough",
+    "zh": "足够的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "slowly",
+    "zh": "缓慢地，慢慢地",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "play the piano",
+    "zh": "弹钢琴",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 10,
+    "en": "take photos",
+    "zh": "拍照",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 10,
+    "en": "dance show",
+    "zh": "舞蹈表演",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 10,
+    "en": "teach sb to do sth",
+    "zh": "教某人做某事",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 10,
+    "en": "wear beautiful clothes",
+    "zh": "穿漂亮的衣服",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 10,
+    "en": "run fast",
+    "zh": "跑得快",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 10,
+    "en": "sing loudly",
+    "zh": "大声唱歌",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 11,
+    "en": "life",
+    "zh": "一生，生活",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "seed",
+    "zh": "种子，粒",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "earth",
+    "zh": "泥土，土壤",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "root",
+    "zh": "根",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "stem",
+    "zh": "植物的茎、梗、柄",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "thin",
+    "zh": "细的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "plant life",
+    "zh": "植物生命",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 11,
+    "en": "dig the earth",
+    "zh": "挖泥土",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 11,
+    "en": "in the fields",
+    "zh": "在田地里",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 11,
+    "en": "pick cotton",
+    "zh": "摘棉花",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 11,
+    "en": "wheat plants",
+    "zh": "小麦植株",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 11,
+    "en": "come true",
+    "zh": "实现（梦想）",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "leaf",
+    "zh": "叶，叶子",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 12,
+    "en": "dig",
+    "zh": "挖、掘",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 12,
+    "en": "sunflower",
+    "zh": "向日葵",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 12,
+    "en": "wheat",
+    "zh": "小麦",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 12,
+    "en": "cotton",
+    "zh": "棉花，棉株",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 12,
+    "en": "sleep",
+    "zh": "睡，睡觉",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 12,
+    "en": "parts of a plant",
+    "zh": "植物的组成部分",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "water the plants",
+    "zh": "给植物浇水",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "grow rice",
+    "zh": "种水稻",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "look after plants",
+    "zh": "照顾植物",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "plant roots",
+    "zh": "植物的根",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 13,
+    "en": "mouse",
+    "zh": "老鼠",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "grain",
+    "zh": "谷粒",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "miss",
+    "zh": "想念，思念",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "will",
+    "zh": "将，会，要",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "everything",
+    "zh": "每件事，所有事物",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "cabbage",
+    "zh": "卷心菜，洋白菜，甘蓝",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "paper",
+    "zh": "纸",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "plant seeds",
+    "zh": "种种子",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 13,
+    "en": "grow up",
+    "zh": "长大；生长",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 13,
+    "en": "grow vegetables",
+    "zh": "种蔬菜",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 13,
+    "en": "a sunflower seed",
+    "zh": "向日葵种子",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 13,
+    "en": "green leaves",
+    "zh": "绿叶",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 14,
+    "en": "activity",
+    "zh": "活动",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "drama",
+    "zh": "戏剧",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "trip",
+    "zh": "旅行，出行",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "fair",
+    "zh": "集市，户外游艺会",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "field",
+    "zh": "野外的，实地的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "Science Day",
+    "zh": "科学日",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 14,
+    "en": "Music Week",
+    "zh": "音乐周",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 14,
+    "en": "school activities",
+    "zh": "校园活动",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 14,
+    "en": "call for help",
+    "zh": "求助",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 14,
+    "en": "take notes",
+    "zh": "做笔记",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "festival",
+    "zh": "节庆，汇演",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "horn",
+    "zh": "角",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "dot",
+    "zh": "点，小圆点",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "raindrop",
+    "zh": "雨点，雨滴",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "more",
+    "zh": "更多的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "Book Week",
+    "zh": "读书周",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "Field Trip",
+    "zh": "野外研学",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "Art Festival",
+    "zh": "艺术节",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "forest keeper",
+    "zh": "森林管理员",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "give the vote",
+    "zh": "投票",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 16,
+    "en": "special",
+    "zh": "特殊的，特别的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "keeper",
+    "zh": "看守人",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "forest",
+    "zh": "森林",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "lovely",
+    "zh": "美好的，令人愉快的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "student",
+    "zh": "学生",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "Drama Night",
+    "zh": "戏剧之夜",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 16,
+    "en": "the School Fair",
+    "zh": "校园集市",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 16,
+    "en": "Chinese words",
+    "zh": "汉字",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 16,
+    "en": "go back home",
+    "zh": "回家",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 17,
+    "en": "culture",
+    "zh": "文化",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "hour",
+    "zh": "小时",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "note",
+    "zh": "笔记，记录",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "vote",
+    "zh": "选票",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "design",
+    "zh": "设计",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "hometown",
+    "zh": "家乡",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "Picnic Day",
+    "zh": "野餐日",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 17,
+    "en": "Sports Day",
+    "zh": "运动会",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 17,
+    "en": "Chinese writing",
+    "zh": "书法",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 17,
+    "en": "culture fair",
+    "zh": "文化集市",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "T-shirt",
+    "zh": "T恤衫",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "skirt",
+    "zh": "半身裙，裙子",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "shorts",
+    "zh": "短裤",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "shirt",
+    "zh": "衬衫",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "trousers",
+    "zh": "裤子",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "scarf",
+    "zh": "围巾",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "sweater",
+    "zh": "毛线衣，针织衫，羊毛衫",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "look outside",
+    "zh": "看外面",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "look for",
+    "zh": "寻找",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "Don't worry",
+    "zh": "别担心",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "birthday gift",
+    "zh": "生日礼物",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 19,
+    "en": "dress",
+    "zh": "连衣裙",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "party",
+    "zh": "聚会，宴会",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "favourite",
+    "zh": "最喜欢的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "dressmaker",
+    "zh": "裁缝",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "wrong",
+    "zh": "不正确的，错误的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "clever",
+    "zh": "聪明的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "pick your clothes",
+    "zh": "挑选衣服",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 19,
+    "en": "cut up",
+    "zh": "裁剪",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 19,
+    "en": "make clothes",
+    "zh": "做衣服",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 19,
+    "en": "come along and have a look",
+    "zh": "过来看看",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 20,
+    "en": "whale",
+    "zh": "鲸",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "Mr",
+    "zh": "先生",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "uniform",
+    "zh": "制服",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "robe",
+    "zh": "长袍",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "safe",
+    "zh": "安全的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "It's time to go",
+    "zh": "该出发了",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 20,
+    "en": "have an idea",
+    "zh": "有一个主意",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 20,
+    "en": "every day",
+    "zh": "每天",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 20,
+    "en": "keep safe and cool",
+    "zh": "保持安全和凉爽",
+    "pos": "",
+    "kind": "phrase"
+  }
+]

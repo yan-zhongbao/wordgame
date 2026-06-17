@@ -8,6 +8,7 @@ const UI = {
   coinValue: homeQuery("#coinValue"),
   updateBtn: homeQuery("#updateBtn"),
   listHint: homeQuery("#listHint"),
+  semesterSelect: homeQuery("#semesterSelect"),
   versionTag: document.getElementById("versionTag"),
   debugPanel: document.getElementById("debugPanel"),
   debugBody: document.getElementById("debugBody"),
@@ -345,9 +346,9 @@ function getViewApp(view) {
 
 const STORAGE_KEYS = {
   coins: "wg-td-coins",
-  review: "wg-review",
-  dayStats: "wg-day-stats",
-  wordsCache: "wg-words-cache",
+  review: WG.key("wg-review"),
+  dayStats: WG.key("wg-day-stats"),
+  wordsCache: WG.key("wg-words-cache"),
 };
 
 const SESSION_KEYS = {
@@ -485,7 +486,7 @@ async function loadWordsCacheFromCaches() {
     return null;
   }
   try {
-    const cached = await caches.match("words.json", { ignoreSearch: true });
+    const cached = await caches.match(WG.wordsFile(), { ignoreSearch: true });
     if (!cached) {
       return null;
     }
@@ -510,9 +511,10 @@ async function loadWordsFallback() {
 
 async function loadWords() {
   try {
-    Debug.log("info", "fetch words.json start", { url: "words.json", cache: "no-store" });
-    const response = await fetch("words.json", { cache: "no-store" });
-    Debug.log("info", "fetch words.json response", { status: response.status });
+    const wordsFile = WG.wordsFile();
+    Debug.log("info", "fetch words start", { url: wordsFile, cache: "no-store" });
+    const response = await fetch(wordsFile, { cache: "no-store" });
+    Debug.log("info", "fetch words response", { status: response.status });
     if (!response.ok) {
       throw new Error("词库加载失败");
     }
@@ -619,7 +621,7 @@ function renderDayList(words, reviewRecords, dayStats) {
   UI.dayList.innerHTML = "";
   const wordCounts = countWordsByDay(words);
   const wrongCounts = countWrongByDay(reviewRecords);
-  const totalDays = 21;
+  const totalDays = WG.maxDay();
 
   for (let day = 1; day <= totalDays; day += 1) {
     const key = String(day);
@@ -634,7 +636,7 @@ function renderDayList(words, reviewRecords, dayStats) {
 
     const title = document.createElement("div");
     title.className = "day-title";
-    title.textContent = `Day ${day}`;
+    title.textContent = WG.dayLabel(day);
 
     const meta = document.createElement("div");
     meta.className = "day-meta";
@@ -757,6 +759,38 @@ window.addEventListener("storage", (event) => {
   }
 });
 
+let semesterSelectorReady = false;
+
+function setupSemesterSelector() {
+  const select = UI.semesterSelect;
+  if (!select || semesterSelectorReady) {
+    return;
+  }
+  semesterSelectorReady = true;
+  const currentId = WG.id();
+  select.innerHTML = "";
+  WG.SEMESTERS.forEach((semester) => {
+    const option = document.createElement("option");
+    option.value = semester.id;
+    option.textContent = semester.label;
+    if (semester.id === currentId) {
+      option.selected = true;
+    }
+    select.appendChild(option);
+  });
+  select.addEventListener("change", () => {
+    const nextId = select.value;
+    if (nextId === WG.id()) {
+      return;
+    }
+    if (WG.setId(nextId)) {
+      Debug.log("info", "switch semester", { semester: nextId });
+      // Reload so every module re-reads the active word set and storage keys.
+      location.reload();
+    }
+  });
+}
+
 async function init() {
   if (initInFlight) {
     return;
@@ -765,6 +799,7 @@ async function init() {
   Debug.log("info", "init start");
   AppNav.show("home");
   updateCoinUI();
+  setupSemesterSelector();
   loadVersionTag();
   try {
     if ("serviceWorker" in navigator) {
@@ -782,7 +817,7 @@ async function init() {
     const dayStats = loadDayStats();
     renderDayList(words, reviewRecords, dayStats);
     setHint("");
-    Debug.log("info", "init ready", { days: 21, words: words.length });
+    Debug.log("info", "init ready", { days: WG.maxDay(), words: words.length });
   } catch (err) {
     Debug.log("error", "init failed", { error: err.message || err });
     setHint(err.message || "加载失败，请刷新重试");

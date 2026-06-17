@@ -260,7 +260,7 @@ function getDayFromQuery() {
   if (!Number.isFinite(value)) {
     return 1;
   }
-  return Math.min(21, Math.max(1, value));
+  return Math.min(WG.maxDay(), Math.max(1, value));
 }
 
 function isFreezeActive(now = performance.now()) {
@@ -311,7 +311,7 @@ function updateEffectStatus(now) {
 }
 
 async function loadWords(day) {
-  const response = await fetch("words.json");
+  const response = await fetch(WG.wordsFile());
   if (!response.ok) {
     throw new Error("词库加载失败");
   }
@@ -1065,7 +1065,7 @@ async function startDay(dayOverride) {
   const day = Number.isFinite(dayOverride) ? dayOverride : getDayFromQuery();
   state.day = day;
   if (UI.dayValue) {
-    UI.dayValue.textContent = String(state.day);
+    UI.dayValue.textContent = WG.dayLabel(state.day);
   }
   state.coins = loadCoins();
   updateCoinUI();

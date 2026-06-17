@@ -68,12 +68,12 @@ const Debug = {
 };
 
 const STORAGE_KEYS = {
-  review: "wg-review",
-  spell: "wg-spell-stats",
-  lastDay: "wg-last-day",
-  dayStats: "wg-day-stats",
+  review: WG.key("wg-review"),
+  spell: WG.key("wg-spell-stats"),
+  lastDay: WG.key("wg-last-day"),
+  dayStats: WG.key("wg-day-stats"),
   coins: "wg-td-coins",
-  wordsCache: "wg-words-cache",
+  wordsCache: WG.key("wg-words-cache"),
 };
 
 const SESSION_KEYS = {
@@ -104,11 +104,12 @@ const Data = {
 
   async load(options = {}) {
     const { noCache = false, cacheBust = false } = options;
-    const url = cacheBust ? `words.json?v=${Date.now()}` : "words.json";
+    const wordsFile = WG.wordsFile();
+    const url = cacheBust ? `${wordsFile}?v=${Date.now()}` : wordsFile;
     try {
-      Debug.log("info", "fetch words.json start", { url, cache: noCache ? "no-store" : "default" });
+      Debug.log("info", "fetch words start", { url, cache: noCache ? "no-store" : "default" });
       const response = await fetch(url, { cache: noCache ? "no-store" : "default" });
-      Debug.log("info", "fetch words.json response", { url, status: response.status });
+      Debug.log("info", "fetch words response", { url, status: response.status });
       if (!response.ok) {
         throw new Error("词库加载失败，请检查 words.json。");
       }
@@ -227,7 +228,7 @@ async function loadWordsCacheFromCaches() {
     return null;
   }
   try {
-    const cached = await caches.match("words.json", { ignoreSearch: true });
+    const cached = await caches.match(WG.wordsFile(), { ignoreSearch: true });
     if (!cached) {
       return null;
     }
@@ -460,14 +461,14 @@ function renderSpellPrompt(zh, display, wrongIndices = null) {
 function getLastDay() {
   const stored = Storage.load(STORAGE_KEYS.lastDay, 1);
   const day = Number(stored);
-  if (!Number.isInteger(day) || day < 1 || day > 21) {
+  if (!Number.isInteger(day) || day < 1 || day > WG.maxDay()) {
     return 1;
   }
   return day;
 }
 
 function setLastDay(day) {
-  const safeDay = Math.min(21, Math.max(1, Number(day) || 1));
+  const safeDay = Math.min(WG.maxDay(), Math.max(1, Number(day) || 1));
   Storage.save(STORAGE_KEYS.lastDay, safeDay);
   return safeDay;
 }
@@ -520,7 +521,7 @@ function getDayFromQuery() {
     return null;
   }
   const day = Math.floor(value);
-  if (day < 1 || day > 21) {
+  if (day < 1 || day > WG.maxDay()) {
     return null;
   }
   return day;
@@ -536,7 +537,7 @@ function getDayFromSession() {
     return null;
   }
   const day = Math.floor(value);
-  if (day < 1 || day > 21) {
+  if (day < 1 || day > WG.maxDay()) {
     return null;
   }
   return day;
@@ -1724,7 +1725,7 @@ const Engine = {
       transitioning: false,
       transitionTimer: null,
     };
-    UI.dayLabel.textContent = String(safeDay);
+    UI.dayLabel.textContent = WG.dayLabel(safeDay);
     UI.primaryBtn.textContent = "重新开始";
     this.updateProgress();
     this.nextTurn();
@@ -1772,7 +1773,7 @@ const Engine = {
       transitioning: false,
       transitionTimer: null,
     };
-    UI.dayLabel.textContent = String(safeDay);
+    UI.dayLabel.textContent = WG.dayLabel(safeDay);
     UI.primaryBtn.textContent = "重新开始";
     this.updateProgress();
     this.nextTurn();
@@ -2539,7 +2540,7 @@ const Engine = {
       updatedAt: new Date().toISOString(),
     });
     const body = [
-      `Day ${this.state.day} 已完成`,
+      `${WG.dayLabel(this.state.day)} 已完成`,
       `星级：${stars}`,
       `分数：${this.state.score}`,
       `错误：${this.state.errors} 次`,
@@ -2630,10 +2631,10 @@ function showDayPicker(selectedDay) {
 
   const grid = document.createElement("div");
   grid.className = "day-grid";
-  for (let day = 1; day <= 21; day += 1) {
+  for (let day = 1; day <= WG.maxDay(); day += 1) {
     const button = document.createElement("button");
     button.className = "day-button";
-    button.textContent = String(day);
+    button.textContent = WG.dayLabel(day);
     if (day === selectedDay) {
       button.classList.add("correct");
     }
@@ -2661,9 +2662,9 @@ function showStartScreen(selectedDay = null) {
   const dayItems = queues[Stage.NEW].length;
   const spellCount = queues[Stage.SPELL].length;
   const meaningCount = queues[Stage.MEANING].length;
-  UI.dayLabel.textContent = String(day);
+  UI.dayLabel.textContent = WG.dayLabel(day);
   updateStarPreview(0);
-  UI.panelTitle.textContent = `准备开始 · Day ${day}`;
+  UI.panelTitle.textContent = `准备开始 · ${WG.dayLabel(day)}`;
   UI.panelBody.innerHTML = [
     "先复习错词，再学习新词。",
     `复习错词：${dueCount} 个`,
@@ -2850,7 +2851,7 @@ async function bootApp() {
       await Data.load({ noCache: true, cacheBust: true });
     }
     if (targetDay && Data.getDay(targetDay).length === 0) {
-      showError(`未找到 Day ${targetDay} 的词库，请更新后重试。`);
+      showError(`未找到 ${WG.dayLabel(targetDay)} 的词库，请更新后重试。`);
       return;
     }
     hideOverlay();
@@ -2890,6 +2891,9 @@ window.PracticeApp = {
       showStartScreen(getInitialDay());
       return;
     }
+    // Dismiss any leftover overlay (e.g. a start screen from a previous visit)
+    // so the freshly started day is shown immediately.
+    hideOverlay();
     Engine.start(targetDay);
     if (
       Engine.state.day !== targetDay ||
@@ -2929,14 +2933,24 @@ window.PracticeApp = {
   },
 };
 
-document.addEventListener("DOMContentLoaded", bootApp);
+// In the single-page app (index.html) the practice view is initialized lazily
+// when navigated to via AppNav -> startDay. Auto-booting here would start a
+// background day and leave a stale start-screen overlay over the practice view,
+// causing the wrong day to load on the next tap. Only auto-boot when this
+// script runs as a standalone page (practice.html, no home view present).
+const STANDALONE_PRACTICE = !document.getElementById("homeView");
+if (STANDALONE_PRACTICE) {
+  document.addEventListener("DOMContentLoaded", bootApp);
+}
 window.addEventListener("pageshow", (event) => {
+  handleAudioResume("pageshow");
+  if (!STANDALONE_PRACTICE) {
+    return;
+  }
   if (event.persisted) {
-    handleAudioResume("pageshow");
     bootApp();
     return;
   }
-  handleAudioResume("pageshow");
   const dayFromQuery = getDayFromQuery();
   const dayFromSession = dayFromQuery ? null : getDayFromSession();
   const targetDay = dayFromQuery ?? dayFromSession;
