@@ -1,4 +1,4 @@
-const CACHE_NAME = "wordgame-v96";
+const CACHE_NAME = "wordgame-v97";
 const AUDIO_CACHE = "wordgame-audio";
 const WORDS_FILES = ["words.json", "words.4b.json"];
 const CORE_ASSETS = [
@@ -46,6 +46,32 @@ const CORE_ASSETS = [
   "./assets/td/enemy-sheet.svg",
   "./assets/td/enemy-stack.svg",
   "./assets/td/enemy-book.svg",
+  "./assets/td/enemy-english-dictation.png",
+  "./assets/td/enemy-math-calculation.svg",
+  "./assets/td/enemy-chinese-characters.svg",
+  "./assets/td/enemy-vocabulary-cards.svg",
+  "./assets/td/enemy-math-practice.svg",
+  "./assets/td/enemy-math-mistakes.svg",
+  "./assets/td/enemy-poem-scroll.svg",
+  "./assets/td/enemy-diary.svg",
+  "./assets/td/enemy-poster-chinese.svg",
+  "./assets/td/enemy-poster-english.svg",
+  "./assets/td/enemy-writing-practice.svg",
+  "./assets/td/enemy-english-composition.svg",
+  "./assets/td/enemy-weekly-journal.svg",
+  "./assets/td/enemy-reading-training.svg",
+  "./assets/td/enemy-english-review.svg",
+  "./assets/td/enemy-math-review.svg",
+  "./assets/td/enemy-chinese-review.svg",
+  "./assets/td/enemy-sunshine-workbook.svg",
+  "./assets/td/enemy-boss-midterm-english.svg",
+  "./assets/td/enemy-boss-midterm-math.svg",
+  "./assets/td/enemy-boss-midterm-chinese.svg",
+  "./assets/td/enemy-boss-final-english.svg",
+  "./assets/td/enemy-boss-final-math.svg",
+  "./assets/td/enemy-boss-final-chinese.svg",
+  "./assets/td/enemy-boss-winter-book.svg",
+  "./assets/td/enemy-boss-summer-book.svg",
   "./assets/td/bag.svg",
   "./assets/td/coin.svg",
   "./assets/td/hoe.svg",

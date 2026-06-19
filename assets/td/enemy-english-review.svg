@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
+  <rect x="11" y="21" width="49" height="45" rx="6" fill="#dff1ff" stroke="#356d9d" stroke-width="3"/>
+  <rect x="19" y="13" width="49" height="45" rx="6" fill="#fffefa" stroke="#356d9d" stroke-width="3"/>
+  <text x="28" y="33" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#2d78c8">ABC</text>
+  <path d="M28 42h28M28 51h21" stroke="#83bde9" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="35" cy="55" r="3" fill="#3b2b1b"/><circle cx="51" cy="55" r="3" fill="#3b2b1b"/>
+  <path d="M39 62c3 2 6 2 9 0" fill="none" stroke="#9b332c" stroke-width="3" stroke-linecap="round"/>
+</svg>

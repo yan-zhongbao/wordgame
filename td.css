@@ -67,8 +67,12 @@ button:active {
 }
 
 .brand-title {
-  font-size: 22px;
-  font-weight: 700;
+  font-family: "Trebuchet MS", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0;
+  color: #2f2216;
+  text-shadow: 0 3px 0 rgba(255, 255, 255, 0.85);
 }
 
 .brand-row {
@@ -368,16 +372,22 @@ button:active {
 .turret {
   position: absolute;
   inset: 6px;
-  padding: 4px 5px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
+  padding: 6px 7px 7px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(251, 247, 238, 0.92));
+  border: 1px solid rgba(116, 84, 46, 0.16);
+  border-radius: 14px;
   text-align: center;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 16px rgba(88, 58, 30, 0.12);
   display: flex;
   flex-direction: column;
   gap: 2px;
   align-items: stretch;
   overflow: hidden;
+}
+
+.turret > * {
+  position: relative;
+  z-index: 1;
 }
 
 .turret-header {
@@ -388,19 +398,20 @@ button:active {
 }
 
 .turret-icon {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
-  position: relative;
+  position: static;
+  filter: drop-shadow(0 3px 3px rgba(70, 45, 20, 0.22));
 }
 
 .turret-level {
   position: absolute;
-  right: -6px;
-  bottom: -6px;
+  right: 7px;
+  top: 7px;
   width: 16px;
   height: 16px;
   border-radius: 50%;
@@ -469,6 +480,8 @@ button:active {
 
 .turret-hp {
   width: 100%;
+  margin-top: auto;
+  padding-bottom: 1px;
 }
 
 .hp-bar {
@@ -528,24 +541,26 @@ button:active {
 
 .enemy {
   position: absolute;
-  min-width: 96px;
-  padding: 8px 10px;
-  background: #fff;
+  min-width: 104px;
+  padding: 6px 8px 7px;
+  background: rgba(255, 252, 246, 0.78);
   color: var(--ink);
-  border-radius: 16px;
+  border: 1px solid rgba(111, 82, 48, 0.12);
+  border-radius: 14px;
   font-size: 12px;
   text-align: center;
   transform: translate(-50%, -50%);
-  box-shadow: 0 12px 20px rgba(40, 20, 10, 0.25);
+  box-shadow: 0 8px 16px rgba(50, 32, 18, 0.18);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  backdrop-filter: blur(2px);
 }
 
 .enemy .hp-bar {
-  width: 86px;
-  height: 7px;
+  width: 88px;
+  height: 6px;
 }
 
 .enemy.shake {
@@ -585,7 +600,7 @@ button:active {
 }
 
 .enemy.slowed {
-  background: rgba(220, 240, 255, 0.9);
+  background: rgba(220, 240, 255, 0.78);
   border-color: rgba(96, 168, 220, 0.4);
   box-shadow: 0 12px 20px rgba(90, 140, 200, 0.2);
 }
@@ -595,12 +610,14 @@ button:active {
 }
 
 .enemy .enemy-img {
-  width: 54px;
-  height: 54px;
+  width: 68px;
+  height: 68px;
   position: relative;
+  background-image: var(--enemy-image, url("assets/td/enemy-sheet.svg"));
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
+  filter: drop-shadow(0 5px 6px rgba(66, 44, 22, 0.22));
 }
 
 .enemy-tag {
@@ -620,29 +637,46 @@ button:active {
 
 .enemy .enemy-title {
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 1.2;
+  max-width: 96px;
 }
 
 .enemy.normal .enemy-img {
-  background-image: url("assets/td/enemy-sheet.svg");
+  background-image: var(--enemy-image, url("assets/td/enemy-sheet.svg"));
 }
 
 .enemy.mid {
-  background: #f0f4ff;
+  background: rgba(240, 244, 255, 0.78);
   border: 1px solid rgba(92, 100, 170, 0.2);
 }
 
 .enemy.mid .enemy-img {
-  background-image: url("assets/td/enemy-stack.svg");
+  background-image: var(--enemy-image, url("assets/td/enemy-stack.svg"));
 }
 
 .enemy.boss {
-  background: #fff1ee;
-  border: 2px solid rgba(174, 57, 47, 0.4);
+  min-width: 128px;
+  padding: 8px 10px 9px;
+  background: rgba(255, 241, 238, 0.86);
+  border: 2px solid rgba(174, 57, 47, 0.42);
+  box-shadow: 0 14px 26px rgba(96, 33, 25, 0.24);
 }
 
 .enemy.boss .enemy-img {
-  background-image: url("assets/td/enemy-book.svg");
+  width: 84px;
+  height: 84px;
+  background-image: var(--enemy-image, url("assets/td/enemy-book.svg"));
+}
+
+.enemy.boss .enemy-title {
+  max-width: 116px;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+.enemy.boss .hp-bar {
+  width: 106px;
+  height: 8px;
 }
 
 .enemy.jump {
@@ -691,14 +725,38 @@ button:active {
 
 .bullet {
   position: absolute;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
-  box-shadow: 0 0 12px rgba(240, 130, 46, 0.4);
-  transform: translate(-50%, -50%);
+  box-shadow: 0 0 8px rgba(240, 130, 46, 0.32);
+  transform: translate(-50%, -50%) rotate(var(--bullet-angle, 0deg));
+  z-index: 5;
+}
+
+.bullet::before {
+  content: "";
+  position: absolute;
+  left: -17px;
+  top: 50%;
+  width: 20px;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 227, 170, 0.75));
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.bullet.fruit-blueberry {
+  width: 16px;
+  height: 16px;
+  box-shadow: 0 0 7px rgba(80, 104, 220, 0.38);
+}
+
+.bullet.fruit-blueberry::before {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(150, 170, 255, 0.7));
 }
 
 .bullet.fruit-apple {
@@ -707,14 +765,15 @@ button:active {
 
 .impact {
   position: absolute;
-  width: 44px;
-  height: 44px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
   transform: translate(-50%, -50%);
-  animation: impact-pop 0.6s ease-out forwards;
+  animation: impact-pop 0.42s ease-out forwards;
+  opacity: 0.82;
 }
 
 .damage-text {
@@ -814,12 +873,12 @@ button:active {
 
 @keyframes impact-pop {
   0% {
-    opacity: 0.9;
+    opacity: 0.82;
     transform: translate(-50%, -50%) scale(0.6);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(1.4);
+    transform: translate(-50%, -50%) scale(1.15);
   }
 }
 

@@ -433,36 +433,42 @@ const TD = {
 };
 
 const TASKS = [
-  { name: "英语听写卷", hp: 1 },
-  { name: "数学口算卷", hp: 1 },
-  { name: "语文生字卷", hp: 1 },
-  { name: "词语积累", hp: 1 },
-  { name: "数学每日一练", hp: 1 },
-  { name: "数学错题本整理", hp: 3 },
-  { name: "古诗三首背诵", hp: 3 },
-  { name: "语文日记", hp: 3 },
-  { name: "语文手抄报", hp: 4 },
-  { name: "英语手抄报", hp: 4 },
-  { name: "语文周末小练笔", hp: 5 },
-  { name: "英语小作文", hp: 6 },
-  { name: "语文周记", hp: 6 },
-  { name: "语文阅读理解专项训练", hp: 6 },
-  { name: "英语单元复习卷", hp: 6 },
-  { name: "数学单元复习卷", hp: 8 },
-  { name: "语文单元复习卷", hp: 8 },
-  { name: "英语阳光课堂", hp: 6 },
+  { name: "英语听写卷", hp: 1, asset: "enemy-english-dictation.png" },
+  { name: "数学口算卷", hp: 1, asset: "enemy-math-calculation.svg" },
+  { name: "语文生字卷", hp: 1, asset: "enemy-chinese-characters.svg" },
+  { name: "词语积累", hp: 1, asset: "enemy-vocabulary-cards.svg" },
+  { name: "数学每日一练", hp: 1, asset: "enemy-math-practice.svg" },
+  { name: "数学错题本整理", hp: 3, asset: "enemy-math-mistakes.svg" },
+  { name: "古诗三首背诵", hp: 3, asset: "enemy-poem-scroll.svg" },
+  { name: "语文日记", hp: 3, asset: "enemy-diary.svg" },
+  { name: "语文手抄报", hp: 4, asset: "enemy-poster-chinese.svg" },
+  { name: "英语手抄报", hp: 4, asset: "enemy-poster-english.svg" },
+  { name: "语文周末小练笔", hp: 5, asset: "enemy-writing-practice.svg" },
+  { name: "英语小作文", hp: 6, asset: "enemy-english-composition.svg" },
+  { name: "语文周记", hp: 6, asset: "enemy-weekly-journal.svg" },
+  { name: "语文阅读理解专项训练", hp: 6, asset: "enemy-reading-training.svg" },
+  { name: "英语单元复习卷", hp: 6, asset: "enemy-english-review.svg" },
+  { name: "数学单元复习卷", hp: 8, asset: "enemy-math-review.svg" },
+  { name: "语文单元复习卷", hp: 8, asset: "enemy-chinese-review.svg" },
+  { name: "英语阳光课堂", hp: 6, asset: "enemy-sunshine-workbook.svg" },
 ];
 
 const BOSSES = [
-  { name: "英语半期模拟测试", hp: 18 },
-  { name: "数学半期模拟测试", hp: 20 },
-  { name: "语文半期模拟测试", hp: 22 },
-  { name: "英语期末测试", hp: 24 },
-  { name: "数学期末测试", hp: 26 },
-  { name: "语文期末测试", hp: 28 },
-  { name: "寒假园地", hp: 30 },
-  { name: "暑假园地", hp: 60 },
+  { name: "英语半期模拟测试", hp: 18, asset: "enemy-boss-midterm-english.svg" },
+  { name: "数学半期模拟测试", hp: 20, asset: "enemy-boss-midterm-math.svg" },
+  { name: "语文半期模拟测试", hp: 22, asset: "enemy-boss-midterm-chinese.svg" },
+  { name: "英语期末测试", hp: 24, asset: "enemy-boss-final-english.svg" },
+  { name: "数学期末测试", hp: 26, asset: "enemy-boss-final-math.svg" },
+  { name: "语文期末测试", hp: 28, asset: "enemy-boss-final-chinese.svg" },
+  { name: "寒假园地", hp: 30, asset: "enemy-boss-winter-book.svg" },
+  { name: "暑假园地", hp: 60, asset: "enemy-boss-summer-book.svg" },
 ];
+
+const DEFAULT_ENEMY_ASSETS = {
+  normal: "enemy-sheet.svg",
+  mid: "enemy-stack.svg",
+  boss: "enemy-book.svg",
+};
 
 const VOICE_BAG_NAMES = [...TASKS.map((task) => task.name), ...BOSSES.map((boss) => boss.name)];
 const VOICE_BAG_SRC = VOICE_BAG_NAMES.reduce((map, name, index) => {
@@ -620,6 +626,7 @@ function buildEnemyQueue(day) {
       queue.push({
         name: task.name,
         hp: task.hp,
+        asset: task.asset,
         tier: "normal",
       });
     }
@@ -628,6 +635,7 @@ function buildEnemyQueue(day) {
       queue.push({
         name: base.name,
         hp: Math.max(9, base.hp + 6 + Math.floor(Math.random() * 4)),
+        asset: base.asset,
         tier: "mid",
       });
     }
@@ -643,6 +651,11 @@ function pickSmallTask(maxHp) {
   }
   const minHp = Math.min(...TASKS.map((task) => task.hp));
   return TASKS.find((task) => task.hp === minHp) || TASKS[0];
+}
+
+function getEnemyAssetPath(asset, tier) {
+  const file = asset || DEFAULT_ENEMY_ASSETS[tier] || DEFAULT_ENEMY_ASSETS.normal;
+  return file.includes("/") ? file : `assets/td/${file}`;
 }
 
 function getSmallHpRate() {
@@ -1300,7 +1313,7 @@ function handleHornAction() {
   spawnBoss();
   for (let i = 0; i < 5; i += 1) {
     const task = randomItem(TASKS);
-    spawnEnemy({ name: task.name, hp: task.hp, tier: "normal" }, getSpawnPoint());
+    spawnEnemy({ name: task.name, hp: task.hp, asset: task.asset, tier: "normal" }, getSpawnPoint());
   }
   showMessage(TEXT.toolHornUsed);
   return true;
@@ -1607,6 +1620,7 @@ function spawnEnemy(entry, spawnPoint) {
     hp: entry.hp,
     maxHp: entry.hp,
     tier: entry.tier,
+    asset: entry.asset,
     x: spawnX,
     y: spawnY,
     speed:
@@ -1709,7 +1723,7 @@ function updateSpawns(delta) {
     return;
   }
   TD.smallHpBudget -= task.hp;
-  spawnEnemy({ name: task.name, hp: task.hp, tier: "normal" }, spawnPoint);
+  spawnEnemy({ name: task.name, hp: task.hp, asset: task.asset, tier: "normal" }, spawnPoint);
   TD.spawnTimer -= spawnInterval;
 }
 
@@ -1717,6 +1731,7 @@ function renderEnemy(enemy) {
   const el = document.createElement("div");
   el.className = `enemy ${enemy.tier === "boss" ? "boss" : enemy.tier === "mid" ? "mid" : "normal"}`;
   el.dataset.id = enemy.id;
+  el.style.setProperty("--enemy-image", `url("${getEnemyAssetPath(enemy.asset, enemy.tier)}")`);
   el.innerHTML = `
     <div class="enemy-img"><span class="enemy-tag"></span></div>
     <div class="enemy-title"></div>
@@ -2236,6 +2251,9 @@ function updateBulletPosition(bullet) {
   }
   bullet.el.style.left = `${bullet.x}px`;
   bullet.el.style.top = `${bullet.y}px`;
+  if (Number.isFinite(bullet.vx) && Number.isFinite(bullet.vy)) {
+    bullet.el.style.setProperty("--bullet-angle", `${Math.atan2(bullet.vy, bullet.vx)}rad`);
+  }
 }
 
 function resolveBulletTarget(bullet) {
