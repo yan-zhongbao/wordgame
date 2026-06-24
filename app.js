@@ -2458,7 +2458,10 @@ const Engine = {
       this.state.score -= 1;
       this.state.errors += 1;
     if (!this.state.currentWrongRecorded) {
-      Review.recordWrong(item, wrongTypeForStage(stage));
+      // Custom levels are isolated: don't pollute the global review pile.
+      if (!this.state.custom) {
+        Review.recordWrong(item, wrongTypeForStage(stage));
+      }
       this.state.currentWrongRecorded = true;
     }
     this.updateProgress();
@@ -2527,7 +2530,9 @@ const Engine = {
     const guardDelay = isCorrect ? 1500 : SPELL_RETRY_DELAY + 1000;
     this.startTransitionGuard("resolveSpellTask", guardDelay);
     Debug.log("info", "resolveSpellTask", { mode: task.modeType, correct: isCorrect });
-    SpellStats.record(task.item, isCorrect, task.modeType);
+    if (!this.state.custom) {
+      SpellStats.record(task.item, isCorrect, task.modeType);
+    }
     if (!isCorrect && task.isPrimary && !task.remedialScheduled) {
       task.remedialScheduled = true;
       const extraModes = remedialSpellModes(task.modeType);
@@ -2554,7 +2559,9 @@ const Engine = {
       this.state.score -= 1;
       this.state.errors += 1;
       if (!task.reviewRecorded) {
-        Review.recordWrong(task.item, wrongTypeForStage(Stage.SPELL));
+        if (!this.state.custom) {
+          Review.recordWrong(task.item, wrongTypeForStage(Stage.SPELL));
+        }
         task.reviewRecorded = true;
       }
       this.updateProgress();
@@ -2611,7 +2618,7 @@ const Engine = {
       `星级：${stars}`,
       `分数：${this.state.score}`,
       `错误：${this.state.errors} 次`,
-      "错词已加入复习区。",
+      isCustom ? "这是特殊关卡，不影响其它关卡的复习记录。" : "错词已加入复习区。",
     ].join("<br />");
     UI.panelTitle.textContent = "闯关完成";
     UI.panelBody.innerHTML = body;
