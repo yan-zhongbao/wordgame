@@ -1609,14 +1609,18 @@ function wrongTypeForStage(stage) {
   return "Meaning";
 }
 
-function buildStageQueues(day) {
-  const dayItems = Data.getDay(day);
+function buildStageQueuesFromItems(items, { includeReview = true } = {}) {
+  const list = Array.isArray(items) ? items : [];
   return {
-    [Stage.REVIEW]: Review.getDueItems(),
-    [Stage.NEW]: dayItems,
-    [Stage.SPELL]: buildSpellTasks(dayItems),
-    [Stage.MEANING]: dayItems.filter(isMeaningCandidate),
+    [Stage.REVIEW]: includeReview ? Review.getDueItems() : [],
+    [Stage.NEW]: list,
+    [Stage.SPELL]: buildSpellTasks(list),
+    [Stage.MEANING]: list.filter(isMeaningCandidate),
   };
+}
+
+function buildStageQueues(day) {
+  return buildStageQueuesFromItems(Data.getDay(day), { includeReview: true });
 }
 
 function buildStageOrder(queues) {
@@ -1726,6 +1730,63 @@ const Engine = {
       transitionTimer: null,
     };
     UI.dayLabel.textContent = WG.dayLabel(safeDay);
+    UI.primaryBtn.textContent = "重新开始";
+    this.updateProgress();
+    this.nextTurn();
+  },
+
+  // Recite an arbitrary list of items (a custom task) instead of a fixed day.
+  startCustom(items, label) {
+    const list = Array.isArray(items) ? items.filter((it) => it && it.en) : [];
+    if (list.length === 0) {
+      showNotice("没有可背诵的单词。");
+      return;
+    }
+    const customLabel = label || "自定义背诵";
+    const queues = buildStageQueuesFromItems(list, { includeReview: false });
+    const stageOrder = buildStageOrder(queues);
+    Debug.log("info", "engine start custom", {
+      count: list.length,
+      review: queues[Stage.REVIEW].length,
+      new: queues[Stage.NEW].length,
+      spell: queues[Stage.SPELL].length,
+      meaning: queues[Stage.MEANING].length,
+    });
+    if (stageOrder.length === 0) {
+      showNotice("当前列表没有可用单词。");
+      return;
+    }
+    const stage = stageOrder[0];
+    this.state = {
+      day: null,
+      custom: true,
+      customItems: list,
+      customLabel,
+      stage,
+      stageOrder,
+      stageIndex: 0,
+      stageQueue: [...queues[stage]],
+      queues,
+      spellCycles: new Map(),
+      flashToken: 0,
+      spellRetryToken: 0,
+      spellRetryTimer: null,
+      errors: 0,
+      score: 0,
+      stageTotal: queues[stage].length,
+      stageCleared: 0,
+      stageAnswered: 0,
+      currentItem: null,
+      currentQuestion: null,
+      spelling: null,
+      spellMode: null,
+      currentTask: null,
+      currentModeType: "",
+      currentWrongRecorded: false,
+      transitioning: false,
+      transitionTimer: null,
+    };
+    UI.dayLabel.textContent = customLabel;
     UI.primaryBtn.textContent = "重新开始";
     this.updateProgress();
     this.nextTurn();
@@ -2533,14 +2594,20 @@ const Engine = {
 
   finish() {
     const stars = this.starsForErrors(this.state.errors);
-    DayStats.set(this.state.day, {
-      stars,
-      score: this.state.score,
-      errors: this.state.errors,
-      updatedAt: new Date().toISOString(),
-    });
+    const isCustom = this.state.custom === true;
+    const customItems = this.state.customItems;
+    const customLabel = this.state.customLabel || "自定义背诵";
+    if (!isCustom) {
+      DayStats.set(this.state.day, {
+        stars,
+        score: this.state.score,
+        errors: this.state.errors,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+    const title = isCustom ? customLabel : WG.dayLabel(this.state.day);
     const body = [
-      `${WG.dayLabel(this.state.day)} 已完成`,
+      `${title} 已完成`,
       `星级：${stars}`,
       `分数：${this.state.score}`,
       `错误：${this.state.errors} 次`,
@@ -2555,8 +2622,29 @@ const Engine = {
     restart.textContent = "再来一次";
     restart.addEventListener("click", () => {
       hideOverlay();
-      showStartScreen(this.state.day);
+      if (isCustom) {
+        this.startCustom(customItems, customLabel);
+      } else {
+        showStartScreen(this.state.day);
+      }
     });
+    if (isCustom) {
+      const close = document.createElement("button");
+      close.className = "primary ghost";
+      close.textContent = "返回主页";
+      close.addEventListener("click", () => {
+        hideOverlay();
+        if (window.AppNav && typeof window.AppNav.show === "function") {
+          window.AppNav.show("home");
+        }
+      });
+      UI.panelActions.appendChild(restart);
+      UI.panelActions.appendChild(close);
+      showOverlay();
+      AudioPlayer.updateButton(null);
+      speakEnglish("Great, you finished all the words.");
+      return;
+    }
 
     const tdMode = document.createElement("button");
     tdMode.className = "primary ghost";
@@ -2743,6 +2831,11 @@ function showNotice(message) {
 UI.primaryBtn.addEventListener("click", async () => {
   unlockAudioOnce("primary");
   await ensureReady();
+  // In a custom recitation, restart the same custom list instead of a day.
+  if (Engine.state.custom && Array.isArray(Engine.state.customItems)) {
+    Engine.startCustom(Engine.state.customItems, Engine.state.customLabel);
+    return;
+  }
   const day = getDayFromSession() ?? getInitialDay();
   if (Number.isFinite(day)) {
     Engine.start(day);
@@ -2912,6 +3005,11 @@ window.PracticeApp = {
       }
       Engine.start(targetDay);
     }
+  },
+  async startCustom(items, label) {
+    await ensureReady();
+    hideOverlay();
+    Engine.startCustom(items, label);
   },
   pause() {
     Engine.state.transitioning = false;

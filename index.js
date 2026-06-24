@@ -9,6 +9,9 @@ const UI = {
   updateBtn: homeQuery("#updateBtn"),
   listHint: homeQuery("#listHint"),
   semesterSelect: homeQuery("#semesterSelect"),
+  customInput: homeQuery("#customInput"),
+  customStart: homeQuery("#customStart"),
+  customHint: homeQuery("#customHint"),
   versionTag: document.getElementById("versionTag"),
   debugPanel: document.getElementById("debugPanel"),
   debugBody: document.getElementById("debugBody"),
@@ -306,7 +309,13 @@ const AppNav = {
     this.setStyle(view);
     document.body.dataset.view = view;
     if (view === "practice") {
-      if (window.PracticeApp && typeof window.PracticeApp.startDay === "function") {
+      if (
+        options.customItems &&
+        window.PracticeApp &&
+        typeof window.PracticeApp.startCustom === "function"
+      ) {
+        window.PracticeApp.startCustom(options.customItems, options.customLabel);
+      } else if (window.PracticeApp && typeof window.PracticeApp.startDay === "function") {
         window.PracticeApp.startDay(options.day);
       }
       return;
@@ -759,7 +768,113 @@ window.addEventListener("storage", (event) => {
   }
 });
 
-let semesterSelectorReady = false;
+let loadedWords = [];
+let customPanelReady = false;
+
+// Normalize an English word/phrase for matching (case/space/quote-insensitive).
+function normalizeEn(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[’]/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Split pasted text into English entries. Each entry is the leading English run
+// before the first Chinese character; separators are ; ；, ，、 and newlines.
+function parseCustomEntries(text) {
+  const out = [];
+  const seen = new Set();
+  String(text || "")
+    .split(/[;；,，、\n\r]+/)
+    .forEach((segment) => {
+      const seg = segment.trim();
+      if (!seg) {
+        return;
+      }
+      const cjk = seg.search(/[一-鿿]/);
+      let en = (cjk >= 0 ? seg.slice(0, cjk) : seg).trim();
+      en = en.replace(/\s+/g, " ");
+      const key = normalizeEn(en);
+      if (en && !seen.has(key)) {
+        seen.add(key);
+        out.push(en);
+      }
+    });
+  return out;
+}
+
+// Match parsed English entries against the loaded word list.
+function matchCustomEntries(entries) {
+  const index = new Map();
+  loadedWords.forEach((item) => {
+    if (item && item.en) {
+      const key = normalizeEn(item.en);
+      if (!index.has(key)) {
+        index.set(key, item);
+      }
+    }
+  });
+  const matched = [];
+  const unmatched = [];
+  entries.forEach((en) => {
+    const item = index.get(normalizeEn(en));
+    if (item) {
+      matched.push(item);
+    } else {
+      unmatched.push(en);
+    }
+  });
+  return { matched, unmatched };
+}
+
+function setCustomHint(message, isError) {
+  if (!UI.customHint) {
+    return;
+  }
+  UI.customHint.textContent = message || "";
+  UI.customHint.classList.toggle("error", Boolean(isError));
+}
+
+function startCustomRecite() {
+  if (!UI.customInput) {
+    return;
+  }
+  const entries = parseCustomEntries(UI.customInput.value);
+  if (entries.length === 0) {
+    setCustomHint("请先粘贴要背诵的单词或短语。", true);
+    return;
+  }
+  const { matched, unmatched } = matchCustomEntries(entries);
+  if (matched.length === 0) {
+    setCustomHint(`未在词库中找到这些单词：${unmatched.join("、")}`, true);
+    return;
+  }
+  if (unmatched.length) {
+    setCustomHint(
+      `已识别 ${matched.length} 个，未找到：${unmatched.join("、")}`,
+      true
+    );
+  } else {
+    setCustomHint(`已识别 ${matched.length} 个，开始背诵。`, false);
+  }
+  Debug.log("info", "start custom recite", {
+    matched: matched.length,
+    unmatched: unmatched.length,
+  });
+  AppNav.show("practice", {
+    customItems: matched,
+    customLabel: "自定义背诵",
+  });
+}
+
+function setupCustomPanel() {
+  if (customPanelReady || !UI.customStart) {
+    return;
+  }
+  customPanelReady = true;
+  UI.customStart.addEventListener("click", startCustomRecite);
+}
 
 function setupSemesterSelector() {
   const select = UI.semesterSelect;
@@ -800,6 +915,7 @@ async function init() {
   AppNav.show("home");
   updateCoinUI();
   setupSemesterSelector();
+  setupCustomPanel();
   loadVersionTag();
   try {
     if ("serviceWorker" in navigator) {
@@ -813,6 +929,7 @@ async function init() {
       }
     }
     const words = await loadWords();
+    loadedWords = words;
     const reviewRecords = loadReviewRecords();
     const dayStats = loadDayStats();
     renderDayList(words, reviewRecords, dayStats);

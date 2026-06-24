@@ -327,6 +327,29 @@
         font-size: 13px;
       }
 
+      .list-hint.error {
+        color: #d9480f;
+      }
+
+      .custom-input {
+        width: 100%;
+        box-sizing: border-box;
+        resize: vertical;
+        min-height: 96px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        background: #fff;
+        font-size: 15px;
+        line-height: 1.5;
+        font-family: inherit;
+        color: var(--text, #1f2937);
+      }
+
+      .custom-start {
+        align-self: flex-start;
+      }
+
       .day-row.drop-target {
         outline: 2px dashed rgba(232, 111, 58, 0.6);
         outline-offset: 2px;
@@ -675,6 +698,26 @@
             </div>
             <div id="dayList" class="day-list"></div>
             <div id="listHint" class="list-hint"></div>
+          </section>
+
+          <section class="card">
+            <div>
+              <div class="card-title">自定义背诵</div>
+              <div class="card-sub">
+                粘贴本学期已有的单词/短语，自动匹配后开始背诵（相当于一个临时关卡）。
+              </div>
+            </div>
+            <textarea
+              id="customInput"
+              class="custom-input"
+              rows="5"
+              placeholder="例如：&#10;plant life植物生命；parts of a plant植物的组成部分；plant seeds种种子；dig the earth挖泥土；water the plants给植物浇水"
+            ></textarea>
+            <div class="card-sub">
+              用分号 ；、逗号 ，或换行分隔；中文可写可不写（按英文从词库匹配）。
+            </div>
+            <button class="start-btn custom-start" id="customStart">开始背诵</button>
+            <div id="customHint" class="list-hint"></div>
           </section>
         </main>
       </div>
