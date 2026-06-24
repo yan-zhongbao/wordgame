@@ -9,9 +9,11 @@ const UI = {
   updateBtn: homeQuery("#updateBtn"),
   listHint: homeQuery("#listHint"),
   semesterSelect: homeQuery("#semesterSelect"),
-  customInput: homeQuery("#customInput"),
   customStart: homeQuery("#customStart"),
-  customHint: homeQuery("#customHint"),
+  customOverlay: document.getElementById("customOverlay"),
+  customTitle: document.getElementById("customTitle"),
+  customBody: document.getElementById("customBody"),
+  customActions: document.getElementById("customActions"),
   versionTag: document.getElementById("versionTag"),
   debugPanel: document.getElementById("debugPanel"),
   debugBody: document.getElementById("debugBody"),
@@ -770,8 +772,9 @@ window.addEventListener("storage", (event) => {
 
 let loadedWords = [];
 let customPanelReady = false;
+let semesterSelectorReady = false;
 
-// Normalize an English word/phrase for matching (case/space/quote-insensitive).
+// Normalize an English word/phrase (case/space/quote-insensitive).
 function normalizeEn(text) {
   return String(text || "")
     .toLowerCase()
@@ -780,92 +783,273 @@ function normalizeEn(text) {
     .trim();
 }
 
-// Split pasted text into English entries. Each entry is the leading English run
-// before the first Chinese character; separators are ; ；, ，、 and newlines.
-function parseCustomEntries(text) {
-  const out = [];
-  const seen = new Set();
-  String(text || "")
-    .split(/[;；,，、\n\r]+/)
-    .forEach((segment) => {
-      const seg = segment.trim();
-      if (!seg) {
-        return;
-      }
-      const cjk = seg.search(/[一-鿿]/);
-      let en = (cjk >= 0 ? seg.slice(0, cjk) : seg).trim();
-      en = en.replace(/\s+/g, " ");
-      const key = normalizeEn(en);
-      if (en && !seen.has(key)) {
-        seen.add(key);
-        out.push(en);
+// ---- Custom recitation task (pick levels -> pick words -> save & recite) ----
+
+function customTaskStorageKey() {
+  return WG.key("wg-custom-task");
+}
+
+function loadCustomTask() {
+  try {
+    const raw = localStorage.getItem(customTaskStorageKey());
+    if (!raw) {
+      return null;
+    }
+    const task = JSON.parse(raw);
+    if (task && task.name && Array.isArray(task.items) && task.items.length) {
+      return task;
+    }
+  } catch (err) {
+    // ignore
+  }
+  return null;
+}
+
+function saveCustomTask(task) {
+  try {
+    localStorage.setItem(customTaskStorageKey(), JSON.stringify(task));
+  } catch (err) {
+    // ignore storage errors
+  }
+}
+
+function customWordKey(item) {
+  return `${item.day}::${normalizeEn(item.en)}`;
+}
+
+function wordsForDays(days) {
+  const set = new Set(days.map(Number));
+  return loadedWords.filter(
+    (item) => item && item.en && set.has(Number(item.day))
+  );
+}
+
+function itemsForKeys(keys) {
+  const set = new Set(keys);
+  return loadedWords.filter(
+    (item) => item && item.en && set.has(customWordKey(item))
+  );
+}
+
+function openCustomModal() {
+  if (UI.customOverlay) {
+    UI.customOverlay.classList.remove("hidden");
+  }
+}
+
+function closeCustomModal() {
+  if (UI.customOverlay) {
+    UI.customOverlay.classList.add("hidden");
+  }
+}
+
+function setCustomModal(title, bodyNodes, actionNodes) {
+  if (UI.customTitle) {
+    UI.customTitle.textContent = title;
+  }
+  if (UI.customBody) {
+    UI.customBody.innerHTML = "";
+    bodyNodes.forEach((node) => UI.customBody.appendChild(node));
+  }
+  if (UI.customActions) {
+    UI.customActions.innerHTML = "";
+    actionNodes.forEach((node) => UI.customActions.appendChild(node));
+  }
+}
+
+function makeActionButton(text, className, onClick) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = className;
+  btn.textContent = text;
+  btn.addEventListener("click", onClick);
+  return btn;
+}
+
+// Entry point: show the saved task options, or jump straight to level select.
+function openCustom() {
+  if (!loadedWords.length) {
+    setCustomModal(
+      "自定义背诵",
+      [textNode("词库正在加载，请稍候后再试。")],
+      [makeActionButton("关闭", "primary ghost", closeCustomModal)]
+    );
+    openCustomModal();
+    return;
+  }
+  const task = loadCustomTask();
+  if (task) {
+    renderSavedTask(task);
+  } else {
+    renderLevelSelect([], []);
+  }
+  openCustomModal();
+}
+
+function textNode(text, className) {
+  const div = document.createElement("div");
+  if (className) {
+    div.className = className;
+  }
+  div.textContent = text;
+  return div;
+}
+
+function renderSavedTask(task) {
+  const info = textNode(
+    `已保存的临时关卡：「${task.name}」，共 ${task.items.length} 个单词。`,
+    "card-sub"
+  );
+  const startBtn = makeActionButton("开始背诵", "primary", () => {
+    closeCustomModal();
+    startCustomTask(task.items, task.name);
+  });
+  const reselectBtn = makeActionButton("重选单词", "primary ghost", () => {
+    const days = Array.from(new Set(task.items.map((it) => Number(it.day))));
+    const keys = task.items.map(customWordKey);
+    renderLevelSelect(days, keys, task.name);
+  });
+  const cancelBtn = makeActionButton("取消", "primary ghost", closeCustomModal);
+  setCustomModal("自定义背诵", [info], [startBtn, reselectBtn, cancelBtn]);
+}
+
+function renderLevelSelect(preDays, presetKeys, presetName) {
+  const preSet = new Set((preDays || []).map(Number));
+  const counts = countWordsByDay(loadedWords);
+  const tip = textNode("选择要背诵的关卡（可多选）。", "card-sub");
+  const list = document.createElement("div");
+  list.className = "custom-list";
+  for (let day = 1; day <= WG.maxDay(); day += 1) {
+    const count = counts[String(day)] || 0;
+    if (count === 0) {
+      continue;
+    }
+    const row = document.createElement("label");
+    row.className = "custom-row";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.dataset.day = String(day);
+    cb.checked = preSet.has(day);
+    const label = textNode(WG.dayLabel(day), "label");
+    const meta = textNode(`${count} 个`, "meta");
+    row.appendChild(cb);
+    row.appendChild(label);
+    row.appendChild(meta);
+    list.appendChild(row);
+  }
+  const nextBtn = makeActionButton("下一步", "primary", () => {
+    const days = Array.from(
+      UI.customBody.querySelectorAll("input[data-day]:checked")
+    ).map((cb) => Number(cb.dataset.day));
+    if (days.length === 0) {
+      return;
+    }
+    renderWordSelect(days, presetKeys || [], presetName || "");
+  });
+  const cancelBtn = makeActionButton("取消", "primary ghost", closeCustomModal);
+  setCustomModal("选择关卡", [tip, list], [nextBtn, cancelBtn]);
+}
+
+function renderWordSelect(days, presetKeys, presetName) {
+  const sortedDays = Array.from(new Set(days.map(Number))).sort((a, b) => a - b);
+  const hasPreset = Array.isArray(presetKeys) && presetKeys.length > 0;
+  const presetSet = new Set(presetKeys || []);
+
+  const nameWrap = document.createElement("div");
+  nameWrap.className = "custom-name-wrap";
+  nameWrap.appendChild(textNode("临时关卡名字", "card-sub"));
+  const nameInput = document.createElement("input");
+  nameInput.type = "text";
+  nameInput.className = "custom-name";
+  nameInput.id = "customTaskName";
+  nameInput.maxLength = 20;
+  nameInput.placeholder = "例如：植物短语";
+  nameInput.value =
+    presetName || `自定义 · ${sortedDays.map((d) => WG.dayLabel(d)).join("/")}`;
+  nameWrap.appendChild(nameInput);
+
+  const tip = textNode("勾选要背诵的单词（可多选）。", "card-sub");
+
+  const list = document.createElement("div");
+  list.className = "custom-list";
+  sortedDays.forEach((day) => {
+    const dayWords = wordsForDays([day]);
+    if (!dayWords.length) {
+      return;
+    }
+    const groupTitle = document.createElement("label");
+    groupTitle.className = "custom-group-title";
+    const groupCb = document.createElement("input");
+    groupCb.type = "checkbox";
+    groupCb.dataset.group = String(day);
+    groupTitle.appendChild(groupCb);
+    groupTitle.appendChild(textNode(WG.dayLabel(day)));
+    list.appendChild(groupTitle);
+
+    dayWords.forEach((item) => {
+      const key = customWordKey(item);
+      const row = document.createElement("label");
+      row.className = "custom-row";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.dataset.key = key;
+      cb.dataset.group = String(day);
+      cb.checked = hasPreset ? presetSet.has(key) : true;
+      const label = textNode(item.en, "label");
+      const meta = textNode(item.zh || "", "meta");
+      row.appendChild(cb);
+      row.appendChild(label);
+      row.appendChild(meta);
+      list.appendChild(row);
+    });
+
+    const syncGroup = () => {
+      const boxes = Array.from(
+        list.querySelectorAll(`input[data-key][data-group="${day}"]`)
+      );
+      groupCb.checked = boxes.length > 0 && boxes.every((b) => b.checked);
+    };
+    groupCb.addEventListener("change", () => {
+      list
+        .querySelectorAll(`input[data-key][data-group="${day}"]`)
+        .forEach((b) => {
+          b.checked = groupCb.checked;
+        });
+    });
+    list.addEventListener("change", (event) => {
+      if (event.target && event.target.dataset.group === String(day) && event.target.dataset.key) {
+        syncGroup();
       }
     });
-  return out;
-}
+    syncGroup();
+  });
 
-// Match parsed English entries against the loaded word list.
-function matchCustomEntries(entries) {
-  const index = new Map();
-  loadedWords.forEach((item) => {
-    if (item && item.en) {
-      const key = normalizeEn(item.en);
-      if (!index.has(key)) {
-        index.set(key, item);
-      }
+  const startBtn = makeActionButton("开始背诵", "primary", () => {
+    const keys = Array.from(
+      UI.customBody.querySelectorAll("input[data-key]:checked")
+    ).map((cb) => cb.dataset.key);
+    if (keys.length === 0) {
+      return;
     }
+    const items = itemsForKeys(keys);
+    const name = (nameInput.value || "").trim() || "自定义背诵";
+    saveCustomTask({ name, items });
+    Debug.log("info", "start custom task", { name, count: items.length });
+    closeCustomModal();
+    startCustomTask(items, name);
   });
-  const matched = [];
-  const unmatched = [];
-  entries.forEach((en) => {
-    const item = index.get(normalizeEn(en));
-    if (item) {
-      matched.push(item);
-    } else {
-      unmatched.push(en);
-    }
+  const backBtn = makeActionButton("上一步", "primary ghost", () => {
+    const keys = Array.from(
+      UI.customBody.querySelectorAll("input[data-key]:checked")
+    ).map((cb) => cb.dataset.key);
+    renderLevelSelect(sortedDays, keys, (nameInput.value || "").trim());
   });
-  return { matched, unmatched };
+  const cancelBtn = makeActionButton("取消", "primary ghost", closeCustomModal);
+  setCustomModal("选择单词", [nameWrap, tip, list], [startBtn, backBtn, cancelBtn]);
 }
 
-function setCustomHint(message, isError) {
-  if (!UI.customHint) {
-    return;
-  }
-  UI.customHint.textContent = message || "";
-  UI.customHint.classList.toggle("error", Boolean(isError));
-}
-
-function startCustomRecite() {
-  if (!UI.customInput) {
-    return;
-  }
-  const entries = parseCustomEntries(UI.customInput.value);
-  if (entries.length === 0) {
-    setCustomHint("请先粘贴要背诵的单词或短语。", true);
-    return;
-  }
-  const { matched, unmatched } = matchCustomEntries(entries);
-  if (matched.length === 0) {
-    setCustomHint(`未在词库中找到这些单词：${unmatched.join("、")}`, true);
-    return;
-  }
-  if (unmatched.length) {
-    setCustomHint(
-      `已识别 ${matched.length} 个，未找到：${unmatched.join("、")}`,
-      true
-    );
-  } else {
-    setCustomHint(`已识别 ${matched.length} 个，开始背诵。`, false);
-  }
-  Debug.log("info", "start custom recite", {
-    matched: matched.length,
-    unmatched: unmatched.length,
-  });
-  AppNav.show("practice", {
-    customItems: matched,
-    customLabel: "自定义背诵",
-  });
+function startCustomTask(items, name) {
+  AppNav.show("practice", { customItems: items, customLabel: name });
 }
 
 function setupCustomPanel() {
@@ -873,7 +1057,14 @@ function setupCustomPanel() {
     return;
   }
   customPanelReady = true;
-  UI.customStart.addEventListener("click", startCustomRecite);
+  UI.customStart.addEventListener("click", openCustom);
+  if (UI.customOverlay) {
+    UI.customOverlay.addEventListener("click", (event) => {
+      if (event.target === UI.customOverlay) {
+        closeCustomModal();
+      }
+    });
+  }
 }
 
 function setupSemesterSelector() {
