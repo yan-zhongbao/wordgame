@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="td.css" id="tdCss" disabled />
     <link rel="stylesheet" href="snake.css" id="snakeCss" disabled />
     <link rel="stylesheet" href="wordsearch.css" id="wordsearchCss" disabled />
+    <link rel="stylesheet" href="exam.css" id="examCss" disabled />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -333,6 +334,37 @@
 
       .custom-start {
         align-self: flex-start;
+      }
+
+      .action-bar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 6px 14px rgba(30, 23, 12, 0.08);
+      }
+
+      .action-btn {
+        flex: 1 1 auto;
+        min-width: 96px;
+        border: none;
+        cursor: pointer;
+        padding: 12px 14px;
+        border-radius: 14px;
+        font-size: 15px;
+        font-weight: 700;
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent) 0%, #f0a44b 100%);
+        box-shadow: 0 8px 16px rgba(232, 111, 58, 0.22);
+      }
+
+      .action-price {
+        font-size: 12px;
+        font-weight: 600;
+        opacity: 0.92;
       }
 
       .custom-overlay {
@@ -814,16 +846,13 @@
             </div>
             <div id="dayList" class="day-list"></div>
             <div id="listHint" class="list-hint"></div>
-          </section>
-
-          <section class="card">
-            <div>
-              <div class="card-title">自定义背诵</div>
-              <div class="card-sub">
-                从本学期关卡里挑选单词，组成一个临时关卡来背诵。
-              </div>
+            <div class="action-bar">
+              <button class="action-btn" id="customStart">自定义背诵</button>
+              <button class="action-btn" id="reviewWrongStart">错题复习</button>
+              <button class="action-btn" id="examStart">
+                考试 <span class="action-price">10金币</span>
+              </button>
             </div>
-            <button class="start-btn custom-start" id="customStart">自定义背诵</button>
           </section>
         </main>
       </div>
@@ -1099,6 +1128,32 @@
       </main>
     </div>
 
+    <div id="examView" class="view">
+      <div class="exam-app">
+        <header class="exam-topbar">
+          <div class="exam-title-row">
+            <div class="exam-name">单词考试</div>
+            <button class="exam-back" id="examBack">返回</button>
+          </div>
+          <div class="exam-stats">
+            <span>题目 <b id="examTotal">0</b></span>
+            <span>已完成 <b id="examDone">0</b></span>
+            <span>得分 <b id="examScore">0</b></span>
+          </div>
+          <div class="exam-progress"><div class="exam-progress-fill" id="examProgressFill"></div></div>
+        </header>
+        <main class="exam-main" id="examMain"></main>
+      </div>
+      <div class="exam-overlay hidden" id="examOverlay" aria-modal="true" role="dialog">
+        <div class="exam-result-card">
+          <div class="exam-result-title" id="examResultTitle">考试完成</div>
+          <div class="exam-result-body" id="examResultBody"></div>
+          <div class="exam-result-actions" id="examResultActions"></div>
+        </div>
+      </div>
+      <div class="coin-rain" id="examCoinRain" aria-hidden="true"></div>
+    </div>
+
     <div class="confirm-overlay hidden" id="confirmOverlay" aria-modal="true" role="dialog">
       <div class="confirm-card">
         <div class="confirm-title" id="confirmTitle">提示</div>
@@ -1144,5 +1199,6 @@
     <script src="td.js"></script>
     <script src="snake.js"></script>
     <script src="wordsearch.js"></script>
+    <script src="exam.js"></script>
   </body>
 </html>

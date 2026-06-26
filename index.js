@@ -10,6 +10,8 @@ const UI = {
   listHint: homeQuery("#listHint"),
   semesterSelect: homeQuery("#semesterSelect"),
   customStart: homeQuery("#customStart"),
+  reviewWrongStart: homeQuery("#reviewWrongStart"),
+  examStart: homeQuery("#examStart"),
   customOverlay: document.getElementById("customOverlay"),
   customTitle: document.getElementById("customTitle"),
   customBody: document.getElementById("customBody"),
@@ -32,6 +34,7 @@ const VIEWS = {
   td: document.getElementById("tdView"),
   snake: document.getElementById("snakeView"),
   wordsearch: document.getElementById("wordsearchView"),
+  exam: document.getElementById("examView"),
 };
 
 const STYLE_LINKS = {
@@ -39,6 +42,7 @@ const STYLE_LINKS = {
   td: document.getElementById("tdCss"),
   snake: document.getElementById("snakeCss"),
   wordsearch: document.getElementById("wordsearchCss"),
+  exam: document.getElementById("examCss"),
 };
 
 const Debug = {
@@ -332,6 +336,10 @@ const AppNav = {
     }
     if (view === "wordsearch" && window.WordSearchApp?.startDay) {
       window.WordSearchApp.startDay(options.day);
+      return;
+    }
+    if (view === "exam" && window.ExamApp?.start) {
+      window.ExamApp.start();
     }
   },
 };
@@ -351,6 +359,9 @@ function getViewApp(view) {
   }
   if (view === "wordsearch") {
     return window.WordSearchApp || null;
+  }
+  if (view === "exam") {
+    return window.ExamApp || null;
   }
   return null;
 }
@@ -438,6 +449,9 @@ function updateCoinUI() {
     UI.directPass.classList.toggle("disabled", !enough);
   }
 }
+
+// Allow other views (e.g. exam rewards) to refresh the coin display.
+window.refreshCoins = updateCoinUI;
 
 function loadReviewRecords() {
   const raw = localStorage.getItem(STORAGE_KEYS.review);
@@ -656,32 +670,7 @@ function renderDayList(words, reviewRecords, dayStats) {
     const actions = document.createElement("div");
     actions.className = "day-actions";
 
-    if (isPerfect(stats)) {
-      const gameLinks = document.createElement("div");
-      gameLinks.className = "game-links";
-      gameLinks.appendChild(
-        createGameLink({
-          title: "单词大战作业",
-          iconClass: "td-icon",
-          onClick: () => AppNav.show("td", { day }),
-        })
-      );
-      gameLinks.appendChild(
-        createGameLink({
-          title: "贪吃蛇记忆",
-          iconClass: "snake-icon",
-          onClick: () => AppNav.show("snake", { day }),
-        })
-      );
-      gameLinks.appendChild(
-        createGameLink({
-          title: "单词寻宝",
-          iconClass: "search-icon",
-          onClick: () => AppNav.show("wordsearch", { day }),
-        })
-      );
-      actions.appendChild(gameLinks);
-    }
+    // 游戏入口已移除，游戏只能通过主页"直通车"(消耗金币)进入。
 
     const start = document.createElement("button");
     start.className = "start-btn";
@@ -864,6 +853,16 @@ function makeActionButton(text, className, onClick) {
   btn.textContent = text;
   btn.addEventListener("click", onClick);
   return btn;
+}
+
+// A simple one-button info dialog reusing the custom overlay.
+function showInfoModal(title, message) {
+  setCustomModal(
+    title,
+    [textNode(message, "card-sub")],
+    [makeActionButton("关闭", "primary ghost", closeCustomModal)]
+  );
+  openCustomModal();
 }
 
 // Entry point: show the saved task options, or jump straight to level select.
@@ -1052,12 +1051,87 @@ function startCustomTask(items, name) {
   AppNav.show("practice", { customItems: items, customLabel: name });
 }
 
+// Recite the most recent 20 wrong words as an isolated special level.
+function startWrongReview() {
+  const records = loadReviewRecords();
+  const items = Object.values(records || {})
+    .filter((r) => r && r.en && (r.wrongCount || 0) >= 1)
+    .sort((a, b) => (b.lastWrongAt || 0) - (a.lastWrongAt || 0))
+    .slice(0, 20)
+    .map((r) => ({ day: r.day, en: r.en, zh: r.zh, kind: r.kind }));
+  if (items.length === 0) {
+    showInfoModal("错题复习", "暂时没有错题，先去闯关吧。");
+    return;
+  }
+  Debug.log("info", "start wrong review", { count: items.length });
+  AppNav.show("practice", { customItems: items, customLabel: "错题复习" });
+}
+
+// ---- Exam entry gating (10-coin fee, 5 attempts/day; entering counts) ----
+
+const EXAM_FEE = 10;
+const EXAM_DAILY_LIMIT = 5;
+
+function examCountKey() {
+  return WG.key("wg-exam-count");
+}
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getExamCountToday() {
+  try {
+    const obj = JSON.parse(localStorage.getItem(examCountKey()) || "null");
+    if (obj && obj.date === todayStr()) {
+      return obj.count || 0;
+    }
+  } catch (err) {
+    // ignore
+  }
+  return 0;
+}
+
+function bumpExamCountToday() {
+  try {
+    localStorage.setItem(
+      examCountKey(),
+      JSON.stringify({ date: todayStr(), count: getExamCountToday() + 1 })
+    );
+  } catch (err) {
+    // ignore
+  }
+}
+
+function startExam() {
+  const remaining = EXAM_DAILY_LIMIT - getExamCountToday();
+  if (remaining <= 0) {
+    showInfoModal("考试", `今天的考试次数已用完（每天 ${EXAM_DAILY_LIMIT} 次），明天再来吧。`);
+    return;
+  }
+  if (loadCoins() < EXAM_FEE) {
+    showInfoModal("考试", `金币不足，考试需要 ${EXAM_FEE} 金币。`);
+    return;
+  }
+  // 进入即算一次：扣费 + 计次，然后进入考试视图。
+  spendCoins(EXAM_FEE);
+  bumpExamCountToday();
+  Debug.log("info", "start exam", { fee: EXAM_FEE });
+  AppNav.show("exam");
+}
+
 function setupCustomPanel() {
   if (customPanelReady || !UI.customStart) {
     return;
   }
   customPanelReady = true;
   UI.customStart.addEventListener("click", openCustom);
+  if (UI.reviewWrongStart) {
+    UI.reviewWrongStart.addEventListener("click", startWrongReview);
+  }
+  if (UI.examStart) {
+    UI.examStart.addEventListener("click", startExam);
+  }
   if (UI.customOverlay) {
     UI.customOverlay.addEventListener("click", (event) => {
       if (event.target === UI.customOverlay) {

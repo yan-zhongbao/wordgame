@@ -839,6 +839,7 @@ const Review = {
     record.wrongCount += 1;
     record.streakCorrect = 0;
     record.lastWrongType = type;
+    record.lastWrongAt = Date.now();
     record.nextReviewAt = this.addDays(today, 1);
     this.records[id] = record;
     this.save();
@@ -2653,39 +2654,7 @@ const Engine = {
       return;
     }
 
-    const tdMode = document.createElement("button");
-    tdMode.className = "primary ghost";
-    tdMode.textContent = "进入单词大战作业";
-    tdMode.addEventListener("click", () => {
-      if (window.AppNav && typeof window.AppNav.show === "function") {
-        window.AppNav.show("td", { day: this.state.day });
-      } else {
-        window.location.href = `td.html?day=${this.state.day}`;
-      }
-    });
-
-    const snakeMode = document.createElement("button");
-    snakeMode.className = "primary ghost";
-    snakeMode.textContent = "进入贪吃蛇记忆";
-    snakeMode.addEventListener("click", () => {
-      if (window.AppNav && typeof window.AppNav.show === "function") {
-        window.AppNav.show("snake", { day: this.state.day });
-      } else {
-        window.location.href = `snake.html?day=${this.state.day}`;
-      }
-    });
-
-    const searchMode = document.createElement("button");
-    searchMode.className = "primary ghost";
-    searchMode.textContent = "进入单词寻宝";
-    searchMode.addEventListener("click", () => {
-      if (window.AppNav && typeof window.AppNav.show === "function") {
-        window.AppNav.show("wordsearch", { day: this.state.day });
-      } else {
-        window.location.href = `wordsearch.html?day=${this.state.day}`;
-      }
-    });
-
+    // 游戏不再从这里进入；只能通过主页"直通车"(消耗金币)进入。
     const close = document.createElement("button");
     close.className = "primary ghost";
     close.textContent = "关闭";
@@ -2694,9 +2663,6 @@ const Engine = {
     });
 
     UI.panelActions.appendChild(restart);
-    UI.panelActions.appendChild(tdMode);
-    UI.panelActions.appendChild(snakeMode);
-    UI.panelActions.appendChild(searchMode);
     UI.panelActions.appendChild(close);
     showOverlay();
     AudioPlayer.updateButton(null);

@@ -45,6 +45,10 @@ const CONFIG = {
   shotIntervalMs: 1000,
   bossIntervalMs: 60000,
   maxHpPerMinute: 200,
+  // 打败敌人获得金币 = round(maxHp × coinRewardRate)。
+  // 炮台价格为输出的1/3(即击杀总血量需花≈血量/3金币)，
+  // 取 0.45 时每局净收益≈击杀总血量×0.12，约100-200金币。
+  coinRewardRate: 0.45,
   flashDurationMs: 1200,
   wrongRevealMs: 1000,
   slipDurationMs: 3000,
@@ -82,6 +86,24 @@ const FIRE_INTERVALS = {
   cucumber: 1000,
   blueberry: 5000,
 };
+
+// 种炮台需消耗金币。价格 = 该炮台满级(1→6级)总输出血量的 1/3。
+// 总输出 = Σ(每级射弹数 × 每弹伤害)：
+//   pear   Σ(6L·[1+0.5(L-1)]) = 336 → 112
+//   apple  Σ(3L·[1+0.5(L-1)]) = 168 → 56
+//   其它(伤害=L) Σ(3L·L) = 273 → 91
+const TURRET_PRICES = {
+  pear: 112,
+  apple: 56,
+  banana: 91,
+  coconut: 91,
+  cucumber: 91,
+  blueberry: 91,
+};
+
+function turretPrice(fruit) {
+  return TURRET_PRICES[fruit] || 0;
+}
 
 const TEXT = {
   brandSubtitle: "单词大战作业",
@@ -787,6 +809,15 @@ function plantSeedAt(slot, fruit) {
     showMessage(TEXT.plantBusy);
     return;
   }
+  const price = turretPrice(fruit);
+  if (TD.coins < price) {
+    showMessage(`金币不足，种植需要 ${price} 金币`);
+    return;
+  }
+  if (price > 0) {
+    TD.coins -= price;
+    updateCoinUI();
+  }
   const seed = {
     level: 1,
     start: performance.now(),
@@ -815,6 +846,7 @@ function renderSeedTray() {
     seed.innerHTML = `
       <div class="seed-icon fruit-${fruit.name}"></div>
       <div class="seed-label">${fruit.label}</div>
+      <div class="seed-price">${turretPrice(fruit.name)}金币</div>
     `;
     seed.addEventListener("pointerdown", (event) => {
       startDrag("seed", { fruit: fruit.name }, seed, event);
@@ -2074,7 +2106,11 @@ function applyEnemyDamage(enemy, damage, fruit) {
     }
     spawnImpact(enemy.x, enemy.y, fruit);
     AudioBank.play("explode");
-    awardCoins(enemy.maxHp, enemy.x, enemy.y);
+    awardCoins(
+      Math.max(1, Math.round(enemy.maxHp * CONFIG.coinRewardRate)),
+      enemy.x,
+      enemy.y
+    );
     if (enemy.tier === "boss") {
       TD.bossDefeated += 1;
       TD.bossAlive = false;
@@ -2736,13 +2772,18 @@ function bindUI() {
     },
   };
   TD.handlers = handlers;
-  UI.restartBtn?.addEventListener("click", handlers.restart);
+  // 重玩/重新开始按钮已停用，避免重开延长游戏时间或刷金币。
+  if (UI.restartBtn) {
+    UI.restartBtn.style.display = "none";
+  }
+  if (UI.overlayRestart) {
+    UI.overlayRestart.style.display = "none";
+  }
   UI.backBtn?.addEventListener("click", handlers.back);
   UI.hoeBtn?.addEventListener("pointerdown", handlers.hoe);
   UI.keyBtn?.addEventListener("pointerdown", handlers.key);
   UI.hornBtn?.addEventListener("pointerdown", handlers.horn);
   UI.batonBtn?.addEventListener("pointerdown", handlers.baton);
-  UI.overlayRestart?.addEventListener("click", handlers.overlayRestart);
   UI.overlayBack?.addEventListener("click", handlers.overlayBack);
   window.addEventListener("pointerdown", handlers.unlockAudioOnce, { once: true });
   window.addEventListener("touchstart", handlers.unlockAudioOnce, { once: true });
@@ -2753,13 +2794,11 @@ function unbindUI() {
     return;
   }
   const handlers = TD.handlers;
-  UI.restartBtn?.removeEventListener("click", handlers.restart);
   UI.backBtn?.removeEventListener("click", handlers.back);
   UI.hoeBtn?.removeEventListener("pointerdown", handlers.hoe);
   UI.keyBtn?.removeEventListener("pointerdown", handlers.key);
   UI.hornBtn?.removeEventListener("pointerdown", handlers.horn);
   UI.batonBtn?.removeEventListener("pointerdown", handlers.baton);
-  UI.overlayRestart?.removeEventListener("click", handlers.overlayRestart);
   UI.overlayBack?.removeEventListener("click", handlers.overlayBack);
   TD.handlers = null;
   TD.uiBound = false;

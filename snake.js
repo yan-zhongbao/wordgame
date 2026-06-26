@@ -37,6 +37,7 @@ const CONFIG = {
   speedMultiplier: 3,
   snipeMultiplier: 4,
   wordCoinReward: 10,
+  wrongLetterPenalty: 5,
   freezeCost: 20,
   speedCost: 30,
   aimCost: 50,
@@ -799,13 +800,19 @@ function handleEat(bubble) {
     updateStarUI();
     AudioFX.playWrong();
     vibrate([0, 80]);
+    const penalty = Math.min(CONFIG.wrongLetterPenalty, state.coins);
+    if (penalty > 0) {
+      state.coins -= penalty;
+      updateCoinUI();
+    }
+    const penaltyText = penalty > 0 ? `，扣${penalty}金币` : "";
     if (state.progress > state.safeProgress && state.currentWordLetters > 0) {
       state.progress -= 1;
       removeLastLetterSegment();
       updateWordDisplay();
-      showMessage("吃错啦，退回一个字母");
+      showMessage(`吃错啦，退回一个字母${penaltyText}`);
     } else {
-      showMessage("吃错啦");
+      showMessage(`吃错啦${penaltyText}`);
     }
   }
   replaceBubble(bubble);
