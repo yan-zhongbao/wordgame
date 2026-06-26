@@ -9,6 +9,8 @@
     total: q("#examTotal"),
     done: q("#examDone"),
     score: q("#examScore"),
+    elapsed: q("#examElapsed"),
+    eta: q("#examEta"),
     progressFill: q("#examProgressFill"),
     back: q("#examBack"),
     overlay: q("#examOverlay"),
@@ -18,16 +20,16 @@
     coinRain: q("#examCoinRain"),
   };
 
-  const TOTAL_TARGET = 100;
-  // [type, number of words]; choice types weigh more, spelling least.
+  // [type, word count]; choice types weigh more, spelling least.
   const PLAN = [
     ["listenMeaning", 18],
     ["listenWord", 18],
     ["meaningWord", 18],
     ["complete", 12],
-    ["correct", 12],
+    ["correctFind", 6],
+    ["correctReplace", 6],
     ["spell", 10],
-    ["match", 12], // 12 words -> 2 rounds of 6
+    ["match", 12], // 2 rounds of 6
   ];
 
   let state = null;
@@ -48,6 +50,24 @@
     return arr;
   }
 
+  const VOWELS = "aeiou";
+  const CONSONANTS = "bcdfghjklmnpqrstvwxyz";
+  // Pad candidate letters to at least 4 with same-class "sand" distractors
+  // (vowels get vowels, consonants get consonants) so a single blank isn't
+  // trivially the only choice.
+  function padToFour(letters) {
+    const out = letters.slice();
+    let guard = 0;
+    while (out.length < 4 && guard < 60) {
+      guard += 1;
+      const base = letters[Math.floor(Math.random() * letters.length)] || "a";
+      const poolStr = VOWELS.includes(base) ? VOWELS : CONSONANTS;
+      const c = poolStr[Math.floor(Math.random() * poolStr.length)];
+      if (!out.includes(c)) out.push(c);
+    }
+    return out;
+  }
+
   function slugify(text) {
     return String(text)
       .toLowerCase()
@@ -61,6 +81,19 @@
 
   function keyOf(item) {
     return `${item.day}::${String(item.en).toLowerCase()}`;
+  }
+
+  function dedupeWrong(list) {
+    const seen = new Set();
+    const out = [];
+    (list || []).forEach((it) => {
+      if (!it || !it.en) return;
+      const k = keyOf(it);
+      if (seen.has(k)) return;
+      seen.add(k);
+      out.push(it);
+    });
+    return out;
   }
 
   let currentAudio = null;
@@ -99,20 +132,16 @@
     }
   }
 
-  function sampleDistinct(pool, n, excludeKeys, mapFn, valueKey) {
-    // pick n distinct mapped values not in excludeKeys/seen
+  function sampleValues(pool, n, excludeKey, mapFn) {
     const seen = new Set();
     const out = [];
-    const order = shuffle([...pool]);
-    for (const item of order) {
+    for (const item of shuffle([...pool])) {
       if (out.length >= n) break;
-      const k = keyOf(item);
-      if (excludeKeys.has(k)) continue;
-      const value = mapFn(item);
-      const vk = valueKey ? valueKey(value) : value;
-      if (seen.has(vk)) continue;
-      seen.add(vk);
-      out.push(value);
+      if (keyOf(item) === excludeKey) continue;
+      const v = mapFn(item);
+      if (seen.has(v)) continue;
+      seen.add(v);
+      out.push(v);
     }
     return out;
   }
@@ -127,9 +156,8 @@
     });
     const allKeys = shuffle([...byKey.keys()]);
     const used = new Set();
-
     const isSpellable = (it) =>
-      /^[a-zA-Z]+$/.test(it.en) && it.en.length >= 3 && it.en.length <= 12;
+      /^[a-zA-Z]+$/.test(it.en) && it.en.length >= 3 && it.en.length <= 11;
 
     function take(n, predicate) {
       const out = [];
@@ -144,46 +172,71 @@
       return out;
     }
 
-    const buckets = {};
-    // spellable-dependent first
-    buckets.spell = take(10, isSpellable);
-    buckets.complete = take(12, isSpellable);
-    buckets.correct = take(12, isSpellable);
-    buckets.listenMeaning = take(18);
-    buckets.listenWord = take(18);
-    buckets.meaningWord = take(18);
-    buckets.match = take(12);
+    const b = {};
+    b.spell = take(6, isSpellable);
+    b.complete = take(10, isSpellable);
+    b.correctFind = take(6, isSpellable);
+    b.correctReplace = take(6, isSpellable);
+    b.listenMeaning = take(16);
+    b.listenWord = take(16);
+    b.meaningWord = take(16);
+    b.match = take(24); // 4 rounds of 6
 
-    const questions = [];
-    buckets.listenMeaning.forEach((it) =>
-      questions.push({ type: "listenMeaning", item: it })
-    );
-    buckets.listenWord.forEach((it) =>
-      questions.push({ type: "listenWord", item: it })
-    );
-    buckets.meaningWord.forEach((it) =>
-      questions.push({ type: "meaningWord", item: it })
-    );
-    buckets.complete.forEach((it) =>
-      questions.push({ type: "complete", item: it })
-    );
-    buckets.correct.forEach((it) =>
-      questions.push({ type: "correct", item: it })
-    );
-    buckets.spell.forEach((it) => questions.push({ type: "spell", item: it }));
-    for (let i = 0; i + 1 < buckets.match.length; i += 6) {
-      questions.push({ type: "match", items: buckets.match.slice(i, i + 6) });
+    // single-word questions, shuffled
+    const single = [];
+    const push = (type, list) =>
+      list.forEach((it) => single.push({ type, item: it }));
+    push("listenMeaning", b.listenMeaning);
+    push("listenWord", b.listenWord);
+    push("meaningWord", b.meaningWord);
+    push("complete", b.complete);
+    push("correctFind", b.correctFind);
+    push("correctReplace", b.correctReplace);
+    push("spell", b.spell);
+    shuffle(single);
+
+    // matching rounds, spread evenly through the exam so they appear regularly
+    const matchQs = [];
+    for (let i = 0; i + 1 < b.match.length; i += 6) {
+      matchQs.push({ type: "match", items: b.match.slice(i, i + 6) });
     }
+    const questions = [...single];
+    matchQs.forEach((mq, k) => {
+      const base = Math.round((single.length / (matchQs.length + 1)) * (k + 1));
+      const idx = Math.min(questions.length, base + k);
+      questions.splice(idx, 0, mq);
+    });
 
-    shuffle(questions);
     const total = questions.reduce(
-      (sum, qn) => sum + (qn.type === "match" ? qn.items.length : 1),
+      (s, qn) => s + (qn.type === "match" ? qn.items.length : 1),
       0
     );
     return { questions, total, pool: valid };
   }
 
-  // ---- top bar ----
+  // ---- top bar / timer ----
+  function fmtTime(ms) {
+    const s = Math.max(0, Math.round(ms / 1000));
+    const m = Math.floor(s / 60);
+    return `${m}:${String(s % 60).padStart(2, "0")}`;
+  }
+
+  function updateTimer() {
+    if (!state) return;
+    const elapsed = Date.now() - state.startTime;
+    if (UI.elapsed) UI.elapsed.textContent = fmtTime(elapsed);
+    if (UI.eta) {
+      if (state.done <= 0) {
+        UI.eta.textContent = "--";
+      } else if (state.done >= state.total) {
+        UI.eta.textContent = "0:00";
+      } else {
+        const remaining = (elapsed / state.done) * (state.total - state.done);
+        UI.eta.textContent = fmtTime(remaining);
+      }
+    }
+  }
+
   function updateTopBar() {
     if (UI.total) UI.total.textContent = String(state.total);
     if (UI.done) UI.done.textContent = String(state.done);
@@ -192,40 +245,102 @@
       const pct = state.total ? Math.round((state.done / state.total) * 100) : 0;
       UI.progressFill.style.width = `${pct}%`;
     }
+    updateTimer();
   }
 
-  // Called when a question is fully resolved.
-  function resolveQuestion(gained, count, wrongItems) {
+  function advance() {
+    state.index += 1;
+    renderCurrent();
+  }
+
+  // Hand-drawn red check drawn over the answered element (targetEl), with
+  // exaggerated, randomized size / position / stroke each time so it looks like
+  // a teacher casually marking by hand.
+  function showCorrectCheck(targetEl) {
+    const svgns = "http://www.w3.org/2000/svg";
+    const r = (n, d) => n + (Math.random() * 2 - 1) * d;
+    const mainRect = UI.main.getBoundingClientRect();
+    let cx;
+    let cy;
+    let span;
+    if (targetEl && targetEl.getBoundingClientRect) {
+      const tr = targetEl.getBoundingClientRect();
+      cx = tr.left - mainRect.left + tr.width / 2;
+      cy = tr.top - mainRect.top + tr.height / 2;
+      span = Math.max(tr.width, tr.height);
+    } else {
+      cx = mainRect.width / 2;
+      cy = mainRect.height / 2;
+      span = 130;
+    }
+    const size = Math.max(64, Math.min(220, span * (1.0 + Math.random() * 0.9)));
+    // casual offset from the element centre
+    const offX = (Math.random() * 2 - 1) * size * 0.45;
+    const offY = (Math.random() * 2 - 1) * size * 0.4;
+    const rot = (Math.random() * 2 - 1) * 34;
+    const stroke = 5 + Math.random() * 9; // 5 - 14
+
+    const svg = document.createElementNS(svgns, "svg");
+    svg.setAttribute("class", "exam-check");
+    svg.setAttribute("viewBox", "0 0 100 100");
+    svg.style.left = `${cx + offX - size / 2}px`;
+    svg.style.top = `${cy + offY - size / 2}px`;
+    svg.style.width = `${size}px`;
+    svg.style.height = `${size}px`;
+    svg.style.transform = `rotate(${rot}deg)`;
+
+    // randomize the tick shape: short leg + long leg, varied lengths/angles
+    const x1 = r(14, 8);
+    const y1 = r(52, 10);
+    const ex = r(40, 8); // elbow
+    const ey = r(82, 8);
+    const cxp = r(26, 8); // control toward elbow
+    const cyp = r(74, 10);
+    const x3 = r(92, 8); // long-leg tip
+    const y3 = r(12, 12);
+    const cx2 = r(64, 10); // control toward tip
+    const cy2 = r(34, 12);
+    const d = `M ${x1} ${y1} Q ${cxp} ${cyp} ${ex} ${ey} Q ${cx2} ${cy2} ${x3} ${y3}`;
+    const path = document.createElementNS(svgns, "path");
+    path.setAttribute("d", d);
+    path.setAttribute("class", "exam-check-path");
+    path.setAttribute("stroke-width", String(stroke.toFixed(1)));
+    path.setAttribute("stroke-dasharray", "320");
+    path.setAttribute("stroke-dashoffset", "320");
+    svg.appendChild(path);
+    UI.main.appendChild(svg);
+  }
+
+  // Resolve a question. allCorrect -> auto-advance after a beat; else show 下一题.
+  function conclude(wrap, allCorrect, gained, count, wrongItems, targetEl) {
     state.score += gained;
     state.done += count;
     if (wrongItems && wrongItems.length) {
       wrongItems.forEach((it) => state.wrong.push(it));
     }
     updateTopBar();
+    if (allCorrect) {
+      showCorrectCheck(targetEl);
+      setTimeout(advance, 1100);
+    } else {
+      const btn = el("button", "exam-next", "下一题");
+      btn.addEventListener("click", advance);
+      wrap.appendChild(btn);
+    }
   }
 
-  function nextButton() {
-    const btn = el("button", "exam-next", "下一题");
-    btn.addEventListener("click", () => {
-      state.index += 1;
-      renderCurrent();
-    });
-    return btn;
-  }
-
-  // ---- question renderers ----
+  // ---- choice ----
   function renderChoice(qn) {
     const item = qn.item;
     const isListen = qn.type === "listenMeaning" || qn.type === "listenWord";
-    // 听选单词 / 词义选单词 -> 答案是英文；听选词义 -> 答案是中文。
     const answerIsEnglish =
       qn.type === "listenWord" || qn.type === "meaningWord";
 
     const wrap = el("div", "exam-q");
     if (isListen) {
+      wrap.appendChild(el("div", "exam-q-tip", "听发音，选择正确答案"));
       const audioBtn = el("button", "exam-audio-btn", "🔊 播放发音");
       audioBtn.addEventListener("click", () => playItem(item));
-      wrap.appendChild(el("div", "exam-q-tip", "听发音，选择正确答案"));
       wrap.appendChild(audioBtn);
       setTimeout(() => playItem(item), 250);
     } else {
@@ -234,20 +349,16 @@
     }
 
     const correctValue = answerIsEnglish ? item.en : item.zh;
-    const distractors = sampleDistinct(
-      state.pool,
-      3,
-      new Set([keyOf(item)]),
-      (it) => (answerIsEnglish ? it.en : it.zh),
-      (v) => v
+    const distractors = sampleValues(state.pool, 3, keyOf(item), (it) =>
+      answerIsEnglish ? it.en : it.zh
     ).filter((v) => v !== correctValue);
     const options = shuffle([correctValue, ...distractors.slice(0, 3)]);
 
     const optBox = el("div", "exam-options");
     let answered = false;
     options.forEach((opt) => {
-      const b = el("button", "exam-option", opt);
-      b.addEventListener("click", () => {
+      const bt = el("button", "exam-option", opt);
+      bt.addEventListener("click", () => {
         if (answered) return;
         answered = true;
         const correct = opt === correctValue;
@@ -255,106 +366,157 @@
           c.disabled = true;
           if (c.textContent === correctValue) c.classList.add("right");
         });
-        if (!correct) b.classList.add("wrong");
-        resolveQuestion(correct ? 1 : 0, 1, correct ? [] : [item]);
-        wrap.appendChild(nextButton());
+        if (!correct) bt.classList.add("wrong");
+        const target = Array.from(optBox.children).find((c) =>
+          c.classList.contains("right")
+        );
+        conclude(wrap, correct, correct ? 1 : 0, 1, correct ? [] : [item], target);
       });
-      optBox.appendChild(b);
+      optBox.appendChild(bt);
     });
     wrap.appendChild(optBox);
     return wrap;
   }
 
-  function renderComplete(qn) {
+  // ---- tile-fill (spelling / completion): tap letters into slots ----
+  function renderTileFill(qn, missingOnly) {
     const item = qn.item;
-    const word = item.en;
+    const word = item.en.toLowerCase();
     const wrap = el("div", "exam-q");
-    wrap.appendChild(el("div", "exam-q-tip", "补全单词（填入缺少的字母）"));
+    wrap.appendChild(
+      el(
+        "div",
+        "exam-q-tip",
+        missingOnly ? "补全单词：点下方字母填入空格" : "拼写单词：点下方字母按顺序拼出"
+      )
+    );
+    if (missingOnly) {
+      const audioBtn = el("button", "exam-audio-btn small", "🔊");
+      audioBtn.addEventListener("click", () => playItem(item));
+      wrap.appendChild(audioBtn);
+    } else {
+      const audioBtn = el("button", "exam-audio-btn small", "🔊");
+      audioBtn.addEventListener("click", () => playItem(item));
+      wrap.appendChild(audioBtn);
+    }
     wrap.appendChild(el("div", "exam-q-prompt", item.zh));
 
-    const blanks = Math.max(1, Math.round(word.length * 0.4));
-    const positions = shuffle(
-      Array.from({ length: word.length }, (_, i) => i)
-    ).slice(0, blanks);
-    const blankSet = new Set(positions);
+    // which positions are blanks
+    let blankPos;
+    if (missingOnly) {
+      const count = Math.max(1, Math.round(word.length * 0.4));
+      blankPos = shuffle(word.split("").map((_, i) => i)).slice(0, count);
+    } else {
+      blankPos = word.split("").map((_, i) => i);
+    }
+    blankPos.sort((a, b) => a - b);
+    const blankSet = new Set(blankPos);
 
-    const row = el("div", "exam-letters");
-    const inputs = [];
+    // slots row
+    const row = el("div", "exam-slots");
+    const slotEls = new Map(); // position -> slot element
     for (let i = 0; i < word.length; i += 1) {
       if (blankSet.has(i)) {
-        const inp = el("input", "exam-letter-input");
-        inp.maxLength = 1;
-        inp.dataset.idx = String(i);
-        inp.addEventListener("input", () => {
-          inp.value = inp.value.replace(/[^a-zA-Z]/g, "").toLowerCase();
-          const idx = inputs.indexOf(inp);
-          if (inp.value && idx >= 0 && idx + 1 < inputs.length) {
-            inputs[idx + 1].focus();
-          }
-        });
-        inputs.push(inp);
-        row.appendChild(inp);
+        const slot = el("button", "exam-slot empty");
+        slot.dataset.pos = String(i);
+        row.appendChild(slot);
+        slotEls.set(i, slot);
       } else {
-        row.appendChild(el("span", "exam-letter-fixed", word[i]));
+        row.appendChild(el("span", "exam-slot fixed", word[i]));
       }
     }
     wrap.appendChild(row);
 
-    const submit = el("button", "exam-submit", "确定");
-    submit.addEventListener("click", () => {
-      submit.disabled = true;
+    // candidate letters = letters of the blanks (+ same-class distractors so
+    // there are always at least 4 choices), shuffled
+    const candLetters = shuffle(padToFour(blankPos.map((i) => word[i])));
+    const tray = el("div", "exam-tray");
+    const placed = new Map(); // position -> {letter, tileBtn}
+    let resolved = false;
+
+    function checkFull() {
+      if (placed.size !== blankPos.length || resolved) return;
+      resolved = true;
       let allRight = true;
-      inputs.forEach((inp) => {
-        const idx = Number(inp.dataset.idx);
-        const expected = word[idx].toLowerCase();
-        inp.disabled = true;
-        if ((inp.value || "").toLowerCase() === expected) {
-          inp.classList.add("right");
+      blankPos.forEach((pos) => {
+        const slot = slotEls.get(pos);
+        const got = placed.get(pos).letter;
+        if (got === word[pos]) {
+          slot.classList.add("right");
         } else {
-          inp.classList.add("wrong");
-          inp.value = expected;
+          slot.classList.add("wrong");
           allRight = false;
         }
       });
+      tray.querySelectorAll("button").forEach((b) => (b.disabled = true));
       if (!allRight) {
         wrap.appendChild(el("div", "exam-answer", `正确答案：${word}`));
       }
-      resolveQuestion(allRight ? 1 : 0, 1, allRight ? [] : [item]);
-      wrap.appendChild(nextButton());
+      conclude(wrap, allRight, allRight ? 1 : 0, 1, allRight ? [] : [item], row);
+    }
+
+    function placeLetter(letter, tileBtn) {
+      if (resolved) return;
+      const pos = blankPos.find((p) => !placed.has(p));
+      if (pos === undefined) return;
+      placed.set(pos, { letter, tileBtn });
+      const slot = slotEls.get(pos);
+      slot.textContent = letter;
+      slot.classList.remove("empty");
+      slot.classList.add("filled");
+      tileBtn.classList.add("used");
+      tileBtn.disabled = true;
+      checkFull();
+    }
+
+    function removeAt(pos) {
+      if (resolved || !placed.has(pos)) return;
+      const { tileBtn } = placed.get(pos);
+      placed.delete(pos);
+      const slot = slotEls.get(pos);
+      slot.textContent = "";
+      slot.classList.remove("filled");
+      slot.classList.add("empty");
+      tileBtn.classList.remove("used");
+      tileBtn.disabled = false;
+    }
+
+    slotEls.forEach((slot, pos) => {
+      slot.addEventListener("click", () => removeAt(pos));
     });
-    wrap.appendChild(submit);
+    candLetters.forEach((letter) => {
+      const tileBtn = el("button", "exam-tile", letter);
+      tileBtn.addEventListener("click", () => placeLetter(letter, tileBtn));
+      tray.appendChild(tileBtn);
+    });
+    wrap.appendChild(tray);
     return wrap;
   }
 
-  function renderCorrect(qn) {
+  // ---- find the wrong letter (click it) ----
+  function renderCorrectFind(qn) {
     const item = qn.item;
     const word = item.en.toLowerCase();
     const wrap = el("div", "exam-q");
     wrap.appendChild(el("div", "exam-q-tip", "找出拼错的字母（点击它）"));
     wrap.appendChild(el("div", "exam-q-prompt", item.zh));
 
-    // change one letter
     const pos = Math.floor(Math.random() * word.length);
     const orig = word[pos];
     let repl = orig;
-    const alphabet = "abcdefghijklmnopqrstuvwxyz";
-    while (repl === orig) {
-      repl = alphabet[Math.floor(Math.random() * 26)];
-    }
+    const alpha = "abcdefghijklmnopqrstuvwxyz";
+    while (repl === orig) repl = alpha[Math.floor(Math.random() * 26)];
     const shown = word.slice(0, pos) + repl + word.slice(pos + 1);
 
     const row = el("div", "exam-letters");
     let answered = false;
     for (let i = 0; i < shown.length; i += 1) {
       const tile = el("button", "exam-letter-tile", shown[i]);
-      tile.dataset.idx = String(i);
       tile.addEventListener("click", () => {
         if (answered) return;
         answered = true;
         const correct = i === pos;
-        Array.from(row.children).forEach((c) => {
-          c.disabled = true;
-        });
+        Array.from(row.children).forEach((c) => (c.disabled = true));
         const correctTile = row.children[pos];
         if (correct) {
           tile.classList.add("right");
@@ -367,8 +529,7 @@
           }
         }
         wrap.appendChild(el("div", "exam-answer", `正确单词：${word}`));
-        resolveQuestion(correct ? 1 : 0, 1, correct ? [] : [item]);
-        wrap.appendChild(nextButton());
+        conclude(wrap, correct, correct ? 1 : 0, 1, correct ? [] : [item], tile);
       });
       row.appendChild(tile);
     }
@@ -376,139 +537,173 @@
     return wrap;
   }
 
-  function renderSpell(qn) {
+  // ---- correction: click the wrong letter, then pick the correct letter.
+  // Validates immediately once both are chosen (no button).
+  function renderCorrectReplace(qn) {
     const item = qn.item;
+    const word = item.en.toLowerCase();
     const wrap = el("div", "exam-q");
-    wrap.appendChild(el("div", "exam-q-tip", "根据中文和发音，拼写单词"));
-    const audioBtn = el("button", "exam-audio-btn", "🔊 播放发音");
-    audioBtn.addEventListener("click", () => playItem(item));
-    wrap.appendChild(audioBtn);
+    wrap.appendChild(
+      el("div", "exam-q-tip", "先点错误的字母，再从下方选择正确的字母")
+    );
     wrap.appendChild(el("div", "exam-q-prompt", item.zh));
 
-    const input = el("input", "exam-spell-input");
-    input.setAttribute("autocomplete", "off");
-    input.setAttribute("autocapitalize", "off");
-    input.placeholder = "在此输入英文";
-    wrap.appendChild(input);
+    const pos = Math.floor(Math.random() * word.length);
+    const orig = word[pos];
+    const alpha = "abcdefghijklmnopqrstuvwxyz";
+    let repl = orig;
+    while (repl === orig) repl = alpha[Math.floor(Math.random() * 26)];
+    const shown = word.slice(0, pos) + repl + word.slice(pos + 1);
 
-    const submit = el("button", "exam-submit", "确定");
-    submit.addEventListener("click", () => {
-      submit.disabled = true;
-      input.disabled = true;
-      const answer = (input.value || "").trim().toLowerCase();
-      const correct = answer === item.en.toLowerCase();
-      input.classList.add(correct ? "right" : "wrong");
-      if (!correct) {
-        wrap.appendChild(el("div", "exam-answer", `正确答案：${item.en}`));
+    const tiles = [];
+    const choiceBtns = [];
+    let pickedPos = -1;
+    let pickedLetter = "";
+    let resolved = false;
+
+    function validate() {
+      if (resolved || pickedPos < 0 || !pickedLetter) return;
+      resolved = true;
+      tiles.forEach((t) => (t.disabled = true));
+      choiceBtns.forEach((b) => (b.disabled = true));
+      const correct = pickedPos === pos && pickedLetter === orig;
+      // reveal the correct letter at the real wrong position
+      tiles[pos].classList.remove("selected");
+      tiles[pos].textContent = orig;
+      tiles[pos].classList.add("right");
+      if (!correct && tiles[pickedPos]) {
+        tiles[pickedPos].classList.add("wrong");
       }
-      resolveQuestion(correct ? 1 : 0, 1, correct ? [] : [item]);
-      wrap.appendChild(nextButton());
+      if (!correct) {
+        wrap.appendChild(el("div", "exam-answer", `正确单词：${word}`));
+      }
+      conclude(wrap, correct, correct ? 1 : 0, 1, correct ? [] : [item], tiles[pos]);
+    }
+
+    const row = el("div", "exam-letters");
+    for (let i = 0; i < shown.length; i += 1) {
+      const tile = el("button", "exam-letter-tile", shown[i]);
+      tile.addEventListener("click", () => {
+        if (resolved) return;
+        pickedPos = i;
+        tiles.forEach((t) => t.classList.remove("selected"));
+        tile.classList.add("selected");
+        validate();
+      });
+      tiles.push(tile);
+      row.appendChild(tile);
+    }
+    wrap.appendChild(row);
+
+    // replacement letter choices: correct letter + a few distractors
+    const choiceLetters = new Set([orig]);
+    while (choiceLetters.size < 5) {
+      choiceLetters.add(alpha[Math.floor(Math.random() * 26)]);
+    }
+    const tray = el("div", "exam-tray");
+    shuffle([...choiceLetters]).forEach((letter) => {
+      const bt = el("button", "exam-tile", letter);
+      bt.addEventListener("click", () => {
+        if (resolved) return;
+        pickedLetter = letter;
+        choiceBtns.forEach((b) => b.classList.remove("selected"));
+        bt.classList.add("selected");
+        validate();
+      });
+      choiceBtns.push(bt);
+      tray.appendChild(bt);
     });
-    wrap.appendChild(submit);
-    setTimeout(() => input.focus(), 100);
+    wrap.appendChild(tray);
     return wrap;
   }
 
+  // ---- matching (connect with lines; edge anchors) ----
   function renderMatch(qn) {
     const items = qn.items;
     const n = items.length;
     const wrap = el("div", "exam-q exam-match");
-    wrap.appendChild(
-      el("div", "exam-q-tip", "连线：先点左边单词，再点右边意思")
-    );
+    wrap.appendChild(el("div", "exam-q-tip", "连线：先点左边单词，再点右边意思"));
 
     const board = el("div", "exam-match-board");
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.classList.add("exam-match-svg");
     board.appendChild(svg);
-
     const leftCol = el("div", "exam-match-col exam-match-left");
     const rightCol = el("div", "exam-match-col exam-match-right");
     board.appendChild(leftCol);
     board.appendChild(rightCol);
     wrap.appendChild(board);
 
-    const leftOrder = shuffle([...items]);
-    const rightOrder = shuffle([...items]);
-    const leftNodes = new Map(); // key -> node
+    const leftNodes = new Map();
     const rightNodes = new Map();
-
-    leftOrder.forEach((it) => {
+    shuffle([...items]).forEach((it) => {
       const node = el("button", "exam-match-item", it.en);
-      node.dataset.key = keyOf(it);
       leftCol.appendChild(node);
       leftNodes.set(keyOf(it), node);
     });
-    rightOrder.forEach((it) => {
+    shuffle([...items]).forEach((it) => {
       const node = el("button", "exam-match-item", it.zh);
-      node.dataset.key = keyOf(it);
       rightCol.appendChild(node);
       rightNodes.set(keyOf(it), node);
     });
 
-    const links = new Map(); // leftKey -> rightKey
+    // each pair gets its own colour so crossing lines stay distinguishable;
+    // red is reserved for showing the correct connection.
+    const PALETTE = ["#111111", "#7a7a7a", "#16357f", "#3aa3e3", "#1f7a44", "#5fc27e"];
+    const colorByKey = new Map();
+    items.forEach((it, i) => colorByKey.set(keyOf(it), PALETTE[i % PALETTE.length]));
+
+    const links = new Map();
     let selectedLeft = null;
     let judged = false;
 
-    function centerOf(node) {
+    // anchor on the inner edge: left -> right edge center, right -> left edge center
+    function anchor(node, side) {
       const br = node.getBoundingClientRect();
       const bb = board.getBoundingClientRect();
-      return {
-        x: br.left - bb.left + br.width / 2,
-        y: br.top - bb.top + br.height / 2,
-      };
+      const x = side === "right" ? br.right - bb.left : br.left - bb.left;
+      const y = br.top - bb.top + br.height / 2;
+      return { x, y };
     }
 
-    function drawLines() {
+    function line(a, b, cls, stroke) {
+      const ln = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      ln.setAttribute("x1", a.x);
+      ln.setAttribute("y1", a.y);
+      ln.setAttribute("x2", b.x);
+      ln.setAttribute("y2", b.y);
+      if (cls) ln.setAttribute("class", cls);
+      if (stroke) ln.setAttribute("stroke", stroke);
+      return ln;
+    }
+
+    function draw() {
       while (svg.firstChild) svg.removeChild(svg.firstChild);
       const bb = board.getBoundingClientRect();
       svg.setAttribute("width", String(bb.width));
       svg.setAttribute("height", String(bb.height));
       links.forEach((rKey, lKey) => {
-        const lNode = leftNodes.get(lKey);
-        const rNode = rightNodes.get(rKey);
-        if (!lNode || !rNode) return;
-        const a = centerOf(lNode);
-        const b = centerOf(rNode);
-        const line = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "line"
+        const ln = leftNodes.get(lKey);
+        const rn = rightNodes.get(rKey);
+        if (!ln || !rn) return;
+        svg.appendChild(
+          line(anchor(ln, "right"), anchor(rn, "left"), "line-user", colorByKey.get(lKey))
         );
-        line.setAttribute("x1", a.x);
-        line.setAttribute("y1", a.y);
-        line.setAttribute("x2", b.x);
-        line.setAttribute("y2", b.y);
-        const correct = lKey === rKey;
-        line.setAttribute("class", judged && !correct ? "" : "line-user");
-        if (judged) {
-          line.setAttribute("stroke", correct ? "#1f9d55" : "#111");
-        }
-        svg.appendChild(line);
       });
-      // corrections (red) for wrong links
       if (judged) {
         links.forEach((rKey, lKey) => {
           if (lKey === rKey) return;
-          const lNode = leftNodes.get(lKey);
-          const rNode = rightNodes.get(lKey); // correct right is same key
-          if (!lNode || !rNode) return;
-          const a = centerOf(lNode);
-          const b = centerOf(rNode);
-          const line = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "line"
+          const ln = leftNodes.get(lKey);
+          const rn = rightNodes.get(lKey); // correct partner
+          if (!ln || !rn) return;
+          svg.appendChild(
+            line(anchor(ln, "right"), anchor(rn, "left"), "line-correct")
           );
-          line.setAttribute("x1", a.x);
-          line.setAttribute("y1", a.y);
-          line.setAttribute("x2", b.x);
-          line.setAttribute("y2", b.y);
-          line.setAttribute("class", "line-correct");
-          svg.appendChild(line);
         });
       }
     }
 
-    function clearSelection() {
+    function clearSel() {
       if (selectedLeft) {
         const node = leftNodes.get(selectedLeft);
         if (node) node.classList.remove("selected");
@@ -519,7 +714,7 @@
     leftNodes.forEach((node, key) => {
       node.addEventListener("click", () => {
         if (judged) return;
-        clearSelection();
+        clearSel();
         selectedLeft = key;
         node.classList.add("selected");
       });
@@ -527,13 +722,12 @@
     rightNodes.forEach((node, rKey) => {
       node.addEventListener("click", () => {
         if (judged || !selectedLeft) return;
-        // remove any existing link to this right
         links.forEach((v, k) => {
           if (v === rKey) links.delete(k);
         });
         links.set(selectedLeft, rKey);
-        clearSelection();
-        drawLines();
+        clearSel();
+        draw();
       });
     });
 
@@ -545,33 +739,26 @@
         return;
       }
       judged = true;
-      submit.disabled = true;
+      submit.remove();
       let correctCount = 0;
       const wrongItems = [];
       links.forEach((rKey, lKey) => {
         if (lKey === rKey) {
           correctCount += 1;
-          const ln = leftNodes.get(lKey);
-          const rn = rightNodes.get(rKey);
-          if (ln) ln.classList.add("right");
-          if (rn) rn.classList.add("right");
+          leftNodes.get(lKey)?.classList.add("right");
+          rightNodes.get(rKey)?.classList.add("right");
         } else {
-          const ln = leftNodes.get(lKey);
-          if (ln) ln.classList.add("wrong");
-          const wrongItem = items.find((it) => keyOf(it) === lKey);
-          if (wrongItem) wrongItems.push(wrongItem);
+          leftNodes.get(lKey)?.classList.add("wrong");
+          const it = items.find((x) => keyOf(x) === lKey);
+          if (it) wrongItems.push(it);
         }
       });
-      drawLines();
-      wrap.appendChild(
-        el("div", "exam-answer", `连对 ${correctCount}/${n} 组`)
-      );
-      resolveQuestion(correctCount, n, wrongItems);
-      wrap.appendChild(nextButton());
+      draw();
+      wrap.appendChild(el("div", "exam-answer", `连对 ${correctCount}/${n} 组`));
+      conclude(wrap, correctCount === n, correctCount, n, wrongItems, board);
     });
     wrap.appendChild(submit);
-
-    setTimeout(drawLines, 50);
+    setTimeout(draw, 60);
     return wrap;
   }
 
@@ -586,20 +773,20 @@
     UI.main.scrollTop = 0;
     let node;
     if (qn.type === "match") node = renderMatch(qn);
-    else if (qn.type === "complete") node = renderComplete(qn);
-    else if (qn.type === "correct") node = renderCorrect(qn);
-    else if (qn.type === "spell") node = renderSpell(qn);
+    else if (qn.type === "complete") node = renderTileFill(qn, true);
+    else if (qn.type === "spell") node = renderTileFill(qn, false);
+    else if (qn.type === "correctFind") node = renderCorrectFind(qn);
+    else if (qn.type === "correctReplace") node = renderCorrectReplace(qn);
     else node = renderChoice(qn);
     UI.main.appendChild(node);
   }
 
-  // ---- coin rain effect ----
+  // ---- coin rain ----
   function coinRain() {
     if (!UI.coinRain) return;
     UI.coinRain.innerHTML = "";
     UI.coinRain.classList.remove("hidden");
-    const count = 28;
-    for (let i = 0; i < count; i += 1) {
+    for (let i = 0; i < 28; i += 1) {
       const coin = el("div", "coin-drop");
       coin.style.left = `${Math.random() * 100}%`;
       coin.style.animationDelay = `${Math.random() * 0.8}s`;
@@ -617,7 +804,9 @@
   // ---- result / rewards ----
   function launchRewardGame(view) {
     const maxDay =
-      window.WG && typeof window.WG.maxDay === "function" ? window.WG.maxDay() : 21;
+      window.WG && typeof window.WG.maxDay === "function"
+        ? window.WG.maxDay()
+        : 21;
     const day = 1 + Math.floor(Math.random() * Math.max(1, maxDay));
     if (window.AppNav && typeof window.AppNav.show === "function") {
       window.AppNav.show(view, { day });
@@ -631,6 +820,7 @@
   }
 
   function finish() {
+    stopTimer();
     const grade = state.total
       ? Math.round((state.score / state.total) * 100)
       : 0;
@@ -639,28 +829,32 @@
     else if (grade > 95) coin = 600;
     else if (grade > 90) coin = 300;
     const gameChoice = grade > 80;
-
     if (coin > 0) addGlobalCoins(coin);
 
     UI.resultTitle.textContent = "考试完成";
     UI.resultBody.innerHTML = "";
     UI.resultBody.appendChild(
-      el("div", "exam-result-score", `得分 ${state.score} / ${state.total}（${grade} 分）`)
+      el(
+        "div",
+        "exam-result-score",
+        `得分 ${state.score} / ${state.total}（${grade} 分）`
+      )
+    );
+    UI.resultBody.appendChild(
+      el("div", "exam-result-tip", `用时 ${fmtTime(Date.now() - state.startTime)}`)
     );
     if (coin > 0) {
       UI.resultBody.appendChild(
         el("div", "exam-result-reward", `恭喜！奖励 ${coin} 金币 🎉`)
       );
     }
-    if (gameChoice) {
-      UI.resultBody.appendChild(
-        el("div", "exam-result-reward", "你获得了一次玩游戏的机会！")
-      );
-    } else {
-      UI.resultBody.appendChild(
-        el("div", "exam-result-tip", "达到 80 分以上可获得玩游戏机会。")
-      );
-    }
+    UI.resultBody.appendChild(
+      el(
+        "div",
+        gameChoice ? "exam-result-reward" : "exam-result-tip",
+        gameChoice ? "你获得了一次玩游戏的机会！" : "达到 80 分以上可获得玩游戏机会。"
+      )
+    );
 
     UI.resultActions.innerHTML = "";
     if (gameChoice) {
@@ -669,19 +863,35 @@
         ["贪吃蛇", "snake"],
         ["单词寻宝", "wordsearch"],
       ].forEach(([label, view]) => {
-        UI.resultActions.appendChild(
-          (() => {
-            const b = el("button", "exam-result-btn primary", label);
-            b.addEventListener("click", () => {
-              UI.overlay.classList.add("hidden");
-              launchRewardGame(view);
-            });
-            return b;
-          })()
-        );
+        const bt = el("button", "exam-result-btn primary", label);
+        bt.addEventListener("click", () => {
+          UI.overlay.classList.add("hidden");
+          launchRewardGame(view);
+        });
+        UI.resultActions.appendChild(bt);
       });
     }
-    // #11 改错送游戏入口会在后续接入（state.wrong 已收集错题）。
+    // 改正错题换游戏：把本次错题组成强化关卡，全部答对后换游戏（不发金币）。
+    const wrongItems = dedupeWrong(state.wrong);
+    if (wrongItems.length) {
+      const fixBtn = el(
+        "button",
+        "exam-result-btn primary",
+        `改正错题换游戏（${wrongItems.length} 个）`
+      );
+      fixBtn.addEventListener("click", () => {
+        UI.overlay.classList.add("hidden");
+        if (window.AppNav && typeof window.AppNav.show === "function") {
+          window.AppNav.show("practice", {
+            customItems: wrongItems,
+            customLabel: "改错闯关",
+            examFix: true,
+          });
+        }
+      });
+      UI.resultActions.appendChild(fixBtn);
+    }
+
     const home = el("button", "exam-result-btn", "返回主页");
     home.addEventListener("click", () => {
       UI.overlay.classList.add("hidden");
@@ -709,7 +919,9 @@
       words = await res.json();
     } catch (err) {
       UI.main.innerHTML = "";
-      UI.main.appendChild(el("div", "exam-loading", "词库加载失败，请返回重试。"));
+      UI.main.appendChild(
+        el("div", "exam-loading", "词库加载失败，请返回重试。")
+      );
       return;
     }
     const built = buildExam(words);
@@ -721,12 +933,24 @@
       score: 0,
       done: 0,
       wrong: [],
+      startTime: Date.now(),
     };
+    stopTimer();
+    examTimer = setInterval(updateTimer, 1000);
     updateTopBar();
     renderCurrent();
   }
 
+  let examTimer = null;
+  function stopTimer() {
+    if (examTimer) {
+      clearInterval(examTimer);
+      examTimer = null;
+    }
+  }
+
   function pause() {
+    stopTimer();
     if (currentAudio) {
       try {
         currentAudio.pause();

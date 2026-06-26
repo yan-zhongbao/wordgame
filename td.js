@@ -725,6 +725,10 @@ function showMessage(text) {
 }
 
 function confirmExit() {
+  // 已通关则直接返回，不弹提示。
+  if (TD.victoryActive) {
+    return Promise.resolve(true);
+  }
   if (window.AppConfirm) {
     return window.AppConfirm("确定退出当前关卡？退出将回到主页。");
   }
@@ -881,10 +885,9 @@ function createTurret(slot, fruit) {
   assignNewWord(turret, true);
   slot.el.innerHTML = `
     <div class="turret">
+      <span class="turret-level"></span>
       <div class="turret-header">
-        <div class="turret-icon ${turret.fruit ? `fruit-${turret.fruit}` : ""}">
-          <span class="turret-level"></span>
-        </div>
+        <div class="turret-icon ${turret.fruit ? `fruit-${turret.fruit}` : ""}"></div>
         <div class="turret-zh"></div>
       </div>
       <div class="turret-word"></div>

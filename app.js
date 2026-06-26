@@ -5,6 +5,7 @@ const practiceQuery = (selector) => PRACTICE_ROOT.querySelector(selector);
 
 const UI = {
   dayLabel: practiceQuery("#dayLabel"),
+  examFixBanner: practiceQuery("#examFixBanner"),
   progressFill: practiceQuery("#progressFill"),
   starPreview: practiceQuery("#starPreview"),
   scoreValue: practiceQuery("#scoreValue"),
@@ -1624,6 +1625,35 @@ function buildStageQueues(day) {
   return buildStageQueuesFromItems(Data.getDay(day), { includeReview: true });
 }
 
+// "改错送游戏" progress banner: 已打败X% + 估算剩余分钟。
+function updateFixBanner() {
+  const banner = UI.examFixBanner;
+  if (!banner) {
+    return;
+  }
+  const st = Engine.state;
+  if (!st || !st.examFix) {
+    banner.classList.add("hidden");
+    return;
+  }
+  const total = Math.max(1, st.fixTotalTasks || 1);
+  const done = Math.min(total, st.fixCleared || 0);
+  const pct = Math.round((done / total) * 100);
+  let etaText = "";
+  if (done > 0 && pct < 100) {
+    const elapsedMs = Date.now() - (st.fixStart || Date.now());
+    const remainMs = (elapsedMs / done) * (total - done);
+    const mins = Math.max(1, Math.ceil(remainMs / 60000));
+    etaText = `，估算 ${mins} 分钟后可以玩游戏`;
+  } else if (pct >= 100) {
+    etaText = "，马上可以玩游戏啦";
+  } else {
+    etaText = "，加油打败错题就能玩游戏";
+  }
+  banner.textContent = `你已打败 ${pct}% 的错题${etaText}`;
+  banner.classList.remove("hidden");
+}
+
 function buildStageOrder(queues) {
   const order = [];
   if (queues[Stage.REVIEW].length) {
@@ -1732,17 +1762,22 @@ const Engine = {
     };
     UI.dayLabel.textContent = WG.dayLabel(safeDay);
     UI.primaryBtn.textContent = "重新开始";
+    if (UI.examFixBanner) {
+      UI.examFixBanner.classList.add("hidden");
+    }
     this.updateProgress();
     this.nextTurn();
   },
 
   // Recite an arbitrary list of items (a custom task) instead of a fixed day.
-  startCustom(items, label) {
+  // opts.examFix: 改错送游戏模式 —— 不发金币、显示进度、完成后送游戏。
+  startCustom(items, label, opts = {}) {
     const list = Array.isArray(items) ? items.filter((it) => it && it.en) : [];
     if (list.length === 0) {
       showNotice("没有可背诵的单词。");
       return;
     }
+    const examFix = opts.examFix === true;
     const customLabel = label || "自定义背诵";
     const queues = buildStageQueuesFromItems(list, { includeReview: false });
     const stageOrder = buildStageOrder(queues);
@@ -1758,11 +1793,21 @@ const Engine = {
       return;
     }
     const stage = stageOrder[0];
+    const fixTotalTasks =
+      queues[Stage.NEW].length +
+      queues[Stage.SPELL].length +
+      queues[Stage.MEANING].length +
+      queues[Stage.REVIEW].length;
     this.state = {
       day: null,
       custom: true,
       customItems: list,
       customLabel,
+      examFix,
+      noReward: examFix,
+      fixTotalTasks,
+      fixCleared: 0,
+      fixStart: Date.now(),
       stage,
       stageOrder,
       stageIndex: 0,
@@ -1789,6 +1834,7 @@ const Engine = {
     };
     UI.dayLabel.textContent = customLabel;
     UI.primaryBtn.textContent = "重新开始";
+    updateFixBanner();
     this.updateProgress();
     this.nextTurn();
   },
@@ -2449,7 +2495,13 @@ const Engine = {
         }
       this.state.stageCleared += 1;
       this.updateProgress();
-      addCoins(COIN_REWARD);
+      if (!this.state.noReward) {
+        addCoins(COIN_REWARD);
+      }
+      if (this.state.examFix) {
+        this.state.fixCleared = (this.state.fixCleared || 0) + 1;
+        updateFixBanner();
+      }
       Debug.log("info", "answer correct", { stage });
       SoundFX.playSuccess();
       this.state.stageQueue.shift();
@@ -2549,7 +2601,13 @@ const Engine = {
         this.state.score += 1;
         this.state.stageCleared += 1;
         this.updateProgress();
-        addCoins(COIN_REWARD);
+        if (!this.state.noReward) {
+          addCoins(COIN_REWARD);
+        }
+        if (this.state.examFix) {
+          this.state.fixCleared = (this.state.fixCleared || 0) + 1;
+          updateFixBanner();
+        }
         Debug.log("info", "spell correct", { mode: task.modeType });
         SoundFX.playSuccess();
         this.state.stageQueue.shift();
@@ -2603,8 +2661,48 @@ const Engine = {
   finish() {
     const stars = this.starsForErrors(this.state.errors);
     const isCustom = this.state.custom === true;
+    const examFix = this.state.examFix === true;
     const customItems = this.state.customItems;
     const customLabel = this.state.customLabel || "自定义背诵";
+    if (UI.examFixBanner) {
+      UI.examFixBanner.classList.add("hidden");
+    }
+    if (examFix) {
+      const gameRow = (label, view) => {
+        const b = document.createElement("button");
+        b.className = "primary";
+        b.textContent = label;
+        b.addEventListener("click", () => {
+          hideOverlay();
+          const maxDay = WG.maxDay();
+          const day = 1 + Math.floor(Math.random() * Math.max(1, maxDay));
+          if (window.AppNav && typeof window.AppNav.show === "function") {
+            window.AppNav.show(view, { day });
+          }
+        });
+        return b;
+      };
+      UI.panelTitle.textContent = "全部错题已纠正！";
+      UI.panelBody.innerHTML = "你打败了所有错题，挑选一个游戏奖励自己吧！";
+      UI.panelActions.innerHTML = "";
+      UI.panelActions.appendChild(gameRow("单词大战", "td"));
+      UI.panelActions.appendChild(gameRow("贪吃蛇", "snake"));
+      UI.panelActions.appendChild(gameRow("单词寻宝", "wordsearch"));
+      const home = document.createElement("button");
+      home.className = "primary ghost";
+      home.textContent = "返回主页";
+      home.addEventListener("click", () => {
+        hideOverlay();
+        if (window.AppNav && typeof window.AppNav.show === "function") {
+          window.AppNav.show("home");
+        }
+      });
+      UI.panelActions.appendChild(home);
+      showOverlay();
+      AudioPlayer.updateButton(null);
+      speakEnglish("Great, you fixed all the words.");
+      return;
+    }
     if (!isCustom) {
       DayStats.set(this.state.day, {
         stars,
@@ -2979,10 +3077,10 @@ window.PracticeApp = {
       Engine.start(targetDay);
     }
   },
-  async startCustom(items, label) {
+  async startCustom(items, label, opts) {
     await ensureReady();
     hideOverlay();
-    Engine.startCustom(items, label);
+    Engine.startCustom(items, label, opts || {});
   },
   pause() {
     Engine.state.transitioning = false;

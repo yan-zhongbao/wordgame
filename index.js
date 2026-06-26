@@ -116,7 +116,7 @@ const ConfirmDialog = {
     });
   },
 
-  show(message, { okText = "退出", cancelText = "继续" } = {}) {
+  show(message, { okText = "确定", cancelText = "继续" } = {}) {
     if (!this.overlay || !this.okBtn || !this.cancelBtn) {
       return Promise.resolve(window.confirm(message || "确定退出？"));
     }
@@ -320,7 +320,9 @@ const AppNav = {
         window.PracticeApp &&
         typeof window.PracticeApp.startCustom === "function"
       ) {
-        window.PracticeApp.startCustom(options.customItems, options.customLabel);
+        window.PracticeApp.startCustom(options.customItems, options.customLabel, {
+          examFix: options.examFix === true,
+        });
       } else if (window.PracticeApp && typeof window.PracticeApp.startDay === "function") {
         window.PracticeApp.startDay(options.day);
       }

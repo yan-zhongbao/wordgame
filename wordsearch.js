@@ -137,6 +137,9 @@ function showMessage(text) {
 }
 
 function confirmExit() {
+  if (state.completed) {
+    return Promise.resolve(true);
+  }
   if (window.AppConfirm) {
     return window.AppConfirm("确定退出当前关卡？退出将回到主页。");
   }

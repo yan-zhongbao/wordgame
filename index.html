@@ -59,6 +59,13 @@
         display: block;
       }
 
+      /* The exam content is intrinsically narrow; force its view (a flex item
+         of <body>) to full width so .exam-app can center at its 980px. */
+      #examView.view.active {
+        width: 100%;
+        flex-shrink: 0;
+      }
+
       body {
         margin: 0;
         min-height: 100vh;
@@ -365,6 +372,21 @@
         font-size: 12px;
         font-weight: 600;
         opacity: 0.92;
+      }
+
+      .exam-fix-banner {
+        padding: 12px 16px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #fff1e0, #ffe1c4);
+        color: #8a4b14;
+        font-size: 15px;
+        font-weight: 700;
+        text-align: center;
+        box-shadow: 0 6px 14px rgba(180, 110, 40, 0.18);
+      }
+
+      .exam-fix-banner.hidden {
+        display: none;
       }
 
       .custom-overlay {
@@ -844,8 +866,6 @@
                 <select id="semesterSelect" aria-label="选择学期"></select>
               </label>
             </div>
-            <div id="dayList" class="day-list"></div>
-            <div id="listHint" class="list-hint"></div>
             <div class="action-bar">
               <button class="action-btn" id="customStart">自定义背诵</button>
               <button class="action-btn" id="reviewWrongStart">错题复习</button>
@@ -853,6 +873,8 @@
                 考试 <span class="action-price">10金币</span>
               </button>
             </div>
+            <div id="dayList" class="day-list"></div>
+            <div id="listHint" class="list-hint"></div>
           </section>
         </main>
       </div>
@@ -890,6 +912,7 @@
         </header>
 
         <main class="stage">
+          <div class="exam-fix-banner hidden" id="examFixBanner"></div>
           <section class="card">
             <div class="stage-label" id="stageLabel">Stage 0 · 复活区</div>
             <div class="prompt" id="prompt">准备开始挑战</div>
@@ -1131,14 +1154,20 @@
     <div id="examView" class="view">
       <div class="exam-app">
         <header class="exam-topbar">
+          <div class="exam-deco" aria-hidden="true">
+            <span>📚</span><span>✏️</span><span>⭐</span><span>🎯</span>
+            <span>🏆</span><span>🎈</span><span>🦉</span>
+          </div>
           <div class="exam-title-row">
-            <div class="exam-name">单词考试</div>
+            <div class="exam-name">📝 单词考试</div>
             <button class="exam-back" id="examBack">返回</button>
           </div>
           <div class="exam-stats">
-            <span>题目 <b id="examTotal">0</b></span>
-            <span>已完成 <b id="examDone">0</b></span>
-            <span>得分 <b id="examScore">0</b></span>
+            <span>📋 题目 <b id="examTotal">0</b></span>
+            <span>✅ 已完成 <b id="examDone">0</b></span>
+            <span>⭐ 得分 <b id="examScore">0</b></span>
+            <span>⏱️ 用时 <b id="examElapsed">0:00</b></span>
+            <span>⏳ 预计还需 <b id="examEta">--</b></span>
           </div>
           <div class="exam-progress"><div class="exam-progress-fill" id="examProgressFill"></div></div>
         </header>
