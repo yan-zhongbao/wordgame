@@ -1191,7 +1191,11 @@ function waterTurret(slot) {
     return false;
   }
   if (!turret.needsWater) {
-    showMessage("它现在不需要浇水。");
+    if (turret.level <= 1) {
+      showMessage("1级炮台免费，拼对就发射，不用浇水。");
+    } else {
+      showMessage("先把单词拼对，出现水滴后再浇水。");
+    }
     return false;
   }
   if (!spendCoins(CONFIG.waterCost)) {
@@ -1202,9 +1206,10 @@ function waterTurret(slot) {
   if (turret.waterFilled >= turret.waterNeeded) {
     turret.needsWater = false;
     updateTurretUI(slot);
+    showMessage("浇满，发射！");
     fireTurret(slot);
   } else {
-    showMessage(`已浇 ${turret.waterFilled}/${turret.waterNeeded}`);
+    showMessage(`已浇 ${turret.waterFilled}/${turret.waterNeeded} 滴`);
     updateTurretUI(slot);
   }
   return true;
@@ -1487,7 +1492,8 @@ function canKeySlot(slot) {
 }
 
 function canWaterSlot(slot) {
-  return !!(slot && slot.turret && slot.turret.needsWater);
+  // 高亮任何炮台，松手后由 waterTurret 给出明确提示。
+  return !!(slot && slot.turret);
 }
 
 function isOverBag(element) {
