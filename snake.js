@@ -36,7 +36,7 @@ const CONFIG = {
   snipeMs: 2000,
   speedMultiplier: 3,
   snipeMultiplier: 4,
-  wordCoinReward: 10,
+  wordCoinReward: 30,
   wrongLetterPenalty: 5,
   freezeCost: 20,
   speedCost: 30,

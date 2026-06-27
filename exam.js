@@ -673,7 +673,8 @@
       ln.setAttribute("x2", b.x);
       ln.setAttribute("y2", b.y);
       if (cls) ln.setAttribute("class", cls);
-      if (stroke) ln.setAttribute("stroke", stroke);
+      // inline style (not the `stroke` attribute) so it beats the CSS rule
+      if (stroke) ln.style.stroke = stroke;
       return ln;
     }
 
@@ -803,6 +804,10 @@
 
   // ---- result / rewards ----
   function launchRewardGame(view) {
+    if (view === "shoot") {
+      window.location.href = "shoot.html";
+      return;
+    }
     const maxDay =
       window.WG && typeof window.WG.maxDay === "function"
         ? window.WG.maxDay()
@@ -862,6 +867,7 @@
         ["单词大战", "td"],
         ["贪吃蛇", "snake"],
         ["单词寻宝", "wordsearch"],
+        ["射击单词", "shoot"],
       ].forEach(([label, view]) => {
         const bt = el("button", "exam-result-btn primary", label);
         bt.addEventListener("click", () => {

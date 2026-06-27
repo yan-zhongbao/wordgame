@@ -1,0 +1,267 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.shoot-app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #aee3ff 0%, #d6f0ff 55%, #eafff0 100%);
+}
+
+.shoot-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  z-index: 5;
+}
+
+.shoot-back {
+  border: none;
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.85);
+  color: #3a5161;
+  cursor: pointer;
+}
+
+.shoot-stats {
+  display: flex;
+  gap: 14px;
+}
+
+.shoot-stat {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #3a5161;
+}
+
+.shoot-stat b {
+  color: #e8590c;
+  font-size: 18px;
+}
+
+.shoot-area {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ---- balloons (auto-size to the word; translucent so overlaps stay legible) ---- */
+.balloon {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: none;
+  box-sizing: border-box;
+  max-width: 210px;
+  padding: 8px 14px;
+  border-radius: 50%; /* JS makes it a square -> perfect circle */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 22px;
+  cursor: pointer;
+  white-space: nowrap; /* single words never break mid-word */
+  box-shadow: inset -8px -10px 18px rgba(0, 0, 0, 0.16),
+    inset 9px 7px 16px rgba(255, 255, 255, 0.4), 0 6px 12px rgba(0, 0, 0, 0.16);
+  will-change: transform;
+}
+
+.balloon.phrase {
+  white-space: normal;
+  word-break: keep-all; /* phrases break only at the spaces */
+}
+
+.balloon-word {
+  pointer-events: none;
+  line-height: 1.12;
+  text-align: center;
+  /* "printed / stamped on the balloon" look */
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.28),
+    -1px -1px 0 rgba(255, 255, 255, 0.32), 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.balloon-string {
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  width: 2px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  transform: translateX(-50%);
+}
+
+.balloon.miss {
+  animation: balloonMiss 0.3s ease;
+}
+
+@keyframes balloonMiss {
+  0%,
+  100% {
+    filter: none;
+  }
+  50% {
+    filter: brightness(1.4) saturate(0.4);
+  }
+}
+
+/* ---- bow with vertical Chinese ---- */
+.shoot-bow {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.bow-target {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  background: rgba(255, 255, 255, 0.92);
+  border: 2px solid #e8590c;
+  border-radius: 14px;
+  padding: 10px 8px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #b5410a;
+  max-height: 46vh;
+  letter-spacing: 2px;
+  box-shadow: 0 8px 16px rgba(180, 80, 20, 0.25);
+}
+
+.bow-graphic {
+  font-size: 44px;
+  line-height: 1;
+  margin-top: 2px;
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
+}
+
+.shoot-bow.shake {
+  animation: bowShake 0.3s ease;
+}
+
+@keyframes bowShake {
+  0%,
+  100% {
+    transform: translateX(-50%) rotate(0deg);
+  }
+  25% {
+    transform: translateX(calc(-50% - 6px)) rotate(-4deg);
+  }
+  75% {
+    transform: translateX(calc(-50% + 6px)) rotate(4deg);
+  }
+}
+
+/* ---- arrow ---- */
+.arrow {
+  position: absolute;
+  font-size: 32px;
+  line-height: 1;
+  color: #6b4423;
+  transform-origin: center;
+  pointer-events: none;
+  z-index: 6;
+  margin-left: -8px;
+  margin-top: -16px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* ---- confetti ---- */
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  pointer-events: none;
+  animation: confettiFly 0.75s ease-out forwards;
+}
+
+@keyframes confettiFly {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) rotate(220deg);
+    opacity: 0;
+  }
+}
+
+/* ---- result ---- */
+.shoot-result {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 30, 40, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.shoot-result.hidden {
+  display: none;
+}
+
+.shoot-result-card {
+  width: min(360px, 90vw);
+  background: #fff;
+  border-radius: 22px;
+  padding: 26px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.shoot-result-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #2f3e4a;
+  margin-bottom: 14px;
+}
+
+.shoot-result-body {
+  font-size: 17px;
+  color: #3a5161;
+  line-height: 1.7;
+  margin-bottom: 18px;
+}
+
+.shoot-result-body b {
+  color: #e8590c;
+  font-size: 22px;
+}
+
+.shoot-home {
+  border: none;
+  border-radius: 14px;
+  padding: 12px 28px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #4dabf7, #3b82f6);
+  cursor: pointer;
+}

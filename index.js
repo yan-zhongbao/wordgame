@@ -25,6 +25,7 @@ const UI = {
   jumpTd: document.getElementById("jumpTd"),
   jumpSnake: document.getElementById("jumpSnake"),
   jumpSearch: document.getElementById("jumpSearch"),
+  jumpShoot: document.getElementById("jumpShoot"),
   jumpCancel: document.getElementById("jumpCancel"),
 };
 
@@ -155,6 +156,7 @@ const JumpDialog = {
     UI.jumpTd?.addEventListener("click", () => this.choose("td"));
     UI.jumpSnake?.addEventListener("click", () => this.choose("snake"));
     UI.jumpSearch?.addEventListener("click", () => this.choose("wordsearch"));
+    UI.jumpShoot?.addEventListener("click", () => this.choose("shoot"));
   },
 
   open(day) {
@@ -180,6 +182,11 @@ const JumpDialog = {
     }
     const day = this.currentDay;
     this.hide();
+    if (view === "shoot") {
+      // 射击单词是独立页面
+      window.location.href = "shoot.html";
+      return;
+    }
     AppNav.show(view, { day });
   },
 };

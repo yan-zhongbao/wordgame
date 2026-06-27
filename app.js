@@ -2674,6 +2674,10 @@ const Engine = {
         b.textContent = label;
         b.addEventListener("click", () => {
           hideOverlay();
+          if (view === "shoot") {
+            window.location.href = "shoot.html";
+            return;
+          }
           const maxDay = WG.maxDay();
           const day = 1 + Math.floor(Math.random() * Math.max(1, maxDay));
           if (window.AppNav && typeof window.AppNav.show === "function") {
@@ -2688,6 +2692,7 @@ const Engine = {
       UI.panelActions.appendChild(gameRow("单词大战", "td"));
       UI.panelActions.appendChild(gameRow("贪吃蛇", "snake"));
       UI.panelActions.appendChild(gameRow("单词寻宝", "wordsearch"));
+      UI.panelActions.appendChild(gameRow("射击单词", "shoot"));
       const home = document.createElement("button");
       home.className = "primary ghost";
       home.textContent = "返回主页";

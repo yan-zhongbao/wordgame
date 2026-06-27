@@ -255,6 +255,10 @@ button:active {
   background-size: contain;
 }
 
+.water-icon {
+  background-image: url("assets/td/water.svg");
+}
+
 .hoe-icon {
   background-image: url("assets/td/hoe.svg");
 }
@@ -410,8 +414,8 @@ button:active {
 
 .turret-level {
   position: absolute;
-  right: -5px;
-  top: -5px;
+  right: 3px;
+  top: 3px;
   width: 16px;
   height: 16px;
   border-radius: 50%;
@@ -478,6 +482,35 @@ button:active {
   100% {
     transform: scale(1);
   }
+}
+
+.turret-drops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  justify-content: center;
+  min-height: 0;
+}
+
+.turret-drops .drop {
+  width: 13px;
+  height: 13px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(45deg);
+  border: 1.5px solid #4aa3df;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.turret-drops .drop.filled {
+  background: #4aa3df;
+  box-shadow: 0 0 4px rgba(74, 163, 223, 0.6);
+}
+
+.turret.dormant {
+  filter: grayscale(0.35) brightness(0.96);
+  outline: 2px dashed rgba(74, 163, 223, 0.7);
+  outline-offset: -2px;
 }
 
 .turret-hp {

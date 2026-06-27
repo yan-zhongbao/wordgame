@@ -23,7 +23,7 @@ const UI = {
 
 const CONFIG = {
   size: 12,
-  reward: 10,
+  reward: 50,
   penalty: 5,
   flashCost: 10,
   speakerCost: 10,

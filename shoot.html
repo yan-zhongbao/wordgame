@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <title>射击单词</title>
+    <link rel="stylesheet" href="shoot.css" />
+  </head>
+  <body>
+    <div class="shoot-app">
+      <header class="shoot-top">
+        <button id="shootBack" class="shoot-back">返回</button>
+        <div class="shoot-stats">
+          <div class="shoot-stat">🎯 得分 <b id="shootScore">0</b></div>
+          <div class="shoot-stat">🎈 剩余 <b id="shootLeft">100</b></div>
+        </div>
+      </header>
+      <div id="shootArea" class="shoot-area">
+        <div id="shootBow" class="shoot-bow">
+          <div class="bow-target" id="bowTarget">准备…</div>
+          <div class="bow-graphic">🏹</div>
+        </div>
+      </div>
+      <div id="shootResult" class="shoot-result hidden">
+        <div class="shoot-result-card">
+          <div class="shoot-result-title">游戏结束</div>
+          <div id="shootResultBody" class="shoot-result-body"></div>
+          <button id="shootHome" class="shoot-home">返回主页</button>
+        </div>
+      </div>
+    </div>
+    <script src="semesters.js"></script>
+    <script src="shoot.js"></script>
+  </body>
+</html>

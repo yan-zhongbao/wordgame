@@ -14,6 +14,7 @@ const UI = {
   seedTray: tdQuery("#seedTray"),
   restartBtn: tdQuery("#restartBtn"),
   backBtn: tdQuery("#backBtn"),
+  waterBtn: tdQuery("#waterBtn"),
   hoeBtn: tdQuery("#hoeBtn"),
   keyBtn: tdQuery("#keyBtn"),
   hornBtn: tdQuery("#hornBtn"),
@@ -49,6 +50,10 @@ const CONFIG = {
   // 炮台价格为输出的1/3(即击杀总血量需花≈血量/3金币)，
   // 取 0.45 时每局净收益≈击杀总血量×0.12，约100-200金币。
   coinRewardRate: 0.45,
+  // 每打败一个boss额外奖励(原通关奖励分摊到每个boss上)。
+  bossCoin: 50,
+  // 种炮台免费；激活炮台需要浇水，每次浇水花费。N级需浇水N次。
+  waterCost: 5,
   flashDurationMs: 1200,
   wrongRevealMs: 1000,
   slipDurationMs: 3000,
@@ -86,24 +91,6 @@ const FIRE_INTERVALS = {
   cucumber: 1000,
   blueberry: 5000,
 };
-
-// 种炮台需消耗金币。价格 = 该炮台满级(1→6级)总输出血量的 1/3。
-// 总输出 = Σ(每级射弹数 × 每弹伤害)：
-//   pear   Σ(6L·[1+0.5(L-1)]) = 336 → 112
-//   apple  Σ(3L·[1+0.5(L-1)]) = 168 → 56
-//   其它(伤害=L) Σ(3L·L) = 273 → 91
-const TURRET_PRICES = {
-  pear: 112,
-  apple: 56,
-  banana: 91,
-  coconut: 91,
-  cucumber: 91,
-  blueberry: 91,
-};
-
-function turretPrice(fruit) {
-  return TURRET_PRICES[fruit] || 0;
-}
 
 const TEXT = {
   brandSubtitle: "单词大战作业",
@@ -813,15 +800,7 @@ function plantSeedAt(slot, fruit) {
     showMessage(TEXT.plantBusy);
     return;
   }
-  const price = turretPrice(fruit);
-  if (TD.coins < price) {
-    showMessage(`金币不足，种植需要 ${price} 金币`);
-    return;
-  }
-  if (price > 0) {
-    TD.coins -= price;
-    updateCoinUI();
-  }
+  // 种炮台免费（成本改为后续"浇水激活"）。
   const seed = {
     level: 1,
     start: performance.now(),
@@ -850,7 +829,6 @@ function renderSeedTray() {
     seed.innerHTML = `
       <div class="seed-icon fruit-${fruit.name}"></div>
       <div class="seed-label">${fruit.label}</div>
-      <div class="seed-price">${turretPrice(fruit.name)}金币</div>
     `;
     seed.addEventListener("pointerdown", (event) => {
       startDrag("seed", { fruit: fruit.name }, seed, event);
@@ -881,6 +859,9 @@ function createTurret(slot, fruit) {
     lockTimer: null,
     revealTimer: null,
     wrongIndices: new Set(),
+    needsWater: false,
+    waterNeeded: 0,
+    waterFilled: 0,
   };
   assignNewWord(turret, true);
   slot.el.innerHTML = `
@@ -891,6 +872,7 @@ function createTurret(slot, fruit) {
         <div class="turret-zh"></div>
       </div>
       <div class="turret-word"></div>
+      <div class="turret-drops"></div>
       <div class="turret-hp">
         <div class="hp-bar"><div class="hp-fill"></div></div>
       </div>
@@ -943,6 +925,22 @@ function updateTurretUI(slot) {
   wordEl.innerHTML = renderDisplayHtml(rawDisplay, slot.turret.wrongIndices);
   const ratio = slot.turret.maxHp ? slot.turret.hp / slot.turret.maxHp : 0;
   hpFill.style.width = `${Math.max(0, Math.min(1, ratio)) * 100}%`;
+  const dropsEl = slot.el.querySelector(".turret-drops");
+  const turretEl = slot.el.querySelector(".turret");
+  if (dropsEl) {
+    if (slot.turret.needsWater) {
+      let html = "";
+      for (let i = 0; i < slot.turret.waterNeeded; i += 1) {
+        html += `<span class="drop${i < slot.turret.waterFilled ? " filled" : ""}"></span>`;
+      }
+      dropsEl.innerHTML = html;
+    } else {
+      dropsEl.innerHTML = "";
+    }
+  }
+  if (turretEl) {
+    turretEl.classList.toggle("dormant", !!slot.turret.needsWater);
+  }
 }
 
 function computeBreakRule(display) {
@@ -1138,19 +1136,39 @@ function adjustNextShot(turret) {
   seq.timer = window.setTimeout(seq.fireOnce, desiredNextAt - now);
 }
 
+// 拼对单词后炮台不会马上开火，而是进入"待浇水"休眠：需要浇水 level 次激活。
 async function handleCorrectShot(slot) {
   const turret = slot.turret;
   if (!turret || !turret.wordItem) {
     return;
   }
-  showMessage(TEXT.correctShot);
   AudioBank.speakEn(turret.wordItem.en);
+  turret.wrongStreak = 0;
+  turret.flashMode = false;
+  // 1级炮台免费，拼对即发射；2级及以上才需要浇水(level 次)激活。
+  if (turret.level <= 1) {
+    turret.needsWater = false;
+    showMessage(TEXT.correctShot);
+    updateTurretUI(slot);
+    fireTurret(slot);
+    return;
+  }
+  turret.needsWater = true;
+  turret.waterNeeded = turret.level;
+  turret.waterFilled = 0;
+  showMessage(`拼对了！用水壶浇水 ${turret.waterNeeded} 次激活`);
   updateTurretUI(slot);
+}
+
+// 实际开火：发射当前等级次数，结束后升级并换新词（再次进入待拼写）。
+function fireTurret(slot) {
+  const turret = slot.turret;
+  if (!turret) {
+    return;
+  }
   turret.shotIntervalMs = turret.baseShotIntervalMs;
   const shots = turret.fruit === "pear" ? turret.level * 6 : turret.level * 3;
   SoundFX.playFruitShot(turret.fruit);
-  turret.wrongStreak = 0;
-  turret.flashMode = false;
   startFiringSequence(slot, shots, () => {
     if (!slot.turret || slot.turret !== turret) {
       return;
@@ -1163,6 +1181,33 @@ async function handleCorrectShot(slot) {
     assignNewWord(turret, false);
     updateTurretUI(slot);
   });
+}
+
+// 浇一次水：花 waterCost 金币，填一滴；浇满后开火。
+function waterTurret(slot) {
+  const turret = slot ? slot.turret : null;
+  if (!turret) {
+    showMessage(TEXT.toolNeedTurret);
+    return false;
+  }
+  if (!turret.needsWater) {
+    showMessage("它现在不需要浇水。");
+    return false;
+  }
+  if (!spendCoins(CONFIG.waterCost)) {
+    return false;
+  }
+  turret.waterFilled += 1;
+  AudioBank.play("coin");
+  if (turret.waterFilled >= turret.waterNeeded) {
+    turret.needsWater = false;
+    updateTurretUI(slot);
+    fireTurret(slot);
+  } else {
+    showMessage(`已浇 ${turret.waterFilled}/${turret.waterNeeded}`);
+    updateTurretUI(slot);
+  }
+  return true;
 }
 
 async function handleWrongShot(slot, wrongIndex) {
@@ -1556,7 +1601,11 @@ function onDragEnd(event) {
       }
     }
   } else if (active.type === "tool") {
-    if (active.payload?.tool === "hoe") {
+    if (active.payload?.tool === "water") {
+      if (dropSlot) {
+        waterTurret(dropSlot);
+      }
+    } else if (active.payload?.tool === "hoe") {
       if (dropSlot) {
         handleHoeOnSlot(dropSlot);
       }
@@ -2109,11 +2158,11 @@ function applyEnemyDamage(enemy, damage, fruit) {
     }
     spawnImpact(enemy.x, enemy.y, fruit);
     AudioBank.play("explode");
-    awardCoins(
-      Math.max(1, Math.round(enemy.maxHp * CONFIG.coinRewardRate)),
-      enemy.x,
-      enemy.y
-    );
+    {
+      const base = Math.max(1, Math.round(enemy.maxHp * CONFIG.coinRewardRate));
+      const bonus = enemy.tier === "boss" ? CONFIG.bossCoin : 0;
+      awardCoins(base + bonus, enemy.x, enemy.y);
+    }
     if (enemy.tier === "boss") {
       TD.bossDefeated += 1;
       TD.bossAlive = false;
@@ -2723,6 +2772,16 @@ function bindUI() {
       }
       startDrag("tool", { tool: "hoe" }, UI.hoeBtn, event);
     },
+    water: (event) => {
+      if (!TD.active) {
+        return;
+      }
+      if (TD.coins < CONFIG.waterCost) {
+        showMessage(TEXT.toolNoCoin);
+        return;
+      }
+      startDrag("tool", { tool: "water" }, UI.waterBtn, event);
+    },
     key: (event) => {
       if (!TD.active) {
         return;
@@ -2783,6 +2842,7 @@ function bindUI() {
     UI.overlayRestart.style.display = "none";
   }
   UI.backBtn?.addEventListener("click", handlers.back);
+  UI.waterBtn?.addEventListener("pointerdown", handlers.water);
   UI.hoeBtn?.addEventListener("pointerdown", handlers.hoe);
   UI.keyBtn?.addEventListener("pointerdown", handlers.key);
   UI.hornBtn?.addEventListener("pointerdown", handlers.horn);
@@ -2798,6 +2858,7 @@ function unbindUI() {
   }
   const handlers = TD.handlers;
   UI.backBtn?.removeEventListener("click", handlers.back);
+  UI.waterBtn?.removeEventListener("pointerdown", handlers.water);
   UI.hoeBtn?.removeEventListener("pointerdown", handlers.hoe);
   UI.keyBtn?.removeEventListener("pointerdown", handlers.key);
   UI.hornBtn?.removeEventListener("pointerdown", handlers.horn);
