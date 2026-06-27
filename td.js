@@ -1512,6 +1512,32 @@ function getSlotFromElement(element) {
   return TD.slots.find((slot) => slot.id === id) || null;
 }
 
+// 几何兜底：找离松手点最近的炮台格子（不依赖 elementFromPoint）。
+function nearestTurretSlot(event) {
+  if (!event) {
+    return null;
+  }
+  const x = event.clientX;
+  const y = event.clientY;
+  let best = null;
+  let bestD = Infinity;
+  TD.slots.forEach((slot) => {
+    if (!slot.turret || !slot.el) {
+      return;
+    }
+    const r = slot.el.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const d = Math.hypot(cx - x, cy - y);
+    const reach = Math.max(r.width, r.height) + 40;
+    if (d < bestD && d <= reach) {
+      bestD = d;
+      best = slot;
+    }
+  });
+  return best;
+}
+
 function updateDragTarget(event) {
   const element = document.elementFromPoint(event.clientX, event.clientY);
   const target = getSlotFromElement(element);
@@ -1617,8 +1643,15 @@ function onDragEnd(event) {
     }
   } else if (active.type === "tool") {
     if (active.payload?.tool === "water") {
-      if (dropSlot) {
-        waterTurret(dropSlot);
+      let s = dropSlot;
+      if (!s || !s.turret) {
+        // 兜底：在所有炮台里找最近松手点的那个
+        s = nearestTurretSlot(event);
+      }
+      if (s && s.turret) {
+        waterTurret(s);
+      } else {
+        showMessage("没找到炮台，请把水壶松手在炮台上。");
       }
     } else if (active.payload?.tool === "hoe") {
       if (dropSlot) {
