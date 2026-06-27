@@ -1486,6 +1486,10 @@ function canKeySlot(slot) {
   return fillIndex !== undefined;
 }
 
+function canWaterSlot(slot) {
+  return !!(slot && slot.turret && slot.turret.needsWater);
+}
+
 function isOverBag(element) {
   return !!(UI.bagArea && element && UI.bagArea.contains(element));
 }
@@ -1525,7 +1529,9 @@ function updateDragTarget(event) {
     return;
   }
   if (DragState.active?.type === "tool") {
-    if (DragState.active.payload?.tool === "hoe") {
+    if (DragState.active.payload?.tool === "water") {
+      setDropTarget(canWaterSlot(target) ? target : null);
+    } else if (DragState.active.payload?.tool === "hoe") {
       setDropTarget(canHoeSlot(target) ? target : null);
     } else if (DragState.active.payload?.tool === "key") {
       setDropTarget(canKeySlot(target) ? target : null);
