@@ -1601,7 +1601,10 @@ function onDragEnd(event) {
   window.removeEventListener("pointerup", onDragEnd);
   window.removeEventListener("touchmove", preventTouchScroll);
   active.ghost.remove();
-  const dropSlot = DragState.targetSlot;
+  // 以"松手位置"重新判定目标格子，避免最后一帧没更新导致放置失败。
+  const dropSlot =
+    DragState.targetSlot ||
+    (event ? getSlotFromElement(document.elementFromPoint(event.clientX, event.clientY)) : null);
   if (active.type === "seed" && dropSlot) {
     plantSeedAt(dropSlot, active.payload.fruit);
   } else if (active.type === "letter" && dropSlot) {
