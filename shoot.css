@@ -64,6 +64,28 @@ body {
   overflow: hidden;
 }
 
+.shoot-toast {
+  position: absolute;
+  left: 50%;
+  top: 24%;
+  transform: translate(-50%, -10px);
+  background: rgba(20, 30, 40, 0.85);
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  padding: 10px 18px;
+  border-radius: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 15;
+}
+
+.shoot-toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 /* ---- balloons (auto-size to the word; translucent so overlaps stay legible) ---- */
 .balloon {
   position: absolute;

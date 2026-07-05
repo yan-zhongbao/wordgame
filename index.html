@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="snake.css" id="snakeCss" disabled />
     <link rel="stylesheet" href="wordsearch.css" id="wordsearchCss" disabled />
     <link rel="stylesheet" href="exam.css" id="examCss" disabled />
+    <link rel="stylesheet" href="vocab.css" id="vocabCss" disabled />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -872,6 +873,7 @@
               <button class="action-btn" id="examStart">
                 考试 <span class="action-price">10金币</span>
               </button>
+              <button class="action-btn" id="vocabStart">小学词汇通</button>
             </div>
             <div id="dayList" class="day-list"></div>
             <div id="listHint" class="list-hint"></div>
@@ -1187,6 +1189,32 @@
       <div class="coin-rain" id="examCoinRain" aria-hidden="true"></div>
     </div>
 
+    <div id="vocabView" class="view">
+      <div class="vocab-app">
+        <header class="vocab-topbar">
+          <div class="vocab-deco" aria-hidden="true">
+            <span>📖</span><span>🐱</span><span>⭐</span><span>🍎</span>
+            <span>🏆</span><span>🎈</span><span>🦉</span>
+          </div>
+          <div class="vocab-title-row">
+            <div class="vocab-name">📖 小学词汇通</div>
+            <div class="vocab-title-actions">
+              <button class="vocab-back" id="vocabExport">导出标记</button>
+              <button class="vocab-back" id="vocabBack">返回</button>
+            </div>
+          </div>
+          <div class="vocab-stats">
+            <span>📚 总词 <b id="vocabTotal">0</b></span>
+            <span>✅ 已掌握 <b id="vocabMastered">0</b></span>
+            <span>🎯 待掌握 <b id="vocabRemaining">0</b></span>
+            <span>📄 本页 <b id="vocabPageInfo">0/0</b></span>
+          </div>
+          <div class="vocab-progress"><div class="vocab-progress-fill" id="vocabProgressFill"></div></div>
+        </header>
+        <main class="vocab-main" id="vocabMain"></main>
+      </div>
+    </div>
+
     <div class="confirm-overlay hidden" id="confirmOverlay" aria-modal="true" role="dialog">
       <div class="confirm-card">
         <div class="confirm-title" id="confirmTitle">提示</div>
@@ -1234,5 +1262,6 @@
     <script src="snake.js"></script>
     <script src="wordsearch.js"></script>
     <script src="exam.js"></script>
+    <script src="vocab.js"></script>
   </body>
 </html>

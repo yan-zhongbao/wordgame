@@ -1,4 +1,4 @@
-const CACHE_NAME = "wordgame-v123";
+const CACHE_NAME = "wordgame-v125";
 const AUDIO_CACHE = "wordgame-audio";
 const WORDS_FILES = ["words.json", "words.4b.json"];
 const CORE_ASSETS = [
@@ -21,6 +21,9 @@ const CORE_ASSETS = [
   "./wordsearch.css",
   "./exam.js",
   "./exam.css",
+  "./vocab.js",
+  "./vocab.css",
+  "./wordlist.txt",
   "./shoot.html",
   "./shoot.js",
   "./shoot.css",

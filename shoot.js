@@ -2,7 +2,8 @@
   "use strict";
 
   const TOTAL_WORDS = 100;
-  const COIN_PER_HIT = 3; // 射中一个得 3 金币，约 300/局，配合直通车基本打平
+  const ARROW_COST = 2; // 每发射一支箭花费 2 金币
+  const HIT_REWARD = 3; // 射中正确单词得 3 金币
   const DISTRACTORS = 13; // atmosphere balloons besides the target
   const BALLOON_ALPHA = 0.8;
   const BALLOON_COLORS = [
@@ -21,6 +22,7 @@
   const bowTarget = document.getElementById("bowTarget");
   const scoreEl = document.getElementById("shootScore");
   const leftEl = document.getElementById("shootLeft");
+  const coinsEl = document.getElementById("shootCoins");
   const resultEl = document.getElementById("shootResult");
   const resultBody = document.getElementById("shootResultBody");
 
@@ -69,14 +71,39 @@
       /* ignore */
     }
   }
+  function readCoins() {
+    try {
+      return parseInt(localStorage.getItem("wg-td-coins") || "0", 10) || 0;
+    } catch (err) {
+      return 0;
+    }
+  }
   function addGlobalCoins(n) {
     try {
-      const k = "wg-td-coins";
-      const cur = parseInt(localStorage.getItem(k) || "0", 10) || 0;
-      localStorage.setItem(k, String(Math.max(0, cur + n)));
+      localStorage.setItem("wg-td-coins", String(Math.max(0, readCoins() + n)));
     } catch (err) {
       /* ignore */
     }
+    renderCoins();
+  }
+  function renderCoins() {
+    if (coinsEl) coinsEl.textContent = String(readCoins());
+  }
+
+  // brief center toast (e.g. 金币不足)
+  let toastTimer = 0;
+  function toast(text) {
+    let el = document.getElementById("shootToast");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "shootToast";
+      el.className = "shoot-toast";
+      area.appendChild(el);
+    }
+    el.textContent = text;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 1100);
   }
 
   function areaSize() {
@@ -266,6 +293,12 @@
 
   function onHit(balloon) {
     if (!state.running || balloon.dead || state.shooting) return;
+    if (readCoins() < ARROW_COST) {
+      toast("金币不足，射不出箭");
+      return;
+    }
+    // 每射一支箭都要花钱
+    addGlobalCoins(-ARROW_COST);
     const c = balloonCenter(balloon);
     if (balloon.isTarget) {
       state.shooting = true;
@@ -274,6 +307,7 @@
         if (balloon.dead) return;
         const cc = balloonCenter(balloon);
         explode(cc.x, cc.y);
+        addGlobalCoins(HIT_REWARD); // 射中正确单词奖励
         removeBalloon(balloon);
         state.score += 1;
         scoreEl.textContent = String(state.score);
@@ -324,9 +358,8 @@
   function finish() {
     state.running = false;
     cancelAnimationFrame(state.raf);
-    const coins = state.score * COIN_PER_HIT;
-    addGlobalCoins(coins);
-    resultBody.innerHTML = `你射中了 <b>${state.score}</b> 个单词<br />获得 <b>${coins}</b> 金币 🪙`;
+    // 金币已在每次射箭/命中时实时结算，这里只展示成绩。
+    resultBody.innerHTML = `你射中了 <b>${state.score}</b> 个单词<br />当前金币 <b>${readCoins()}</b> 🪙`;
     resultEl.classList.remove("hidden");
   }
 
@@ -362,6 +395,7 @@
     }
     scoreEl.textContent = "0";
     leftEl.textContent = String(state.pool.length);
+    renderCoins();
     state.running = true;
     state.lastTs = performance.now();
     provideTarget();

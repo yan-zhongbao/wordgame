@@ -12,6 +12,7 @@ const UI = {
   customStart: homeQuery("#customStart"),
   reviewWrongStart: homeQuery("#reviewWrongStart"),
   examStart: homeQuery("#examStart"),
+  vocabStart: homeQuery("#vocabStart"),
   customOverlay: document.getElementById("customOverlay"),
   customTitle: document.getElementById("customTitle"),
   customBody: document.getElementById("customBody"),
@@ -36,6 +37,7 @@ const VIEWS = {
   snake: document.getElementById("snakeView"),
   wordsearch: document.getElementById("wordsearchView"),
   exam: document.getElementById("examView"),
+  vocab: document.getElementById("vocabView"),
 };
 
 const STYLE_LINKS = {
@@ -44,6 +46,7 @@ const STYLE_LINKS = {
   snake: document.getElementById("snakeCss"),
   wordsearch: document.getElementById("wordsearchCss"),
   exam: document.getElementById("examCss"),
+  vocab: document.getElementById("vocabCss"),
 };
 
 const Debug = {
@@ -349,6 +352,10 @@ const AppNav = {
     }
     if (view === "exam" && window.ExamApp?.start) {
       window.ExamApp.start();
+      return;
+    }
+    if (view === "vocab" && window.VocabApp?.start) {
+      window.VocabApp.start();
     }
   },
 };
@@ -371,6 +378,9 @@ function getViewApp(view) {
   }
   if (view === "exam") {
     return window.ExamApp || null;
+  }
+  if (view === "vocab") {
+    return window.VocabApp || null;
   }
   return null;
 }
@@ -1140,6 +1150,9 @@ function setupCustomPanel() {
   }
   if (UI.examStart) {
     UI.examStart.addEventListener("click", startExam);
+  }
+  if (UI.vocabStart) {
+    UI.vocabStart.addEventListener("click", () => AppNav.show("vocab"));
   }
   if (UI.customOverlay) {
     UI.customOverlay.addEventListener("click", (event) => {
