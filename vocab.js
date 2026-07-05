@@ -1,12 +1,20 @@
-/* 小学词汇通 —— 独立的认读斩词页面。
+/* 小学词汇通 —— 独立的认读斩词页面（5 轮漏斗式确认）。
  *
- * 玩法：从 wordlist.txt 加载全部小学单词，每页 10 行，每行给出英文单词 +
- * 4 个中文意思按钮（1 对 3 错）+「不认识」。答对该词计数 +1，答错或点
- * 「不认识」则清零。计数累计到 5 视为真正掌握（斩），不再出现。反复循环，
- * 直到全部单词计数都到 5。
+ * 玩法：从 wordlist.txt 加载全部小学单词，每页 10 行，每行 = 英文单词 +
+ * 4 个中文意思按钮（1 对 3 错）+「不认识」。
  *
- * 计数持久化在 localStorage（静态网页无法写回 wordlist.txt），键为
- * wg-vocab-counts，形如 { "cat": 3, ... }。
+ * 漏斗规则（用户拍板）：
+ *  - 第 1 轮测所有词；答对（选对正确意思）→ 进入下一轮，答错/不认识 → 掉出
+ *    成为「需记」的词，本流程不再测它。
+ *  - 第 2 轮只测第 1 轮答对的词，第 3 轮只测第 2 轮答对的词…… 连续 5 轮都答对
+ *    才算「真正认识」（斩，排除）。
+ *  - 每轮全部测完才进入下一轮。
+ *
+ * 断点续做：每个词只记两样——lv(已连续答对几轮 0..5) 与 f(是否掉队/需记)，
+ * 全部存 localStorage。当前轮次、当前位置都由这些状态推导，任何时候关闭/刷新，
+ * 重新打开都会从原进度继续，直到 5 轮走完。只有手动「重新开始」才清零。
+ *
+ * 存储键：wg-vocab-progress = { v:2, goal:5, words:{ "cat":{lv,f}, ... } }
  */
 (() => {
   "use strict";
@@ -17,23 +25,26 @@
   const UI = {
     main: q("#vocabMain"),
     total: q("#vocabTotal"),
-    mastered: q("#vocabMastered"),
-    remaining: q("#vocabRemaining"),
-    pageInfo: q("#vocabPageInfo"),
+    round: q("#vocabRound"),
+    known: q("#vocabKnown"),
+    need: q("#vocabNeed"),
+    roundLeft: q("#vocabRoundLeft"),
     progressFill: q("#vocabProgressFill"),
     back: q("#vocabBack"),
     export: q("#vocabExport"),
   };
 
   const PAGE_SIZE = 10; // 每页 10 个单词
-  const MASTER_GOAL = 5; // 计数到 5 视为真正掌握
-  const COUNTS_KEY = "wg-vocab-counts";
+  const GOAL = 5; // 连续答对 5 轮 = 真正认识
+  const PROG_KEY = "wg-vocab-progress";
+  const OLD_COUNTS_KEY = "wg-vocab-counts"; // 旧版本键，弃用并清除
   const WORDLIST_URL = "wordlist.txt";
 
   let allWords = null; // [{en, zh}]  加载一次后缓存
-  let counts = null; // { enLower: number }
-  let queue = []; // 待掌握单词的循环队列（allWords 索引）
-  let page = []; // 当前页 [{word, answered}]
+  let prog = null; // { enLower: {lv, f} }
+  let round = null; // 当前轮次 1..5，null=全部完成
+  let queue = []; // 当前轮待测单词队列（allWords 索引）
+  let page = []; // 当前页 [{idx, word, answered}]
   let answered = 0; // 当前页已作答数
 
   // ---- helpers ----
@@ -104,29 +115,48 @@
     }
   }
 
-  // ---- 计数存储 ----
-  function loadCounts() {
+  // ---- 进度存储 ----
+  function loadProg() {
+    prog = {};
     try {
-      const raw = localStorage.getItem(COUNTS_KEY);
-      counts = raw ? JSON.parse(raw) : {};
-      if (!counts || typeof counts !== "object") counts = {};
+      const raw = localStorage.getItem(PROG_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        const words = data && data.words ? data.words : {};
+        Object.keys(words).forEach((k) => {
+          const rec = words[k] || {};
+          const lv = Math.max(0, Math.min(GOAL, parseInt(rec.lv, 10) || 0));
+          prog[k] = { lv, f: !!rec.f };
+        });
+      }
     } catch (err) {
-      counts = {};
+      prog = {};
     }
-  }
-  function saveCounts() {
+    // 清除旧版本遗留的计数键，避免混淆污染。
     try {
-      localStorage.setItem(COUNTS_KEY, JSON.stringify(counts));
+      localStorage.removeItem(OLD_COUNTS_KEY);
     } catch (err) {
       /* ignore */
     }
   }
-  function countOf(en) {
-    return counts[keyOf(en)] || 0;
+
+  function saveProg() {
+    try {
+      localStorage.setItem(
+        PROG_KEY,
+        JSON.stringify({ v: 2, goal: GOAL, words: prog })
+      );
+    } catch (err) {
+      /* ignore */
+    }
   }
-  function setCount(en, value) {
-    counts[keyOf(en)] = Math.max(0, value);
-    saveCounts();
+
+  function progOf(en) {
+    return prog[keyOf(en)] || { lv: 0, f: false };
+  }
+  function setProg(en, lv, failed) {
+    prog[keyOf(en)] = { lv: Math.max(0, Math.min(GOAL, lv)), f: !!failed };
+    saveProg();
   }
 
   // ---- 加载词表 ----
@@ -167,9 +197,7 @@
       for (let j = 1; j <= n; j += 1) {
         const tmp = dp[j];
         dp[j] =
-          a[i - 1] === b[j - 1]
-            ? prev
-            : 1 + Math.min(prev, dp[j], dp[j - 1]);
+          a[i - 1] === b[j - 1] ? prev : 1 + Math.min(prev, dp[j], dp[j - 1]);
         prev = tmp;
       }
     }
@@ -190,12 +218,9 @@
       scored.push({ w, d });
     }
 
-    // 形近阈值：短词更严，长词放宽；同时要求首字母相同或距离很小。
+    // 形近阈值：短词更严，长词放宽。
     const limit = Math.min(3, Math.max(1, targetEn.length - 2));
-    const similar = scored
-      .filter((s) => s.d > 0 && s.d <= limit)
-      .sort((a, b) => a.d - b.d);
-    // 同距离内打乱，避免每次都同一批。
+    const similar = scored.filter((s) => s.d > 0 && s.d <= limit);
     shuffle(similar);
     similar.sort((a, b) => a.d - b.d);
 
@@ -217,70 +242,135 @@
     return out.slice(0, 3);
   }
 
-  // ---- 队列 / 分页 ----
-  function rebuildQueue() {
-    queue = [];
-    allWords.forEach((w, i) => {
-      if (countOf(w.en) < MASTER_GOAL) queue.push(i);
-    });
+  // ---- 轮次 / 队列（全部由持久化状态推导，保证可续做） ----
+  // 当前应处理的轮次 = 仍活跃(未掉队、未满 5)的词里最小 lv + 1。
+  function computeRound() {
+    let min = Infinity;
+    for (const w of allWords) {
+      const p = progOf(w.en);
+      if (p.f || p.lv >= GOAL) continue;
+      if (p.lv < min) min = p.lv;
+    }
+    return min === Infinity ? null : min + 1;
   }
 
-  function masteredCount() {
+  // 装载当前轮的待测词（lv == round-1 且未掉队）。
+  function refillQueue() {
+    round = computeRound();
+    queue = [];
+    if (round == null) return;
+    const lvl = round - 1;
+    allWords.forEach((w, i) => {
+      const p = progOf(w.en);
+      if (!p.f && p.lv === lvl) queue.push(i);
+    });
+    shuffle(queue);
+  }
+
+  function knownCount() {
     let n = 0;
     allWords.forEach((w) => {
-      if (countOf(w.en) >= MASTER_GOAL) n += 1;
+      if (progOf(w.en).lv >= GOAL) n += 1;
+    });
+    return n;
+  }
+  function needCount() {
+    let n = 0;
+    allWords.forEach((w) => {
+      if (progOf(w.en).f) n += 1;
+    });
+    return n;
+  }
+  // 本轮仍待测（未作答）的词数。
+  function roundRemaining() {
+    if (round == null) return 0;
+    const lvl = round - 1;
+    let n = 0;
+    allWords.forEach((w) => {
+      const p = progOf(w.en);
+      if (!p.f && p.lv === lvl) n += 1;
+    });
+    return n;
+  }
+  // 本轮参与总数（待测 + 已答对进阶 + 本轮掉队）。
+  function roundTotal() {
+    if (round == null) return 0;
+    const lvl = round - 1;
+    let n = 0;
+    allWords.forEach((w) => {
+      const p = progOf(w.en);
+      if (!p.f && (p.lv === lvl || p.lv === round)) n += 1; // 待测 or 本轮已进阶
+      else if (p.f && p.lv === lvl) n += 1; // 本轮掉队
     });
     return n;
   }
 
   function updateStats() {
     const total = allWords.length;
-    const mastered = masteredCount();
     if (UI.total) UI.total.textContent = String(total);
-    if (UI.mastered) UI.mastered.textContent = String(mastered);
-    if (UI.remaining) UI.remaining.textContent = String(total - mastered);
-    if (UI.pageInfo) UI.pageInfo.textContent = `${answered}/${page.length}`;
+    if (UI.round) UI.round.textContent = round == null ? "完成" : `${round}/${GOAL}`;
+    if (UI.known) UI.known.textContent = String(knownCount());
+    if (UI.need) UI.need.textContent = String(needCount());
+    if (UI.roundLeft) UI.roundLeft.textContent = String(roundRemaining());
     if (UI.progressFill) {
-      const pct = total ? Math.round((mastered / total) * 100) : 0;
+      const rt = roundTotal();
+      const pct = rt ? Math.round(((rt - roundRemaining()) / rt) * 100) : 0;
       UI.progressFill.style.width = `${pct}%`;
     }
   }
 
   // ---- 渲染一页 ----
   function renderPage() {
-    // 从队列前端取最多 10 个未掌握的词。
-    page = [];
-    while (page.length < PAGE_SIZE && queue.length) {
-      const idx = queue.shift();
-      const w = allWords[idx];
-      if (countOf(w.en) >= MASTER_GOAL) continue; // 可能已掌握
-      page.push({ idx, word: w, answered: false, correct: false });
-    }
-    answered = 0;
-
-    if (!page.length) {
+    if (!queue.length) refillQueue(); // 轮空 → 计算/进入下一轮
+    if (round == null) {
       renderDone();
       updateStats();
       return;
     }
 
-    UI.main.innerHTML = "";
-    const list = el("div", "vocab-list");
+    // 只从当前轮队列取，最多 10 个；不跨轮混页。
+    page = [];
+    while (page.length < PAGE_SIZE && queue.length) {
+      const idx = queue.shift();
+      const w = allWords[idx];
+      const p = progOf(w.en);
+      if (p.f || p.lv !== round - 1) continue; // 防御：跳过已变动的
+      page.push({ idx, word: w, answered: false });
+    }
+    answered = 0;
 
-    page.forEach((entry) => {
-      list.appendChild(renderRow(entry));
-    });
+    if (!page.length) {
+      // 当前轮已无待测，尝试进入下一轮。
+      refillQueue();
+      if (round == null) {
+        renderDone();
+        updateStats();
+        return;
+      }
+      renderPage();
+      return;
+    }
+
+    UI.main.innerHTML = "";
+    UI.main.appendChild(
+      el(
+        "div",
+        "vocab-round-head",
+        `第 ${round} 轮 / 共 ${GOAL} 轮 · 本轮还剩 ${roundRemaining()} 词`
+      )
+    );
+
+    const list = el("div", "vocab-list");
+    page.forEach((entry) => list.appendChild(renderRow(entry)));
     UI.main.appendChild(list);
 
-    // 底部：进度提示 + 下一页
     const footer = el("div", "vocab-footer");
     footer.appendChild(
-      el("div", "vocab-footer-tip", "点英文可听发音 · 全部作答后进入下一页")
+      el("div", "vocab-footer-tip", "点英文可听发音 · 本页作答完继续；随时可关闭，下次自动续做")
     );
     const nextBtn = el("button", "vocab-next", "下一页");
     nextBtn.disabled = true;
     nextBtn.addEventListener("click", () => {
-      requeuePage();
       renderPage();
       UI.main.scrollTop = 0;
     });
@@ -295,7 +385,7 @@
     const word = entry.word;
     const row = el("div", "vocab-row");
 
-    // 左侧：单词 + 掌握进度点
+    // 左侧：单词 + 已连过轮次进度点
     const wrap = el("div", "vocab-word-wrap");
     const wordBtn = el("button", "vocab-word");
     wordBtn.innerHTML = `${word.en}<span class="spk">🔊</span>`;
@@ -304,7 +394,8 @@
 
     const meta = el("div", "vocab-word-meta");
     const pips = el("span", "vocab-pips");
-    renderPips(pips, countOf(word.en));
+    const p = progOf(word.en);
+    renderPips(pips, p.lv, p.f);
     meta.appendChild(pips);
     entry._pips = pips;
     wrap.appendChild(meta);
@@ -335,29 +426,32 @@
     return row;
   }
 
-  function renderPips(pipsEl, count) {
+  function renderPips(pipsEl, lv, failed) {
     pipsEl.innerHTML = "";
-    for (let i = 0; i < MASTER_GOAL; i += 1) {
-      const pip = el("span", "vocab-pip" + (i < count ? " on" : ""));
-      pipsEl.appendChild(pip);
+    if (failed) {
+      pipsEl.appendChild(el("span", "vocab-need-tag", "📝 需记"));
+      return;
     }
-    if (count >= MASTER_GOAL) {
-      pipsEl.appendChild(el("span", "vocab-mastered-tag", " ✓已掌握"));
+    for (let i = 0; i < GOAL; i += 1) {
+      pipsEl.appendChild(el("span", "vocab-pip" + (i < lv ? " on" : "")));
+    }
+    if (lv >= GOAL) {
+      pipsEl.appendChild(el("span", "vocab-mastered-tag", " ✓已认识"));
     }
   }
 
   function answer(entry, row, buttons, unknownBtn, isCorrect, chosenBtn) {
     if (entry.answered) return;
     entry.answered = true;
-    entry.correct = isCorrect;
 
     const word = entry.word;
+    const p = progOf(word.en);
     if (isCorrect) {
-      const next = countOf(word.en) + 1;
-      setCount(word.en, next);
-      if (next >= MASTER_GOAL) addGlobalCoins(1); // 斩词奖励
+      const nlv = Math.min(GOAL, p.lv + 1);
+      setProg(word.en, nlv, false); // 答对：进阶到下一轮
+      if (nlv >= GOAL) addGlobalCoins(1); // 连过 5 轮，斩词奖励
     } else {
-      setCount(word.en, 0); // 答错 / 不认识 → 清零
+      setProg(word.en, p.lv, true); // 答错/不认识：掉出为「需记」
     }
 
     // 视觉反馈：正确项标绿，选错标红。
@@ -372,57 +466,72 @@
       playWord(word.en); // 不会/答错时读一遍，帮助认读
     }
     row.classList.add("done");
-    renderPips(entry._pips, countOf(word.en));
+    const np = progOf(word.en);
+    renderPips(entry._pips, np.lv, np.f);
 
     answered += 1;
     if (page._nextBtn && answered >= page.length) {
       page._nextBtn.disabled = false;
-      page._nextBtn.textContent =
-        queue.length || anyUnmastered() ? "下一页" : "完成";
+      page._nextBtn.textContent = nextLabel();
     }
     updateStats();
   }
 
-  function anyUnmastered() {
-    return allWords.some((w) => countOf(w.en) < MASTER_GOAL);
-  }
-
-  // 当前页作答完后，把仍未掌握的词放回队列末尾以循环练习。
-  function requeuePage() {
-    page.forEach((entry) => {
-      if (countOf(entry.word.en) < MASTER_GOAL) {
-        queue.push(entry.idx);
-      }
-    });
-    if (!queue.length) rebuildQueue(); // 一轮扫完，重建仍未掌握的
+  // 本页作答完后，下一步按钮的文案。
+  function nextLabel() {
+    if (queue.length) return "下一页";
+    const r = computeRound();
+    if (r == null) return "完成";
+    if (r !== round) return `进入第 ${r} 轮`;
+    return "下一页";
   }
 
   function renderDone() {
     UI.main.innerHTML = "";
+    const known = knownCount();
+    const need = needCount();
     const box = el("div", "vocab-done");
-    box.appendChild(el("div", "vocab-done-title", "🏆 全部单词都掌握啦！"));
+    box.appendChild(el("div", "vocab-done-title", "🏆 5 轮确认全部完成！"));
     box.appendChild(
       el(
         "div",
         "vocab-done-tip",
-        `${allWords.length} 个单词全部连续答对 ${MASTER_GOAL} 次，真正认识了。`
+        `真正认识（连过 ${GOAL} 轮）${known} 词 · 需要记 ${need} 词。` +
+          `点「导出标记」把结果交给 Python 生成需记词表。`
       )
     );
     const actions = el("div", "vocab-done-actions");
-    const again = el("button", "vocab-done-btn primary", "再练一轮");
-    again.addEventListener("click", () => {
-      // 重置计数，重新开始。
-      counts = {};
-      saveCounts();
-      rebuildQueue();
-      renderPage();
-    });
+
+    const exportBtn = el("button", "vocab-done-btn primary", "导出标记");
+    exportBtn.addEventListener("click", exportProgress);
+    actions.appendChild(exportBtn);
+
+    const again = el("button", "vocab-done-btn", "全部重新开始");
+    again.addEventListener("click", resetProgress);
+    actions.appendChild(again);
+
     const home = el("button", "vocab-done-btn", "返回主页");
     home.addEventListener("click", goHome);
-    actions.appendChild(again);
     actions.appendChild(home);
+
     box.appendChild(actions);
     UI.main.appendChild(box);
+  }
+
+  async function resetProgress() {
+    const ok =
+      typeof window.AppConfirm === "function"
+        ? await window.AppConfirm("确定要清空所有进度、从第 1 轮重新开始吗？", {
+            title: "重新开始",
+            okText: "清空重来",
+            cancelText: "取消",
+          })
+        : window.confirm("确定要清空所有进度、从第 1 轮重新开始吗？");
+    if (!ok) return;
+    prog = {};
+    saveProg();
+    refillQueue();
+    renderPage();
   }
 
   function goHome() {
@@ -431,18 +540,28 @@
     }
   }
 
-  // 导出标记：把本地计数下载成 JSON，交给 Python 脚本生成需记词表。
-  function exportCounts() {
-    loadCounts();
+  // 导出标记：把每个词的等级(lv)下载成 JSON，交给 Python 生成需记词表。
+  // counts[en] = lv；Python 端 lv>=5 视为已认识(排除)，其余为需记。
+  function exportProgress() {
+    const counts = {};
+    let touched = 0;
+    (allWords || []).forEach((w) => {
+      const p = progOf(w.en);
+      if (p.lv > 0 || p.f) {
+        counts[keyOf(w.en)] = p.lv;
+        touched += 1;
+      }
+    });
     const total = allWords ? allWords.length : 0;
-    const mastered = allWords ? masteredCount() : 0;
+    const done = computeRound() == null;
     const payload = {
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
-      masterGoal: MASTER_GOAL,
+      masterGoal: GOAL,
+      completed: done, // 是否已走完 5 轮（未完成时导出仅供参考）
       total,
-      mastered,
-      remaining: total - mastered,
+      known: knownCount(),
+      need: needCount(),
       counts,
     };
     try {
@@ -468,7 +587,7 @@
     if (UI.main) {
       UI.main.innerHTML = '<div class="vocab-loading">正在加载词库…</div>';
     }
-    loadCounts();
+    loadProg();
     try {
       await loadWords();
     } catch (err) {
@@ -478,7 +597,7 @@
       }
       return;
     }
-    rebuildQueue();
+    refillQueue(); // 由持久化状态推导当前轮次与位置 → 续做
     renderPage();
   }
 
@@ -499,7 +618,7 @@
   }
 
   if (UI.export) {
-    UI.export.addEventListener("click", exportCounts);
+    UI.export.addEventListener("click", exportProgress);
   }
 
   window.VocabApp = { start, pause };

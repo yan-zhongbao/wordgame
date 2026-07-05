@@ -125,6 +125,17 @@
   padding: 40px 0;
 }
 
+/* ---- 轮次标题 ---- */
+.vocab-round-head {
+  font-size: 15px;
+  font-weight: 800;
+  color: #b25a1f;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fff1e0, #ffe1c4);
+}
+
 /* ---- 斩词列表 ---- */
 .vocab-list {
   display: flex;
@@ -201,6 +212,12 @@
 .vocab-mastered-tag {
   color: #1f9d55;
   font-weight: 700;
+}
+
+.vocab-need-tag {
+  color: #b02a26;
+  font-weight: 700;
+  font-size: 12px;
 }
 
 .vocab-opts {
