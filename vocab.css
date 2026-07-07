@@ -899,3 +899,38 @@
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
+/* ---- 得分/扣分飘字 ---- */
+.vocab-float {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: 800;
+  pointer-events: none;
+  z-index: 50;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  animation: vocabFloatUp 1s ease-out forwards;
+}
+
+.vocab-float.plus {
+  color: #f3b938;
+}
+
+.vocab-float.minus {
+  color: #d9534f;
+}
+
+@keyframes vocabFloatUp {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -30%) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -60%) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -170%) scale(1);
+  }
+}

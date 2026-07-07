@@ -188,6 +188,48 @@
     }
   }
 
+  // 音效：复用 TD 的音频。coin=得分、fail=爆炸/失败。
+  const SFX = {
+    files: { coin: "audio/td/coin.wav", fail: "audio/td/explode.wav" },
+    preload() {
+      for (const k in this.files) {
+        try {
+          const a = new Audio(this.files[k]);
+          a.preload = "auto";
+          a.load();
+        } catch (err) {
+          /* ignore */
+        }
+      }
+    },
+    play(name) {
+      const src = this.files[name];
+      if (!src) return;
+      try {
+        const a = new Audio(src);
+        a.volume = 0.6;
+        a.play().catch(() => {});
+      } catch (err) {
+        /* ignore */
+      }
+    },
+  };
+
+  // 在屏幕坐标处冒出一段文字（如 +1 / -2金币），向上飘并淡出。
+  function floatText(x, y, text, kind) {
+    try {
+      const t = document.createElement("div");
+      t.className = "vocab-float " + (kind === "plus" ? "plus" : "minus");
+      t.textContent = text;
+      t.style.left = `${x}px`;
+      t.style.top = `${y}px`;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 1000);
+    } catch (err) {
+      /* ignore */
+    }
+  }
+
   // ---- 进度存储（PHP 优先，localStorage 镜像） ----
   function normalizeWords(words) {
     const out = {};
@@ -603,7 +645,10 @@
     box.appendChild(summary);
 
     const cards = el("div", "vocab-hub-cards");
-    cards.appendChild(hubCard("⚡", "快速分词", () => setScreen("sort")));
+    // 所有词都分过（没有待分词的词）后，隐藏"快速分词"入口。
+    if (untouchedCount() > 0) {
+      cards.appendChild(hubCard("⚡", "快速分词", () => setScreen("sort")));
+    }
     cards.appendChild(hubCard("✅", "认识词标记", () => setScreen("confirm")));
     cards.appendChild(hubCard("🔗", "单词连连看", () => setScreen("match")));
     cards.appendChild(hubCard("🔊", "听音选词", () => setScreen("listen")));
@@ -878,9 +923,13 @@
         else if (btn === chosenBtn) btn.classList.add("wrong");
       });
       unknownBtn.disabled = true;
-      if (!isCorrect) {
-        unknownBtn.classList.add("picked");
-        playWord(word.en);
+      if (isCorrect) {
+        playWord(word.en); // 对 → 读单词
+      } else if (chosenBtn) {
+        SFX.play("fail"); // 选错了 → 失败音效
+      } else {
+        unknownBtn.classList.add("picked"); // 点了"不认识"
+        playWord(word.en); // 读一遍帮助认读
       }
       row.classList.add("done");
       const np = progOf(word.en);
@@ -1103,6 +1152,7 @@
         const p = progOf(word.en);
         setProg(word.en, { mc: p.mc + 1 });
         addGlobalCoins(1); // 连对 1 词 = 1 金币
+        playWord(word.en); // 对 → 读单词
         this.drawLine(left.node, node);
         this.selectedLeft = null;
         this.matched += 1;
@@ -1111,7 +1161,8 @@
           this._nextBtn.textContent = this.pool.length > this.batch.length ? "下一组" : "完成";
         }
       } else {
-        // 连错：闪红
+        // 连错：闪红 + 失败音效
+        SFX.play("fail");
         node.classList.add("wrong");
         const bad = node;
         setTimeout(() => bad.classList.remove("wrong"), 400);
@@ -1271,7 +1322,8 @@
         } else {
           this.streak = 0;
         }
-        playWord(w.en); // 读一遍帮助认读
+        if (isCorrect) playWord(w.en); // 对 → 读单词
+        else SFX.play("fail"); // 错 → 失败音效
         if (this._feedback) this._feedback.textContent = `${w.en} = ${w.zh}`;
         this.renderHeaderStats();
         if (this._nextBtn) this._nextBtn.disabled = false;
@@ -1335,17 +1387,20 @@
       }
       this.score = 0;
       this.streak = 0;
+      this.active = new Set();
       this.endAt = Date.now() + SESSION_LIMIT_MS;
       this.running = true;
       this.render();
       this.pickTarget();
-      this.spawnT = setInterval(() => this.spawn(), 1050);
+      this.spawnT = setInterval(() => this.spawn(), 700);
       this.tickT = setInterval(() => this.onTick(), 500);
-      this.rotateT = setInterval(() => this.pickTarget(), 25000);
     },
 
+    // 切换到下一组（不清屏）：目标词洗成一副牌、每词只放一次；干扰词另起一副。
     pickTarget() {
-      const label = this.usable[Math.floor(Math.random() * this.usable.length)];
+      const choices = this.usable.filter((k) => k !== this.target);
+      const src = choices.length ? choices : this.usable;
+      const label = src[Math.floor(Math.random() * src.length)];
       this.target = label;
       this.targetSet = new Set((categories[label] || []).map(keyOf));
       const other = [];
@@ -1356,24 +1411,34 @@
         });
       }
       this.otherPool = other;
-      this.targetBag = [];
+      this.targetBag = shuffle((categories[label] || []).slice());
       this.otherBag = [];
-      this.active = new Set();
-      if (this.area) this.area.innerHTML = ""; // 换分类清空旧词，避免正误混淆
       if (this._taskEl) this._taskEl.textContent = `点掉所有：${label}`;
     },
 
-    // 从牌堆无放回抽词：一轮内每个词只出现一次；且跳过当前屏幕上已有的词。
-    drawWord(useTarget) {
-      const pool = useTarget ? categories[this.target] || [] : this.otherPool;
-      if (!pool.length) return null;
-      const bagKey = useTarget ? "targetBag" : "otherBag";
-      for (let i = 0; i <= pool.length; i += 1) {
-        if (!this[bagKey].length) this[bagKey] = shuffle(pool.slice());
-        const en = this[bagKey].pop();
+    // 目标词：牌堆发完就为空（本组结束的信号），不重洗。
+    drawTarget() {
+      while (this.targetBag.length) {
+        const en = this.targetBag.pop();
         if (!this.active.has(keyOf(en))) return en;
       }
-      return null; // 池子里的词都在屏幕上了，本次不生成
+      return null;
+    },
+    // 干扰词：持续供应，发完重洗；跳过屏幕上已有的词。
+    drawOther() {
+      const pool = this.otherPool;
+      if (!pool.length) return null;
+      for (let i = 0; i <= pool.length; i += 1) {
+        if (!this.otherBag.length) this.otherBag = shuffle(pool.slice());
+        const en = this.otherBag.pop();
+        if (!this.active.has(keyOf(en))) return en;
+      }
+      return null;
+    },
+    // 当前分类还有目标词在屏幕上吗？
+    anyTargetOnScreen() {
+      for (const k of this.active) if (this.targetSet.has(k)) return true;
+      return false;
     },
 
     removeItem(item) {
@@ -1415,37 +1480,75 @@
 
     spawn() {
       if (!this.running || !this.area) return;
-      const useTarget = Math.random() < 0.5;
-      const en = this.drawWord(useTarget);
+      // 本组目标词全部放完、且都已飘出屏幕 → 切下一组（不清屏，无缝过渡）。
+      if (!this.targetBag.length && !this.anyTargetOnScreen()) {
+        this.pickTarget();
+      }
+      // 目标词没发完时偏向发目标词；发完则继续放干扰词等最后几个飘走。
+      let en = null;
+      if (this.targetBag.length && Math.random() < 0.55) en = this.drawTarget();
+      if (!en) en = this.drawOther();
       if (!en) return;
       const key = keyOf(en);
-      const correct = this.targetSet.has(key);
       this.active.add(key);
       const item = el("button", "vocab-rain-word", en);
       item._key = key;
-      const areaW = this.area.clientWidth || 320;
-      item.style.left = `${Math.random() * Math.max(8, areaW - 78)}px`;
-      item.style.animationDuration = `${4200 + Math.random() * 1800}ms`;
+      const isPhrase = /\s/.test(en.trim());
+      try {
+        item._audio = new Audio(`audio/${isPhrase ? "phrase" : "en"}/${slugify(en)}.mp3`);
+        item._audio.preload = "auto"; // 提前缓存，点击即读
+      } catch (err) {
+        /* ignore */
+      }
+      item.style.animationDuration = `${3000 + Math.random() * 4200}ms`; // 3–7.2s，速度差更明显
       item.addEventListener("animationend", () => this.removeItem(item));
-      item.addEventListener("click", () => this.hit(item, correct));
+      item.addEventListener("click", () => this.hit(item));
       this.area.appendChild(item);
+      // 先加入 DOM 量出真实宽度，再夹住 left，保证整词不超出右边界。
+      const areaW = this.area.clientWidth || 320;
+      const wordW = item.offsetWidth || 70;
+      const maxLeft = Math.max(0, areaW - wordW - 6);
+      item.style.left = `${Math.random() * maxLeft}px`;
     },
 
-    hit(item, correct) {
+    hit(item) {
       if (!this.running || item._done) return;
       item._done = true;
+      const correct = this.targetSet.has(item._key); // 按当前分类实时判定
+      const r = item.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top;
       if (correct) {
         this.score += 1;
         this.streak += 1;
-        addGlobalCoins(1); // 点对 1 词 = 1 金币
+        addGlobalCoins(1);
+        this.readItem(item); // 读出点到的单词
+        SFX.play("coin");
+        floatText(cx, cy, "+1", "plus");
         item.classList.add("hit-right");
       } else {
         this.streak = 0;
+        addGlobalCoins(-2); // 点错扣 2 金币（不会低于 0）
+        SFX.play("fail");
+        floatText(cx, cy, "-2金币", "minus");
         item.classList.add("hit-wrong");
       }
-      // 220ms 后移除（removeItem 会把它从 active 里删掉，之后才可能再次出现）
       setTimeout(() => this.removeItem(item), 220);
       this.renderStats();
+    },
+
+    readItem(item) {
+      const en = item.textContent;
+      try {
+        if (item._audio) {
+          item._audio.currentTime = 0;
+          item._audio.play().catch(() => speak(en));
+        } else {
+          speak(en);
+        }
+      } catch (err) {
+        speak(en);
+      }
     },
 
     onTick() {
@@ -1632,22 +1735,36 @@
         addGlobalCoins(1); // 打对 1 词 = 1 金币
         const p = progOf(this.target.en);
         setProg(this.target.en, { mc: p.mc + 1 });
+        SFX.play("coin");
+        const rr = h.el.getBoundingClientRect();
+        floatText(rr.left + rr.width / 2, rr.top, "+1", "plus");
         h.el.classList.add("bonk-right");
         this.renderStats();
-        // 冻结一下：所有地鼠缩下，读完整个单词后再进入下一题。
+        // 冻结：正确的这只地鼠留在屏幕上，其它收回；读完整个单词后再进入下一题。
         this.frozen = true;
         this.holes.forEach((hh) => {
+          if (hh === h) return; // 打中的这只保持冒头
           hh.up = false;
           hh.el.classList.remove("up");
         });
+        // 停掉这只自己的起落定时器，避免读音期间它自动缩回。
+        clearTimeout(h.tUp);
+        clearTimeout(h.tDown);
         playWordThen(this.target.en, () => {
           if (!this.running) return;
           h.el.classList.remove("bonk-right");
+          h.up = false;
+          h.el.classList.remove("up"); // 读完后收回
           this.frozen = false;
           this.newRound();
+          this.startHole(h); // 恢复这只地鼠的起落循环
         });
       } else {
         this.streak = 0;
+        addGlobalCoins(-2); // 打错扣 2 金币
+        SFX.play("fail");
+        const rw = h.el.getBoundingClientRect();
+        floatText(rw.left + rw.width / 2, rw.top, "-2金币", "minus");
         h.el.classList.add("bonk-wrong");
         setTimeout(() => h.el.classList.remove("bonk-wrong"), 300);
         this.renderStats();
@@ -1732,6 +1849,7 @@
       return;
     }
     await Promise.all([loadCurriculum(), loadProgress(), loadCategories()]);
+    SFX.preload();
     setScreen("hub");
   }
 
