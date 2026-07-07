@@ -1,7 +1,7 @@
 /* 小学词汇通 —— 视觉风格与考试模块 (exam.css) 保持一致 */
 
 .vocab-app {
-  width: min(980px, 100%);
+  width: min(1180px, 100%);
   margin: 0 auto;
   padding: 12px 18px 18px;
   display: flex;
@@ -792,7 +792,7 @@
   font-size: 17px;
   font-weight: 800;
   cursor: pointer;
-  transition: bottom 0.18s ease;
+  transition: bottom 0.22s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -825,5 +825,77 @@
   .vocab-mole {
     height: 66px;
     font-size: 15px;
+  }
+}
+
+/* ==== 平板 / 横屏加宽（tablet-friendly） ==== */
+@media (min-width: 760px) {
+  .vocab-app {
+    padding: 16px 28px 24px;
+    gap: 14px;
+  }
+  .vocab-main {
+    padding: 20px 24px 24px;
+  }
+  /* hub 卡片 3 列，充分利用横向空间 */
+  .vocab-hub-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  /* 连连看：更宽的板、更大的间距和字号 */
+  .vocab-match-board {
+    max-width: 860px;
+    gap: 140px;
+  }
+  .vocab-match-item {
+    font-size: 18px;
+    padding: 16px 14px;
+  }
+  /* 选词类：更宽的选项区、更大的字 */
+  .vocab-quiz-opts {
+    max-width: 720px;
+    gap: 16px;
+  }
+  .vocab-quiz-opt {
+    font-size: 22px;
+    padding: 20px 14px;
+  }
+  .vocab-quiz-zh {
+    font-size: 36px;
+  }
+  /* 打地鼠：更大的场地 */
+  .vocab-mole-grid {
+    max-width: 780px;
+    gap: 20px;
+  }
+  .vocab-mole-hole {
+    height: 120px;
+  }
+  .vocab-mole {
+    height: 100px;
+    font-size: 20px;
+  }
+  /* 单词雨：更高的下落区 */
+  .vocab-rain-area {
+    height: 64vh;
+  }
+  .vocab-rain-word {
+    font-size: 20px;
+    padding: 10px 14px;
+  }
+  /* 标记模式：中文选项更大更好点 */
+  .vocab-word {
+    font-size: 19px;
+  }
+  .vocab-opt {
+    font-size: 16px;
+    padding: 9px 14px;
+  }
+}
+
+@media (min-width: 1040px) {
+  /* 更宽的平板/桌面：hub 卡片 4 列 */
+  .vocab-hub-cards {
+    grid-template-columns: repeat(4, 1fr);
   }
 }

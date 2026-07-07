@@ -60,9 +60,10 @@
         display: block;
       }
 
-      /* The exam content is intrinsically narrow; force its view (a flex item
-         of <body>) to full width so .exam-app can center at its 980px. */
-      #examView.view.active {
+      /* The exam/vocab content is intrinsically narrow; force its view (a flex
+         item of <body>) to full width so the inner app can center at its width. */
+      #examView.view.active,
+      #vocabView.view.active {
         width: 100%;
         flex-shrink: 0;
       }

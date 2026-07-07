@@ -134,6 +134,49 @@
       speak(en);
     }
   }
+  function speakThen(text, cb) {
+    if (!("speechSynthesis" in window)) {
+      cb();
+      return;
+    }
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "en-US";
+      u.onend = cb;
+      u.onerror = cb;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    } catch (err) {
+      cb();
+    }
+  }
+  // 播放单词，播完（或兜底超时）后回调，用于打地鼠"读完再继续"。
+  function playWordThen(en, cb) {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      cb();
+    };
+    const safety = setTimeout(finish, 2600);
+    const finClear = () => {
+      clearTimeout(safety);
+      finish();
+    };
+    const isPhrase = /\s/.test(en.trim());
+    const src = `audio/${isPhrase ? "phrase" : "en"}/${slugify(en)}.mp3`;
+    try {
+      if (currentAudio) currentAudio.pause();
+      const a = new Audio(src);
+      currentAudio = a;
+      a.addEventListener("ended", finClear);
+      a.addEventListener("error", () => speakThen(en, finClear));
+      const p = a.play();
+      if (p && p.catch) p.catch(() => speakThen(en, finClear));
+    } catch (err) {
+      speakThen(en, finClear);
+    }
+  }
   function addGlobalCoins(amount) {
     try {
       const k = "wg-td-coins";
@@ -1434,6 +1477,7 @@
       this.ptr = 0;
       this.score = 0;
       this.streak = 0;
+      this.frozen = false;
       this.endAt = Date.now() + SESSION_LIMIT_MS;
       this.running = true;
       this.render();
@@ -1536,20 +1580,25 @@
     startHole(h) {
       const cycle = () => {
         if (!this.running) return;
+        if (this.frozen) {
+          // 冻结中（读单词）：地鼠先不冒头，稍后再试。
+          h.tDown = setTimeout(cycle, 300);
+          return;
+        }
         h.up = true;
         h.el.classList.add("up");
         h.labelEl.textContent = h.word;
         h.tUp = setTimeout(() => {
           h.up = false;
           h.el.classList.remove("up");
-          h.tDown = setTimeout(cycle, 400 + Math.random() * 1300);
-        }, 1000 + Math.random() * 1500);
+          h.tDown = setTimeout(cycle, 700 + Math.random() * 1200);
+        }, 1500 + Math.random() * 1600);
       };
-      h.tDown = setTimeout(cycle, Math.random() * 1200);
+      h.tDown = setTimeout(cycle, 300 + Math.random() * 1500);
     },
 
     hitHole(h) {
-      if (!this.running || !h.up || !this.target) return;
+      if (!this.running || this.frozen || !h.up || !this.target) return;
       if (keyOf(h.word) === keyOf(this.target.en)) {
         this.score += 1;
         this.streak += 1;
@@ -1557,14 +1606,25 @@
         const p = progOf(this.target.en);
         setProg(this.target.en, { mc: p.mc + 1 });
         h.el.classList.add("bonk-right");
-        setTimeout(() => h.el.classList.remove("bonk-right"), 220);
-        this.newRound();
+        this.renderStats();
+        // 冻结一下：所有地鼠缩下，读完整个单词后再进入下一题。
+        this.frozen = true;
+        this.holes.forEach((hh) => {
+          hh.up = false;
+          hh.el.classList.remove("up");
+        });
+        playWordThen(this.target.en, () => {
+          if (!this.running) return;
+          h.el.classList.remove("bonk-right");
+          this.frozen = false;
+          this.newRound();
+        });
       } else {
         this.streak = 0;
         h.el.classList.add("bonk-wrong");
         setTimeout(() => h.el.classList.remove("bonk-wrong"), 300);
+        this.renderStats();
       }
-      this.renderStats();
     },
 
     end() {
