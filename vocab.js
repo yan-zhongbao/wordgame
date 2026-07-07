@@ -349,6 +349,47 @@
     return out.slice(0, 3);
   }
 
+  // 挑 n 个形近的英文词（编辑距离小，如 cat→cut/cap/cot），用于听音选词/形近词辨析。
+  function pickSimilarWords(word, n) {
+    const targetEn = keyOf(word.en);
+    const used = new Set([targetEn]);
+    const scored = [];
+    for (const w of allWords) {
+      const k = keyOf(w.en);
+      if (used.has(k)) continue;
+      scored.push({ en: w.en, d: levenshtein(targetEn, k) });
+    }
+    const close = scored.filter((s) => s.d > 0);
+    shuffle(close);
+    close.sort((a, b) => a.d - b.d); // 越形近越优先
+    const out = [];
+    for (const s of close) {
+      if (out.length >= n) break;
+      const k = keyOf(s.en);
+      if (used.has(k)) continue;
+      used.add(k);
+      out.push(s.en);
+    }
+    return out.slice(0, n);
+  }
+
+  // 选词模式的 3 个英文干扰项：similar=全形近；mixed=2形近+1随机。
+  function chooseDistractors(word, strategy) {
+    const sim = pickSimilarWords(word, strategy === "mixed" ? 2 : 3);
+    const out = sim.slice();
+    if (strategy === "mixed") {
+      const used = new Set([keyOf(word.en), ...out.map(keyOf)]);
+      for (const w of shuffle(allWords.slice())) {
+        if (out.length >= 3) break;
+        const k = keyOf(w.en);
+        if (used.has(k)) continue;
+        used.add(k);
+        out.push(w.en);
+      }
+    }
+    return out.slice(0, 3);
+  }
+
   // ---- 统计 ----
   function knownCount() {
     let n = 0;
@@ -469,6 +510,15 @@
     } else if (next === "match") {
       UI.name.textContent = "🔗 单词连连看";
       Match.enter();
+    } else if (next === "listen") {
+      UI.name.textContent = "🔊 听音选词";
+      Listen.enter();
+    } else if (next === "similar") {
+      UI.name.textContent = "🔤 形近词辨析";
+      Similar.enter();
+    } else if (next === "zh2en") {
+      UI.name.textContent = "📖 中文选词";
+      Zh2en.enter();
     }
   }
 
@@ -486,21 +536,12 @@
     box.appendChild(summary);
 
     const cards = el("div", "vocab-hub-cards");
-    cards.appendChild(
-      hubCard("⚡", "快速分词", "第1轮：看词选中文，快速把词分成「认识 / 需记」，答对得金币", () =>
-        setScreen("sort")
-      )
-    );
-    cards.appendChild(
-      hubCard("✅", "认识词标记", "第2–5轮：确认认识的词不是蒙对的，连过5轮算真正认识", () =>
-        setScreen("confirm")
-      )
-    );
-    cards.appendChild(
-      hubCard("🔗", "单词连连看", "左词右义连线，优先练不会/需记的词，连对得金币", () =>
-        setScreen("match")
-      )
-    );
+    cards.appendChild(hubCard("⚡", "快速分词", () => setScreen("sort")));
+    cards.appendChild(hubCard("✅", "认识词标记", () => setScreen("confirm")));
+    cards.appendChild(hubCard("🔗", "单词连连看", () => setScreen("match")));
+    cards.appendChild(hubCard("🔊", "听音选词", () => setScreen("listen")));
+    cards.appendChild(hubCard("🔤", "形近词辨析", () => setScreen("similar")));
+    cards.appendChild(hubCard("📖", "中文选词", () => setScreen("zh2en")));
     box.appendChild(cards);
 
     // 游戏解锁区
@@ -550,12 +591,11 @@
     s.appendChild(el("span", null, label));
     return s;
   }
-  function hubCard(icon, title, sub, onClick) {
+  function hubCard(icon, title, onClick) {
     const card = el("button", "vocab-hub-card");
     card.innerHTML =
       `<div class="vocab-hub-icon">${icon}</div>` +
-      `<div class="vocab-hub-card-title">${title}</div>` +
-      `<div class="vocab-hub-card-sub">${sub}</div>`;
+      `<div class="vocab-hub-card-title">${title}</div>`;
     card.addEventListener("click", onClick);
     return card;
   }
@@ -680,23 +720,11 @@
       }
 
       UI.main.innerHTML = "";
-      UI.main.appendChild(
-        el(
-          "div",
-          "vocab-round-head",
-          isSort
-            ? `快速分词 · 还剩 ${this.roundRemaining()} 词（简单词优先，答对得金币）`
-            : `第 ${this.round} 轮 / 共 ${GOAL} 轮 · 本轮还剩 ${this.roundRemaining()} 词`
-        )
-      );
       const list = el("div", "vocab-list");
       this.page.forEach((entry) => list.appendChild(this.renderRow(entry)));
       UI.main.appendChild(list);
 
       const footer = el("div", "vocab-footer");
-      footer.appendChild(
-        el("div", "vocab-footer-tip", "点英文听发音 · 本页答完继续；随时可关闭，下次自动续做")
-      );
       const nextBtn = el("button", "vocab-next", "下一页");
       nextBtn.disabled = true;
       nextBtn.addEventListener("click", () => {
@@ -942,9 +970,7 @@
       UI.headerExtra.appendChild(stats);
 
       UI.main.innerHTML = "";
-      UI.main.appendChild(
-        el("div", "vocab-round-head", "把左边的英文和右边的中文连起来（点一个英文，再点对应中文）")
-      );
+      UI.main.appendChild(el("div", "vocab-round-head", "点英文，再点对应中文"));
 
       const board = el("div", "vocab-match-board");
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -975,7 +1001,6 @@
       UI.main.appendChild(board);
 
       const footer = el("div", "vocab-footer");
-      footer.appendChild(el("div", "vocab-footer-tip", "连对全部后可换下一组；随时返回。"));
       const nextBtn = el("button", "vocab-next", "下一组");
       nextBtn.disabled = true;
       nextBtn.addEventListener("click", () => {
@@ -1043,6 +1068,169 @@
   };
 
   // =======================================================================
+  //  选词引擎：listen=听音选英文、similar=中文选形近英文（候选都用形近词）
+  // =======================================================================
+  function makeChoose(opts) {
+    const isAudio = opts.prompt === "audio";
+    return {
+      pool: [],
+      ptr: 0,
+      current: null,
+      correct: 0,
+      streak: 0,
+      answered: false,
+      timer: null,
+
+      enter() {
+        this.correct = 0;
+        this.streak = 0;
+        this.ptr = 0;
+        this.next();
+      },
+
+      // 练习池：还没真正认识的词，需记优先、进度低优先。
+      buildPool() {
+        const cand = allWords.filter((w) => progOf(w.en).lv < GOAL);
+        cand.sort((a, b) => {
+          const pa = progOf(a.en);
+          const pb = progOf(b.en);
+          const fa = pa.f ? 0 : 1;
+          const fb = pb.f ? 0 : 1;
+          if (fa !== fb) return fa - fb;
+          if (pa.lv !== pb.lv) return pa.lv - pb.lv;
+          return difficulty(a) - difficulty(b);
+        });
+        this.pool = cand;
+      },
+
+      clearTimer() {
+        if (this.timer) {
+          clearTimeout(this.timer);
+          this.timer = null;
+        }
+      },
+
+      next() {
+        this.clearTimer();
+        this.buildPool();
+        if (!this.pool.length) {
+          this.renderEmpty();
+          return;
+        }
+        if (this.ptr >= this.pool.length) this.ptr = 0;
+        this.current = this.pool[this.ptr];
+        this.ptr += 1;
+        this.render();
+      },
+
+      renderHeaderStats() {
+        UI.headerExtra.innerHTML = "";
+        const stats = el("div", "vocab-stats");
+        stats.innerHTML =
+          `<span>✅ 答对 <b>${this.correct}</b></span>` +
+          `<span>🔥 连击 <b>${this.streak}</b></span>` +
+          `<span>💰 金币 <b>${coinBalance()}</b></span>` +
+          `<span>🎯 可练 <b>${this.pool.length}</b></span>`;
+        UI.headerExtra.appendChild(stats);
+      },
+
+      render() {
+        this.answered = false;
+        const w = this.current;
+        this.renderHeaderStats();
+
+        UI.main.innerHTML = "";
+        const box = el("div", "vocab-quiz");
+
+        const prompt = el("div", "vocab-quiz-prompt");
+        if (isAudio) {
+          const play = el("button", "vocab-quiz-audio", "🔊 点我听");
+          play.addEventListener("click", () => playWord(w.en));
+          prompt.appendChild(play);
+          prompt.appendChild(el("div", "vocab-quiz-hint", "听发音，选出正确的单词"));
+        } else {
+          prompt.appendChild(el("div", "vocab-quiz-zh", w.zh));
+          prompt.appendChild(el("div", "vocab-quiz-hint", "选出对应的英文单词"));
+        }
+        box.appendChild(prompt);
+
+        const opts = el("div", "vocab-quiz-opts");
+        const options = shuffle([w.en, ...chooseDistractors(w, opts.distractors)]);
+        const buttons = [];
+        options.forEach((en) => {
+          const btn = el("button", "vocab-quiz-opt", en);
+          btn.addEventListener("click", () => this.answer(w, en, btn, buttons));
+          buttons.push(btn);
+          opts.appendChild(btn);
+        });
+        box.appendChild(opts);
+
+        const feedback = el("div", "vocab-quiz-feedback");
+        box.appendChild(feedback);
+        this._feedback = feedback;
+
+        const footer = el("div", "vocab-footer");
+        const nextBtn = el("button", "vocab-next", "下一题");
+        nextBtn.disabled = true;
+        nextBtn.addEventListener("click", () => this.next());
+        footer.appendChild(nextBtn);
+        const hubBtn = el("button", "vocab-done-btn", "返回词汇通");
+        hubBtn.addEventListener("click", () => setScreen("hub"));
+        footer.appendChild(hubBtn);
+        box.appendChild(footer);
+        this._nextBtn = nextBtn;
+
+        UI.main.appendChild(box);
+        if (isAudio) playWord(w.en); // 自动播一次
+      },
+
+      answer(w, chosenEn, btn, buttons) {
+        if (this.answered) return;
+        this.answered = true;
+        const isCorrect = keyOf(chosenEn) === keyOf(w.en);
+        buttons.forEach((b) => {
+          b.disabled = true;
+          if (keyOf(b.textContent) === keyOf(w.en)) b.classList.add("right");
+          else if (b === btn) b.classList.add("wrong");
+        });
+        if (isCorrect) {
+          this.correct += 1;
+          this.streak += 1;
+          addGlobalCoins(1); // 答对 1 词 = 1 金币
+          const p = progOf(w.en);
+          setProg(w.en, { mc: p.mc + 1 }); // 熟练度信号，影响排序
+        } else {
+          this.streak = 0;
+        }
+        playWord(w.en); // 读一遍帮助认读
+        if (this._feedback) this._feedback.textContent = `${w.en} = ${w.zh}`;
+        this.renderHeaderStats();
+        if (this._nextBtn) this._nextBtn.disabled = false;
+        if (isCorrect) {
+          this.timer = setTimeout(() => this.next(), 900); // 答对自动下一题
+        }
+      },
+
+      renderEmpty() {
+        UI.headerExtra.innerHTML = "";
+        UI.main.innerHTML = "";
+        const box = el("div", "vocab-done");
+        box.appendChild(el("div", "vocab-done-title", "🎉 没有需要练的词了！"));
+        box.appendChild(el("div", "vocab-done-tip", "所有词都已确认认识。"));
+        const acts = el("div", "vocab-done-actions");
+        const hub = el("button", "vocab-done-btn primary", "返回词汇通");
+        hub.addEventListener("click", () => setScreen("hub"));
+        acts.appendChild(hub);
+        box.appendChild(acts);
+        UI.main.appendChild(box);
+      },
+    };
+  }
+  const Listen = makeChoose({ prompt: "audio", distractors: "similar" });
+  const Similar = makeChoose({ prompt: "zh", distractors: "similar" });
+  const Zh2en = makeChoose({ prompt: "zh", distractors: "mixed" });
+
+  // =======================================================================
   //  导出
   // =======================================================================
   function exportProgress() {
@@ -1105,6 +1293,9 @@
     } catch (err) {
       /* ignore */
     }
+    Listen.clearTimer();
+    Similar.clearTimer();
+    Zh2en.clearTimer();
     // 离开前把待保存的进度立即刷到服务器。
     if (saveTimer) {
       clearTimeout(saveTimer);
@@ -1114,7 +1305,12 @@
   }
 
   if (UI.back) {
-    UI.back.addEventListener("click", () => {
+    UI.back.addEventListener("click", async () => {
+      const ok =
+        typeof window.AppConfirm === "function"
+          ? await window.AppConfirm("确定要返回吗？", { okText: "返回", cancelText: "继续" })
+          : true;
+      if (!ok) return;
       pause();
       if (screen === "hub") goHome();
       else setScreen("hub");

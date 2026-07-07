@@ -3,10 +3,10 @@
 .vocab-app {
   width: min(980px, 100%);
   margin: 0 auto;
-  padding: 24px 28px 28px;
+  padding: 12px 18px 18px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   min-height: 100vh;
   min-height: 100svh;
   box-sizing: border-box;
@@ -16,10 +16,10 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   background: linear-gradient(135deg, #fff6ec 0%, #ffeede 55%, #ffe7f0 100%);
-  border-radius: 20px;
-  padding: 16px 18px;
+  border-radius: 16px;
+  padding: 10px 14px;
   box-shadow: 0 12px 24px rgba(60, 40, 20, 0.12);
   overflow: hidden;
 }
@@ -111,8 +111,8 @@
   flex: 1;
   width: 100%;
   background: #fff;
-  border-radius: 22px;
-  padding: 20px 20px 24px;
+  border-radius: 18px;
+  padding: 12px 14px 16px;
   box-shadow: 0 12px 28px rgba(60, 40, 20, 0.1);
   overflow-y: auto;
   position: relative;
@@ -140,17 +140,17 @@
 .vocab-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
 .vocab-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  border: 2px solid #f1e6d8;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid #f1e6d8;
   background: #fffdf9;
 }
 
@@ -162,8 +162,8 @@
 .vocab-word-wrap {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-width: 128px;
+  gap: 2px;
+  min-width: 92px;
   flex: 0 0 auto;
 }
 
@@ -172,7 +172,7 @@
   background: transparent;
   padding: 0;
   text-align: left;
-  font-size: 22px;
+  font-size: 17px;
   font-weight: 800;
   color: #2f2417;
   cursor: pointer;
@@ -229,9 +229,9 @@
 
 .vocab-opt {
   border: 2px solid #efe2cf;
-  border-radius: 14px;
-  padding: 10px 14px;
-  font-size: 15px;
+  border-radius: 12px;
+  padding: 6px 10px;
+  font-size: 14px;
   font-weight: 600;
   background: #fff;
   color: #3a2e1e;
@@ -263,9 +263,9 @@
 
 .vocab-unknown {
   border: 2px dashed #d8b48a;
-  border-radius: 14px;
-  padding: 10px 14px;
-  font-size: 14px;
+  border-radius: 12px;
+  padding: 6px 10px;
+  font-size: 13px;
   font-weight: 700;
   background: #fff8ee;
   color: #a4703a;
@@ -594,5 +594,100 @@
 @media (max-width: 560px) {
   .vocab-games-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ---- 听音选词 / 形近词辨析 ---- */
+.vocab-quiz {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.vocab-quiz-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 90px;
+  justify-content: center;
+}
+
+.vocab-quiz-audio {
+  border: none;
+  border-radius: 18px;
+  padding: 18px 34px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #e86f3a, #f0a44b);
+  box-shadow: 0 10px 20px rgba(232, 111, 58, 0.25);
+  cursor: pointer;
+}
+
+.vocab-quiz-zh {
+  font-size: 30px;
+  font-weight: 800;
+  color: #2f2417;
+  text-align: center;
+}
+
+.vocab-quiz-hint {
+  font-size: 13px;
+  color: #9a8a72;
+}
+
+.vocab-quiz-opts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+  max-width: 460px;
+}
+
+.vocab-quiz-opt {
+  border: 2px solid #efe2cf;
+  border-radius: 14px;
+  padding: 16px 12px;
+  font-size: 20px;
+  font-weight: 700;
+  background: #fff;
+  color: #3a2e1e;
+  cursor: pointer;
+  text-transform: lowercase;
+}
+
+.vocab-quiz-opt:active {
+  transform: scale(0.98);
+}
+
+.vocab-quiz-opt.right {
+  background: #e6f7ec;
+  border-color: #1f9d55;
+  color: #15713c;
+}
+
+.vocab-quiz-opt.wrong {
+  background: #fdeaea;
+  border-color: #d9534f;
+  color: #b02a26;
+}
+
+.vocab-quiz-feedback {
+  font-size: 16px;
+  font-weight: 700;
+  color: #b25a1f;
+  min-height: 22px;
+}
+
+@media (max-width: 560px) {
+  .vocab-quiz-zh {
+    font-size: 26px;
+  }
+  .vocab-quiz-opt {
+    font-size: 18px;
+    padding: 13px 10px;
   }
 }
