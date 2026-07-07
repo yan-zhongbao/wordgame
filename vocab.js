@@ -1356,7 +1356,31 @@
         });
       }
       this.otherPool = other;
+      this.targetBag = [];
+      this.otherBag = [];
+      this.active = new Set();
+      if (this.area) this.area.innerHTML = ""; // 换分类清空旧词，避免正误混淆
       if (this._taskEl) this._taskEl.textContent = `点掉所有：${label}`;
+    },
+
+    // 从牌堆无放回抽词：一轮内每个词只出现一次；且跳过当前屏幕上已有的词。
+    drawWord(useTarget) {
+      const pool = useTarget ? categories[this.target] || [] : this.otherPool;
+      if (!pool.length) return null;
+      const bagKey = useTarget ? "targetBag" : "otherBag";
+      for (let i = 0; i <= pool.length; i += 1) {
+        if (!this[bagKey].length) this[bagKey] = shuffle(pool.slice());
+        const en = this[bagKey].pop();
+        if (!this.active.has(keyOf(en))) return en;
+      }
+      return null; // 池子里的词都在屏幕上了，本次不生成
+    },
+
+    removeItem(item) {
+      if (item._removed) return;
+      item._removed = true;
+      this.active.delete(item._key);
+      item.remove();
     },
 
     render() {
@@ -1392,15 +1416,17 @@
     spawn() {
       if (!this.running || !this.area) return;
       const useTarget = Math.random() < 0.5;
-      const pool = useTarget ? categories[this.target] || [] : this.otherPool;
-      if (!pool.length) return;
-      const en = pool[Math.floor(Math.random() * pool.length)];
-      const correct = this.targetSet.has(keyOf(en));
+      const en = this.drawWord(useTarget);
+      if (!en) return;
+      const key = keyOf(en);
+      const correct = this.targetSet.has(key);
+      this.active.add(key);
       const item = el("button", "vocab-rain-word", en);
+      item._key = key;
       const areaW = this.area.clientWidth || 320;
       item.style.left = `${Math.random() * Math.max(8, areaW - 78)}px`;
       item.style.animationDuration = `${4200 + Math.random() * 1800}ms`;
-      item.addEventListener("animationend", () => item.remove());
+      item.addEventListener("animationend", () => this.removeItem(item));
       item.addEventListener("click", () => this.hit(item, correct));
       this.area.appendChild(item);
     },
@@ -1417,7 +1443,8 @@
         this.streak = 0;
         item.classList.add("hit-wrong");
       }
-      setTimeout(() => item.remove(), 220);
+      // 220ms 后移除（removeItem 会把它从 active 里删掉，之后才可能再次出现）
+      setTimeout(() => this.removeItem(item), 220);
       this.renderStats();
     },
 
