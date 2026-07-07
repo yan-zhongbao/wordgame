@@ -1,14 +1,19 @@
-/* 小学词汇通 —— 认读斩词 + 连线配对，进度服务器(PHP)同步。
+/* 小学词汇通 —— 主界面(hub) 三个入口 + 金币/游戏解锁，进度服务器(PHP)同步。
  *
- * 结构：进入后是「主界面(hub)」，两个入口：
- *   1) 认识词标记(mark)：5 轮漏斗式确认。第1轮测所有词，答对进下一轮、答错/不
- *      认识掉出为「需记」；连过 5 轮 = 真正认识。词按难度排序（四年级课本词优先、
- *      三年级词靠前、短词/连线连对多的靠前），已标记的 300 词自动跳过。
- *   2) 连线配对(match)：左英文右中文连线学习，优先未认识/需记的词；连对累加
- *      matchCorrect(mc)，只用于把可能已认识的词在标记模式里排前，不改 5 轮进度。
+ *   1) 快速分词(sort)：第1轮，把全部词快速分成「认识/需记」。答对 lv0→1、答错/不
+ *      认识→需记(f)。按难度排序（四年级课本词优先、三年级词靠前、短词靠前），已标
+ *      记的 300 词自动跳过。
+ *   2) 认识词标记(confirm)：第2–5轮，确认「认识」的词不是蒙对的。lv1→…→5，连过
+ *      5 轮 = 真正认识；任一轮答错→需记。
+ *   3) 单词连连看(match)：左英文右中文连线，优先未认识/需记的词；连对累加 mc，只
+ *      影响 sort/confirm 的难度排序。
  *
- * 每词状态：{ lv(已连过轮 0..5), f(是否掉队/需记), mc(连线连对次数) }
+ * 金币：sort/confirm 每答对 1 词 +1、连线每连对 1 词 +1（只奖对的）。金币≥300 点亮
+ * hub 的游戏按钮，进一个游戏扣 300，每个游戏每天只能进一次。
+ *
+ * 每词状态：{ lv(0..5), f(需记), mc(连线连对次数) }
  * 持久化：优先 PHP(vocab_data.php) 服务器同步，localStorage 作离线镜像/回退。
+ * 单独入口：index.html#vocab。
  */
 (() => {
   "use strict";
@@ -367,6 +372,83 @@
     });
     return n;
   }
+  // 已通过快速分词、进入确认流程的词（lv>=1 且未掉队，含已认识）。
+  function recognizedCount() {
+    let n = 0;
+    allWords.forEach((w) => {
+      const p = progOf(w.en);
+      if (!p.f && p.lv >= 1) n += 1;
+    });
+    return n;
+  }
+  // 是否全部有结果（都已认识 lv5 或掉队 f）。
+  function allSettled() {
+    return allWords.every((w) => {
+      const p = progOf(w.en);
+      return p.f || p.lv >= GOAL;
+    });
+  }
+
+  // =======================================================================
+  //  金币 & 游戏解锁
+  // =======================================================================
+  const COIN_KEY = "wg-td-coins";
+  const GAME_COST = 300; // 进一个游戏扣 300 金币
+  const UNLOCK_COINS = 300; // 金币 >= 300 才点亮游戏按钮
+  const GAMES = [
+    ["单词大战作业", "td", "⚔️"],
+    ["贪吃蛇记忆", "snake", "🐍"],
+    ["单词寻宝", "wordsearch", "🔍"],
+    ["射击单词", "shoot", "🎯"],
+  ];
+
+  function coinBalance() {
+    return parseInt(localStorage.getItem(COIN_KEY) || "0", 10) || 0;
+  }
+  function spendCoins(n) {
+    const c = coinBalance();
+    if (c < n) return false;
+    localStorage.setItem(COIN_KEY, String(c - n));
+    if (typeof window.refreshCoins === "function") window.refreshCoins();
+    return true;
+  }
+  function todayStr() {
+    return new Date().toISOString().slice(0, 10);
+  }
+  // 每个游戏每天只能从这里进一次。
+  function gamesPlayedToday() {
+    try {
+      const o = JSON.parse(localStorage.getItem("wg-vocab-games") || "{}");
+      return o.date === todayStr() ? o.games || {} : {};
+    } catch (err) {
+      return {};
+    }
+  }
+  function markGamePlayed(view) {
+    const g = gamesPlayedToday();
+    g[view] = true;
+    try {
+      localStorage.setItem("wg-vocab-games", JSON.stringify({ date: todayStr(), games: g }));
+    } catch (err) {
+      /* ignore */
+    }
+  }
+  function launchGame(view) {
+    if (gamesPlayedToday()[view]) return;
+    if (!spendCoins(GAME_COST)) return;
+    markGamePlayed(view);
+    pause();
+    if (view === "shoot") {
+      window.location.href = "shoot.html";
+      return;
+    }
+    const maxDay =
+      window.WG && typeof window.WG.maxDay === "function" ? window.WG.maxDay() : 21;
+    const day = 1 + Math.floor(Math.random() * Math.max(1, maxDay));
+    if (window.AppNav && typeof window.AppNav.show === "function") {
+      window.AppNav.show(view, { day });
+    }
+  }
 
   // =======================================================================
   //  屏幕切换
@@ -378,55 +460,88 @@
     if (next === "hub") {
       UI.name.textContent = "📖 小学词汇通";
       renderHub();
-    } else if (next === "mark") {
+    } else if (next === "sort") {
+      UI.name.textContent = "⚡ 快速分词";
+      Sort.enter();
+    } else if (next === "confirm") {
       UI.name.textContent = "✅ 认识词标记";
-      Mark.enter();
+      Confirm.enter();
     } else if (next === "match") {
-      UI.name.textContent = "🔗 连线配对";
+      UI.name.textContent = "🔗 单词连连看";
       Match.enter();
     }
   }
 
   function renderHub() {
     const total = allWords.length;
+    const coins = coinBalance();
     const box = el("div", "vocab-hub");
 
     const summary = el("div", "vocab-hub-summary");
     summary.appendChild(hubStat("总词", total));
-    summary.appendChild(hubStat("已确认认识", knownCount()));
+    summary.appendChild(hubStat("已认识", knownCount()));
     summary.appendChild(hubStat("需记", needCount()));
-    summary.appendChild(hubStat("待标记", untouchedCount()));
+    summary.appendChild(hubStat("待分词", untouchedCount()));
+    summary.appendChild(hubStat("💰 金币", coins));
     box.appendChild(summary);
 
     const cards = el("div", "vocab-hub-cards");
-
-    const markCard = el("button", "vocab-hub-card");
-    markCard.innerHTML =
-      '<div class="vocab-hub-icon">✅</div>' +
-      '<div class="vocab-hub-card-title">认识词标记</div>' +
-      '<div class="vocab-hub-card-sub">看词选中文，快速标出认识的词；连过 5 轮算真正认识</div>';
-    markCard.addEventListener("click", () => setScreen("mark"));
-    cards.appendChild(markCard);
-
-    const matchCard = el("button", "vocab-hub-card");
-    matchCard.innerHTML =
-      '<div class="vocab-hub-icon">🔗</div>' +
-      '<div class="vocab-hub-card-title">连线配对</div>' +
-      '<div class="vocab-hub-card-sub">左词右义连连看，优先练不会/需记的词，帮助记忆</div>';
-    matchCard.addEventListener("click", () => setScreen("match"));
-    cards.appendChild(matchCard);
-
+    cards.appendChild(
+      hubCard("⚡", "快速分词", "第1轮：看词选中文，快速把词分成「认识 / 需记」，答对得金币", () =>
+        setScreen("sort")
+      )
+    );
+    cards.appendChild(
+      hubCard("✅", "认识词标记", "第2–5轮：确认认识的词不是蒙对的，连过5轮算真正认识", () =>
+        setScreen("confirm")
+      )
+    );
+    cards.appendChild(
+      hubCard("🔗", "单词连连看", "左词右义连线，优先练不会/需记的词，连对得金币", () =>
+        setScreen("match")
+      )
+    );
     box.appendChild(cards);
 
-    const tip = el(
-      "div",
-      "vocab-hub-tip",
-      serverOk
-        ? "进度已连接服务器，自动同步、换设备也不丢。"
-        : "未连接服务器，进度暂存本机；连上 vocab_data.php 后可跨设备同步。"
+    // 游戏解锁区
+    const gameWrap = el("div", "vocab-games");
+    const unlocked = coins >= UNLOCK_COINS;
+    gameWrap.appendChild(
+      el(
+        "div",
+        "vocab-games-head",
+        unlocked
+          ? `🎮 玩游戏（每个 -${GAME_COST} 金币，每个游戏每天只能玩 1 次）`
+          : `🎮 攒够 ${UNLOCK_COINS} 金币点亮游戏（还差 ${UNLOCK_COINS - coins}）`
+      )
     );
-    box.appendChild(tip);
+    const played = gamesPlayedToday();
+    const grid = el("div", "vocab-games-grid");
+    GAMES.forEach(([label, view, icon]) => {
+      const btn = el("button", "vocab-game-btn");
+      const done = !!played[view];
+      btn.disabled = !unlocked || done;
+      btn.innerHTML =
+        `<span class="vocab-game-icon">${icon}</span>` +
+        `<span class="vocab-game-label">${label}</span>` +
+        `<span class="vocab-game-cost">${done ? "今日已玩" : "-" + GAME_COST + " 💰"}</span>`;
+      btn.addEventListener("click", () => {
+        launchGame(view);
+      });
+      grid.appendChild(btn);
+    });
+    gameWrap.appendChild(grid);
+    box.appendChild(gameWrap);
 
+    box.appendChild(
+      el(
+        "div",
+        "vocab-hub-tip",
+        serverOk
+          ? "进度已连接服务器，自动同步、换设备也不丢。"
+          : "未连接服务器，进度暂存本机；连上 vocab_data.php 后可跨设备同步。"
+      )
+    );
     UI.main.appendChild(box);
   }
   function hubStat(label, value) {
@@ -435,11 +550,22 @@
     s.appendChild(el("span", null, label));
     return s;
   }
+  function hubCard(icon, title, sub, onClick) {
+    const card = el("button", "vocab-hub-card");
+    card.innerHTML =
+      `<div class="vocab-hub-icon">${icon}</div>` +
+      `<div class="vocab-hub-card-title">${title}</div>` +
+      `<div class="vocab-hub-card-sub">${sub}</div>`;
+    card.addEventListener("click", onClick);
+    return card;
+  }
 
   // =======================================================================
-  //  认识词标记（5 轮漏斗，按难度排序）
+  //  分词标记引擎：sort=第1轮(lv0→1)、confirm=第2–5轮(lv1→5)
   // =======================================================================
-  const Mark = {
+  function makeMark(mode) {
+    const isSort = mode === "sort";
+    return {
     round: null,
     queue: [],
     page: [],
@@ -450,11 +576,13 @@
       this.render();
     },
 
+    // sort 只处理 lv0；confirm 只处理 lv1..GOAL-1。
     computeRound() {
       let min = Infinity;
       for (const w of allWords) {
         const p = progOf(w.en);
         if (p.f || p.lv >= GOAL) continue;
+        if (isSort ? p.lv !== 0 : p.lv < 1) continue;
         if (p.lv < min) min = p.lv;
       }
       return min === Infinity ? null : min + 1;
@@ -499,12 +627,21 @@
     renderHeader() {
       UI.headerExtra.innerHTML = "";
       const stats = el("div", "vocab-stats");
-      stats.innerHTML =
-        `<span>📚 总词 <b>${allWords.length}</b></span>` +
-        `<span>🔁 轮次 <b>${this.round == null ? "完成" : this.round + "/" + GOAL}</b></span>` +
-        `<span>✅ 已确认 <b>${knownCount()}</b></span>` +
-        `<span>📝 需记 <b>${needCount()}</b></span>` +
-        `<span>📄 本轮剩 <b>${this.roundRemaining()}</b></span>`;
+      if (isSort) {
+        stats.innerHTML =
+          `<span>📚 总词 <b>${allWords.length}</b></span>` +
+          `<span>⚡ 待分词 <b>${untouchedCount()}</b></span>` +
+          `<span>👍 认识 <b>${recognizedCount()}</b></span>` +
+          `<span>📝 需记 <b>${needCount()}</b></span>` +
+          `<span>💰 金币 <b>${coinBalance()}</b></span>`;
+      } else {
+        stats.innerHTML =
+          `<span>🔁 轮次 <b>${this.round == null ? "完成" : this.round + "/" + GOAL}</b></span>` +
+          `<span>✅ 已确认 <b>${knownCount()}</b></span>` +
+          `<span>📝 需记 <b>${needCount()}</b></span>` +
+          `<span>📄 本轮剩 <b>${this.roundRemaining()}</b></span>` +
+          `<span>💰 金币 <b>${coinBalance()}</b></span>`;
+      }
       UI.headerExtra.appendChild(stats);
       const bar = el("div", "vocab-progress");
       const fill = el("div", "vocab-progress-fill");
@@ -547,7 +684,9 @@
         el(
           "div",
           "vocab-round-head",
-          `第 ${this.round} 轮 / 共 ${GOAL} 轮 · 本轮还剩 ${this.roundRemaining()} 词（简单词优先）`
+          isSort
+            ? `快速分词 · 还剩 ${this.roundRemaining()} 词（简单词优先，答对得金币）`
+            : `第 ${this.round} 轮 / 共 ${GOAL} 轮 · 本轮还剩 ${this.roundRemaining()} 词`
         )
       );
       const list = el("div", "vocab-list");
@@ -565,6 +704,9 @@
         UI.main.scrollTop = 0;
       });
       footer.appendChild(nextBtn);
+      const hubBtn = el("button", "vocab-done-btn", "返回词汇通");
+      hubBtn.addEventListener("click", () => setScreen("hub"));
+      footer.appendChild(hubBtn);
       UI.main.appendChild(footer);
       this.page._nextBtn = nextBtn;
 
@@ -629,7 +771,7 @@
       if (isCorrect) {
         const nlv = Math.min(GOAL, p.lv + 1);
         setProg(word.en, { lv: nlv, f: false });
-        if (nlv >= GOAL) addGlobalCoins(1);
+        addGlobalCoins(1); // 答对 1 词 = 1 金币
       } else {
         setProg(word.en, { f: true });
       }
@@ -665,25 +807,58 @@
     renderDone() {
       UI.main.innerHTML = "";
       const box = el("div", "vocab-done");
-      box.appendChild(el("div", "vocab-done-title", "🏆 5 轮确认全部完成！"));
+      if (isSort) {
+        box.appendChild(el("div", "vocab-done-title", "⚡ 快速分词完成！"));
+        box.appendChild(
+          el(
+            "div",
+            "vocab-done-tip",
+            `认识 ${recognizedCount()} 词 · 需记 ${needCount()} 词。接着去「认识词标记」确认这些认识的词吧。`
+          )
+        );
+        const actions = el("div", "vocab-done-actions");
+        const go = el("button", "vocab-done-btn primary", "去认识词标记");
+        go.addEventListener("click", () => setScreen("confirm"));
+        const hub = el("button", "vocab-done-btn", "返回词汇通");
+        hub.addEventListener("click", () => setScreen("hub"));
+        actions.appendChild(go);
+        actions.appendChild(hub);
+        box.appendChild(actions);
+        UI.main.appendChild(box);
+        return;
+      }
+      const hasRecognized = recognizedCount() > 0 || knownCount() > 0;
+      box.appendChild(
+        el("div", "vocab-done-title", hasRecognized ? "🏆 认识词确认完成！" : "还没有可确认的词")
+      );
       box.appendChild(
         el(
           "div",
           "vocab-done-tip",
-          `真正认识 ${knownCount()} 词 · 需记 ${needCount()} 词。可导出交给 Python 生成需记词表。`
+          hasRecognized
+            ? `真正认识 ${knownCount()} 词 · 需记 ${needCount()} 词。可导出交给 Python 生成需记词表。`
+            : "先去「快速分词」把认识的词挑出来，再回来确认。"
         )
       );
       const actions = el("div", "vocab-done-actions");
-      const exportBtn = el("button", "vocab-done-btn primary", "导出标记");
-      exportBtn.addEventListener("click", exportProgress);
+      if (knownCount() > 0) {
+        const exportBtn = el("button", "vocab-done-btn primary", "导出标记");
+        exportBtn.addEventListener("click", exportProgress);
+        actions.appendChild(exportBtn);
+      }
+      const goSort = el("button", "vocab-done-btn", "去快速分词");
+      goSort.addEventListener("click", () => setScreen("sort"));
       const hub = el("button", "vocab-done-btn", "返回词汇通");
       hub.addEventListener("click", () => setScreen("hub"));
-      actions.appendChild(exportBtn);
+      actions.appendChild(goSort);
       actions.appendChild(hub);
       box.appendChild(actions);
       UI.main.appendChild(box);
     },
-  };
+    };
+  }
+  const Sort = makeMark("sort");
+  const Confirm = makeMark("confirm");
 
   // =======================================================================
   //  连线配对（左英文右中文，优先未认识/需记的词）
@@ -833,6 +1008,7 @@
         node.classList.add("matched");
         const p = progOf(word.en);
         setProg(word.en, { mc: p.mc + 1 });
+        addGlobalCoins(1); // 连对 1 词 = 1 金币
         this.drawLine(left.node, node);
         this.selectedLeft = null;
         this.matched += 1;
@@ -879,7 +1055,7 @@
       version: 2,
       exportedAt: new Date().toISOString(),
       masterGoal: GOAL,
-      completed: Mark.computeRound() == null,
+      completed: allSettled(),
       total: allWords ? allWords.length : 0,
       known: knownCount(),
       need: needCount(),

@@ -400,6 +400,7 @@ const DIRECT_PASS_COST = 300;
 
 let swRegistration = null;
 let initInFlight = false;
+let vocabDeepLinkDone = false;
 let lastTouchEnd = 0;
 let touchMoved = false;
 
@@ -1204,6 +1205,11 @@ async function init() {
   setupSemesterSelector();
   setupCustomPanel();
   loadVersionTag();
+  // 单独入口：index.html#vocab 直接进入小学词汇通（书签直达）。
+  if (!vocabDeepLinkDone && location.hash.replace(/^#/, "") === "vocab") {
+    vocabDeepLinkDone = true;
+    AppNav.show("vocab");
+  }
   try {
     if ("serviceWorker" in navigator) {
       try {
@@ -1245,6 +1251,11 @@ window.addEventListener("focus", () => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden && UI.dayList && UI.dayList.children.length === 0) {
     init();
+  }
+});
+window.addEventListener("hashchange", () => {
+  if (location.hash.replace(/^#/, "") === "vocab") {
+    AppNav.show("vocab");
   }
 });
 
