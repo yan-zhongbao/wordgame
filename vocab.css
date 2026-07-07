@@ -375,3 +375,159 @@
     flex: 1 1 100%;
   }
 }
+
+/* ---- 主界面 hub ---- */
+.vocab-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vocab-hub-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.vocab-hub-stat {
+  flex: 1 1 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 8px;
+  border-radius: 16px;
+  background: #fbf3e8;
+}
+
+.vocab-hub-stat b {
+  font-size: 24px;
+  color: #e86f3a;
+}
+
+.vocab-hub-stat span {
+  font-size: 13px;
+  color: #7a6a55;
+}
+
+.vocab-hub-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.vocab-hub-card {
+  border: none;
+  text-align: left;
+  border-radius: 20px;
+  padding: 22px 20px;
+  background: linear-gradient(135deg, #fff6ec 0%, #ffe7f0 100%);
+  box-shadow: 0 12px 24px rgba(60, 40, 20, 0.12);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vocab-hub-card:active {
+  transform: scale(0.99);
+}
+
+.vocab-hub-icon {
+  font-size: 34px;
+}
+
+.vocab-hub-card-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: #2f2417;
+}
+
+.vocab-hub-card-sub {
+  font-size: 13px;
+  color: #7a6a55;
+  line-height: 1.5;
+}
+
+.vocab-hub-tip {
+  font-size: 13px;
+  color: #9a8a72;
+  text-align: center;
+}
+
+/* ---- 连线配对 ---- */
+.vocab-match-board {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 80px;
+}
+
+.vocab-match-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.vocab-match-svg line {
+  stroke: #1f9d55;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.vocab-match-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.vocab-match-item {
+  border: 2px solid #efe2cf;
+  border-radius: 14px;
+  padding: 13px 10px;
+  font-size: 16px;
+  font-weight: 700;
+  background: #fff;
+  color: #3a2e1e;
+  cursor: pointer;
+}
+
+.vocab-match-item.selected {
+  border-color: #e86f3a;
+  background: #fff1e3;
+}
+
+.vocab-match-item.matched {
+  border-color: #1f9d55;
+  background: #e6f7ec;
+  color: #15713c;
+  cursor: default;
+}
+
+.vocab-match-item.wrong {
+  border-color: #d9534f;
+  background: #fdeaea;
+  color: #b02a26;
+}
+
+@media (max-width: 560px) {
+  .vocab-hub-cards {
+    grid-template-columns: 1fr;
+  }
+  .vocab-match-board {
+    gap: 30px;
+  }
+  .vocab-match-item {
+    font-size: 15px;
+    padding: 11px 8px;
+  }
+}

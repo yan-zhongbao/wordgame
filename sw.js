@@ -1,4 +1,4 @@
-const CACHE_NAME = "wordgame-v126";
+const CACHE_NAME = "wordgame-v127";
 const AUDIO_CACHE = "wordgame-audio";
 const WORDS_FILES = ["words.json", "words.4b.json"];
 const CORE_ASSETS = [
@@ -24,6 +24,7 @@ const CORE_ASSETS = [
   "./vocab.js",
   "./vocab.css",
   "./wordlist.txt",
+  "./vocab_seed.json",
   "./shoot.html",
   "./shoot.js",
   "./shoot.css",
@@ -234,6 +235,14 @@ self.addEventListener("fetch", (event) => {
       const cache = await caches.open(CACHE_NAME);
       const cacheOverride = request.cache === "no-store";
       const url = new URL(request.url);
+      // 动态接口（PHP 进度同步）只走网络，绝不缓存，避免读到旧进度。
+      if (url.pathname.endsWith(".php")) {
+        try {
+          return await fetch(request);
+        } catch (err) {
+          return Response.error();
+        }
+      }
       const isWords = /\/words(\.[a-z0-9]+)?\.json$/.test(url.pathname);
       const isAudio = url.pathname.includes("/audio/");
       const isHtml =

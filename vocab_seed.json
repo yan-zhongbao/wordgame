@@ -1,0 +1,1162 @@
+{
+  "v": 2,
+  "goal": 5,
+  "seededFrom": "vocab_counts_2026-07-06.json",
+  "words": {
+    "about": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "activity": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "afterschool": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "air": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "all": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "all around": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "alone": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "animal": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "area": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "artwork": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "ask": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "aunt": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "baby": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "bake": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "bakery": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "banana": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "bang": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "basketball": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "because": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "become": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "below": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "best": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "better": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "blue": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "body": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "bookmark": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "british": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "broken": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "bury": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "cabbage": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "cake": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "can": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "cancer": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "chicken": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "christmas": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "class": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "clean": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "cliff": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "clock": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "clothes": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "cloudy": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "colourful": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "cooking": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "country": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "crayon": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "create": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "cupboard": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "dad (father)": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "date": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "delight": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "detail": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "different": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "dining room": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "direction": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "door": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "dot": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "draw": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "dress": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "duck": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "during": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "ear": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "earth": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "eastern": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "eight": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "eighty": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "elephant": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "event": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "everything": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "exciting": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "expensive": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "expert": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "explore": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "fact": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "famous": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "far": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "february": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "feel": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "field": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "flood": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "flow": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "flower": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "flyer": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "football": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "from": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "game": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "garden": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "goodbye": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "grade": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "grandpa (grandfather)": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "hair": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "hamburger": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "hardly": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "have": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "head": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "hero": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "highway": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "horn": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "hospital": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "huge": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "hunter": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "hurt": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "instrument": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "interested": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "interesting": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "its": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "june": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "lightning": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "litter": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "loud": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "loudly": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "lunch": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "man": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "mantis": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "map": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "mask": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "me": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "model": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "monday": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "monkey": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "more": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "morning": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "most": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "mountain": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "mr": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "must": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "never": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "night": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "not": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "note": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "ocean": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "oh": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "oilcloth": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "old": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "olivia": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "or": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "ostrich": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "owner": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "panda": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "paper": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "pearl": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "people": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "plane": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "please": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "police": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "police station": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "poor": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "push": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "rat": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "real": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "red": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "remember": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "rice": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "rocket": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "root": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "rubbish": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "rule": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "same": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "sandwich": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "save": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "scarf": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "schoolbag": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "science": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "see": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "shape": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "shiny": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "shop": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "should": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "sign": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "singapore": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "small": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "snowy": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "something": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "soon": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "space": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "spaceship": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "squirrel": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "stand": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "steal": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "sth": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "stop": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "strong": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "sunday": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "surprised": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "swim": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "tall": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "teahouse": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "team": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "terry fox": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "the": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "this": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "three": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "thursday": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "tick-tock": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "tom": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "town": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "toy": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "trash": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "truth": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "try": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "turn": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "turn on": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "umbrella": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "upstairs": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "village": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "visit": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "volunteer": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "watch": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "waterfall": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "week": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "welcome": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "west": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "wheel": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "wheelchair": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "whoosh": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "win": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "window": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "windy": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "wisdom": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "with": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "without": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "wonderful": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "word": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "work": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "worker": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "worry": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "would": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "write": {
+      "lv": 0,
+      "f": true,
+      "mc": 0
+    },
+    "writer": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "yes": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "young": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    },
+    "zebra": {
+      "lv": 1,
+      "f": false,
+      "mc": 0
+    }
+  }
+}
