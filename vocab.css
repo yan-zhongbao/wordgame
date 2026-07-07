@@ -691,3 +691,139 @@
     padding: 13px 10px;
   }
 }
+
+/* ---- 单词雨 ---- */
+.vocab-rain-task {
+  font-size: 17px;
+  font-weight: 800;
+  color: #b25a1f;
+  text-align: center;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fff1e0, #ffe1c4);
+  margin-bottom: 10px;
+}
+
+.vocab-rain-area {
+  position: relative;
+  width: 100%;
+  height: 58vh;
+  min-height: 320px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f3f8ff 0%, #eef4ec 100%);
+}
+
+.vocab-rain-word {
+  position: absolute;
+  top: -12%;
+  border: none;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #2f2417;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(60, 40, 20, 0.18);
+  cursor: pointer;
+  white-space: nowrap;
+  animation-name: vocabFall;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes vocabFall {
+  from {
+    top: -12%;
+  }
+  to {
+    top: 108%;
+  }
+}
+
+.vocab-rain-word.hit-right {
+  background: #e6f7ec;
+  color: #15713c;
+  animation-play-state: paused;
+}
+
+.vocab-rain-word.hit-wrong {
+  background: #fdeaea;
+  color: #b02a26;
+  animation-play-state: paused;
+}
+
+/* ---- 打地鼠 ---- */
+.vocab-mole-target {
+  font-size: 28px;
+  font-weight: 800;
+  color: #2f2417;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.vocab-mole-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.vocab-mole-hole {
+  position: relative;
+  height: 96px;
+  border-radius: 50% 50% 14px 14px;
+  background: radial-gradient(ellipse at 50% 90%, #d8c4a6 0%, #c2a985 70%);
+  overflow: hidden;
+  box-shadow: inset 0 -6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.vocab-mole {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: -100%;
+  height: 80px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f0a44b, #e86f3a);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: bottom 0.18s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: lowercase;
+}
+
+.vocab-mole.up {
+  bottom: 8px;
+}
+
+.vocab-mole.bonk-right {
+  background: linear-gradient(135deg, #4bd08a, #1f9d55);
+}
+
+.vocab-mole.bonk-wrong {
+  background: linear-gradient(135deg, #f08a8a, #d9534f);
+}
+
+@media (max-width: 560px) {
+  .vocab-rain-word {
+    font-size: 16px;
+    padding: 7px 10px;
+  }
+  .vocab-mole-target {
+    font-size: 24px;
+  }
+  .vocab-mole-hole {
+    height: 80px;
+  }
+  .vocab-mole {
+    height: 66px;
+    font-size: 15px;
+  }
+}

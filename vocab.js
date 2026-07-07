@@ -72,6 +72,8 @@
   let prog = {}; // { key:{lv,f,mc} }
   let curriculumSet = new Set(); // 四年级课本词（lower en）
   const grade3Set = new Set(GRADE3);
+  let categories = {}; // { 分类label: [en...] }（单词雨用）
+  const SESSION_LIMIT_MS = 10 * 60 * 1000; // 游戏单次 10 分钟上限
   let screen = "hub"; // hub | mark | match
   let serverOk = false; // PHP 是否可用
 
@@ -91,6 +93,10 @@
   }
   function keyOf(en) {
     return String(en).toLowerCase().trim();
+  }
+  function fmtClock(ms) {
+    const s = Math.max(0, Math.round(ms / 1000));
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   }
   function slugify(text) {
     return String(text)
@@ -257,6 +263,18 @@
       } catch (err) {
         /* ignore a missing curriculum file */
       }
+    }
+  }
+
+  async function loadCategories() {
+    try {
+      const res = await fetch("vocab_categories.json", { cache: "no-cache" });
+      if (res.ok) {
+        const d = await res.json();
+        categories = d.categories || {};
+      }
+    } catch (err) {
+      categories = {};
     }
   }
 
@@ -519,6 +537,12 @@
     } else if (next === "zh2en") {
       UI.name.textContent = "📖 中文选词";
       Zh2en.enter();
+    } else if (next === "rain") {
+      UI.name.textContent = "🌧️ 单词雨";
+      Rain.enter();
+    } else if (next === "mole") {
+      UI.name.textContent = "🔨 打地鼠";
+      Mole.enter();
     }
   }
 
@@ -542,6 +566,8 @@
     cards.appendChild(hubCard("🔊", "听音选词", () => setScreen("listen")));
     cards.appendChild(hubCard("🔤", "形近词辨析", () => setScreen("similar")));
     cards.appendChild(hubCard("📖", "中文选词", () => setScreen("zh2en")));
+    cards.appendChild(hubCard("🌧️", "单词雨", () => setScreen("rain")));
+    cards.appendChild(hubCard("🔨", "打地鼠", () => setScreen("mole")));
     box.appendChild(cards);
 
     // 游戏解锁区
@@ -1231,6 +1257,342 @@
   const Zh2en = makeChoose({ prompt: "zh", distractors: "mixed" });
 
   // =======================================================================
+  //  单词雨（掉落 + 分类任务，10 分钟倒计时）
+  // =======================================================================
+  const Rain = {
+    running: false,
+    area: null,
+    spawnT: null,
+    tickT: null,
+    rotateT: null,
+    endAt: 0,
+    score: 0,
+    streak: 0,
+    target: null,
+    targetSet: null,
+    otherPool: [],
+    usable: [],
+
+    enter() {
+      this.usable = Object.keys(categories).filter(
+        (k) => (categories[k] || []).length >= 4
+      );
+      if (!this.usable.length) {
+        UI.headerExtra.innerHTML = "";
+        UI.main.innerHTML = "";
+        const box = el("div", "vocab-done");
+        box.appendChild(el("div", "vocab-done-title", "分类数据未加载"));
+        const hub = el("button", "vocab-done-btn primary", "返回词汇通");
+        hub.addEventListener("click", () => setScreen("hub"));
+        const acts = el("div", "vocab-done-actions");
+        acts.appendChild(hub);
+        box.appendChild(acts);
+        UI.main.appendChild(box);
+        return;
+      }
+      this.score = 0;
+      this.streak = 0;
+      this.endAt = Date.now() + SESSION_LIMIT_MS;
+      this.running = true;
+      this.render();
+      this.pickTarget();
+      this.spawnT = setInterval(() => this.spawn(), 1050);
+      this.tickT = setInterval(() => this.onTick(), 500);
+      this.rotateT = setInterval(() => this.pickTarget(), 25000);
+    },
+
+    pickTarget() {
+      const label = this.usable[Math.floor(Math.random() * this.usable.length)];
+      this.target = label;
+      this.targetSet = new Set((categories[label] || []).map(keyOf));
+      const other = [];
+      for (const [k, arr] of Object.entries(categories)) {
+        if (k === label) continue;
+        arr.forEach((en) => {
+          if (!this.targetSet.has(keyOf(en))) other.push(en);
+        });
+      }
+      this.otherPool = other;
+      if (this._taskEl) this._taskEl.textContent = `点掉所有：${label}`;
+    },
+
+    render() {
+      UI.main.innerHTML = "";
+      const task = el("div", "vocab-rain-task", "准备…");
+      this._taskEl = task;
+      UI.main.appendChild(task);
+      const area = el("div", "vocab-rain-area");
+      this.area = area;
+      UI.main.appendChild(area);
+      const footer = el("div", "vocab-footer");
+      const hub = el("button", "vocab-done-btn", "返回词汇通");
+      hub.addEventListener("click", () => {
+        this.stop();
+        setScreen("hub");
+      });
+      footer.appendChild(hub);
+      UI.main.appendChild(footer);
+      this.renderStats();
+    },
+
+    renderStats() {
+      UI.headerExtra.innerHTML = "";
+      const stats = el("div", "vocab-stats");
+      stats.innerHTML =
+        `<span>⭐ 得分 <b>${this.score}</b></span>` +
+        `<span>🔥 连击 <b>${this.streak}</b></span>` +
+        `<span>💰 金币 <b>${coinBalance()}</b></span>` +
+        `<span>⏳ 剩余 <b>${fmtClock(this.endAt - Date.now())}</b></span>`;
+      UI.headerExtra.appendChild(stats);
+    },
+
+    spawn() {
+      if (!this.running || !this.area) return;
+      const useTarget = Math.random() < 0.5;
+      const pool = useTarget ? categories[this.target] || [] : this.otherPool;
+      if (!pool.length) return;
+      const en = pool[Math.floor(Math.random() * pool.length)];
+      const correct = this.targetSet.has(keyOf(en));
+      const item = el("button", "vocab-rain-word", en);
+      const areaW = this.area.clientWidth || 320;
+      item.style.left = `${Math.random() * Math.max(8, areaW - 78)}px`;
+      item.style.animationDuration = `${4200 + Math.random() * 1800}ms`;
+      item.addEventListener("animationend", () => item.remove());
+      item.addEventListener("click", () => this.hit(item, correct));
+      this.area.appendChild(item);
+    },
+
+    hit(item, correct) {
+      if (!this.running || item._done) return;
+      item._done = true;
+      if (correct) {
+        this.score += 1;
+        this.streak += 1;
+        addGlobalCoins(1); // 点对 1 词 = 1 金币
+        item.classList.add("hit-right");
+      } else {
+        this.streak = 0;
+        item.classList.add("hit-wrong");
+      }
+      setTimeout(() => item.remove(), 220);
+      this.renderStats();
+    },
+
+    onTick() {
+      if (Date.now() >= this.endAt) {
+        this.end();
+        return;
+      }
+      this.renderStats();
+    },
+
+    end() {
+      this.stop();
+      UI.main.innerHTML = "";
+      const box = el("div", "vocab-done");
+      box.appendChild(el("div", "vocab-done-title", "⏰ 时间到！"));
+      box.appendChild(el("div", "vocab-done-tip", `本次得分 ${this.score}，玩了 10 分钟，休息一下～`));
+      const hub = el("button", "vocab-done-btn primary", "返回词汇通");
+      hub.addEventListener("click", () => setScreen("hub"));
+      const acts = el("div", "vocab-done-actions");
+      acts.appendChild(hub);
+      box.appendChild(acts);
+      UI.main.appendChild(box);
+    },
+
+    stop() {
+      this.running = false;
+      clearInterval(this.spawnT);
+      clearInterval(this.tickT);
+      clearInterval(this.rotateT);
+      this.spawnT = this.tickT = this.rotateT = null;
+      if (this.area) this.area.innerHTML = "";
+    },
+  };
+
+  // =======================================================================
+  //  打地鼠（显示中文，打帽子上是正确单词的地鼠；形近词干扰，10 分钟）
+  // =======================================================================
+  const HOLE_COUNT = 6;
+  const Mole = {
+    running: false,
+    holes: [],
+    target: null,
+    pool: [],
+    ptr: 0,
+    endAt: 0,
+    score: 0,
+    streak: 0,
+    tickT: null,
+
+    enter() {
+      this.buildPool();
+      if (!this.pool.length) {
+        this.pool = allWords.slice();
+      }
+      shuffle(this.pool);
+      this.ptr = 0;
+      this.score = 0;
+      this.streak = 0;
+      this.endAt = Date.now() + SESSION_LIMIT_MS;
+      this.running = true;
+      this.render();
+      this.newRound();
+      this.tickT = setInterval(() => {
+        if (Date.now() >= this.endAt) {
+          this.end();
+          return;
+        }
+        this.renderStats();
+      }, 500);
+    },
+
+    buildPool() {
+      const cand = allWords.filter((w) => progOf(w.en).lv < GOAL);
+      cand.sort((a, b) => {
+        const pa = progOf(a.en);
+        const pb = progOf(b.en);
+        const fa = pa.f ? 0 : 1;
+        const fb = pb.f ? 0 : 1;
+        if (fa !== fb) return fa - fb;
+        return pa.lv - pb.lv;
+      });
+      this.pool = cand;
+    },
+
+    options(target, count) {
+      const out = [target.en];
+      const used = new Set([keyOf(target.en)]);
+      for (const en of pickSimilarWords(target, count - 1)) {
+        const k = keyOf(en);
+        if (used.has(k)) continue;
+        used.add(k);
+        out.push(en);
+      }
+      for (const w of shuffle(allWords.slice())) {
+        if (out.length >= count) break;
+        const k = keyOf(w.en);
+        if (used.has(k)) continue;
+        used.add(k);
+        out.push(w.en);
+      }
+      return shuffle(out).slice(0, count);
+    },
+
+    render() {
+      UI.main.innerHTML = "";
+      const zh = el("div", "vocab-mole-target", "…");
+      this._zhEl = zh;
+      UI.main.appendChild(zh);
+      const grid = el("div", "vocab-mole-grid");
+      this.holes = [];
+      for (let i = 0; i < HOLE_COUNT; i += 1) {
+        const hole = el("div", "vocab-mole-hole");
+        const mole = el("button", "vocab-mole");
+        const label = el("span", "vocab-mole-label");
+        mole.appendChild(label);
+        hole.appendChild(mole);
+        grid.appendChild(hole);
+        const h = { el: mole, labelEl: label, word: "", up: false, tUp: null, tDown: null };
+        mole.addEventListener("click", () => this.hitHole(h));
+        this.holes.push(h);
+        this.startHole(h);
+      }
+      UI.main.appendChild(grid);
+      const footer = el("div", "vocab-footer");
+      const hub = el("button", "vocab-done-btn", "返回词汇通");
+      hub.addEventListener("click", () => {
+        this.stop();
+        setScreen("hub");
+      });
+      footer.appendChild(hub);
+      UI.main.appendChild(footer);
+      this.renderStats();
+    },
+
+    renderStats() {
+      UI.headerExtra.innerHTML = "";
+      const stats = el("div", "vocab-stats");
+      stats.innerHTML =
+        `<span>⭐ 得分 <b>${this.score}</b></span>` +
+        `<span>🔥 连击 <b>${this.streak}</b></span>` +
+        `<span>💰 金币 <b>${coinBalance()}</b></span>` +
+        `<span>⏳ 剩余 <b>${fmtClock(this.endAt - Date.now())}</b></span>`;
+      UI.headerExtra.appendChild(stats);
+    },
+
+    newRound() {
+      if (this.ptr >= this.pool.length) this.ptr = 0;
+      this.target = this.pool[this.ptr];
+      this.ptr += 1;
+      const opts = this.options(this.target, HOLE_COUNT);
+      this.holes.forEach((h, i) => {
+        h.word = opts[i % opts.length];
+        if (h.up) h.labelEl.textContent = h.word;
+      });
+      if (this._zhEl) this._zhEl.textContent = this.target.zh;
+    },
+
+    startHole(h) {
+      const cycle = () => {
+        if (!this.running) return;
+        h.up = true;
+        h.el.classList.add("up");
+        h.labelEl.textContent = h.word;
+        h.tUp = setTimeout(() => {
+          h.up = false;
+          h.el.classList.remove("up");
+          h.tDown = setTimeout(cycle, 400 + Math.random() * 1300);
+        }, 1000 + Math.random() * 1500);
+      };
+      h.tDown = setTimeout(cycle, Math.random() * 1200);
+    },
+
+    hitHole(h) {
+      if (!this.running || !h.up || !this.target) return;
+      if (keyOf(h.word) === keyOf(this.target.en)) {
+        this.score += 1;
+        this.streak += 1;
+        addGlobalCoins(1); // 打对 1 词 = 1 金币
+        const p = progOf(this.target.en);
+        setProg(this.target.en, { mc: p.mc + 1 });
+        h.el.classList.add("bonk-right");
+        setTimeout(() => h.el.classList.remove("bonk-right"), 220);
+        this.newRound();
+      } else {
+        this.streak = 0;
+        h.el.classList.add("bonk-wrong");
+        setTimeout(() => h.el.classList.remove("bonk-wrong"), 300);
+      }
+      this.renderStats();
+    },
+
+    end() {
+      this.stop();
+      UI.main.innerHTML = "";
+      const box = el("div", "vocab-done");
+      box.appendChild(el("div", "vocab-done-title", "⏰ 时间到！"));
+      box.appendChild(el("div", "vocab-done-tip", `本次得分 ${this.score}，玩了 10 分钟，休息一下～`));
+      const hub = el("button", "vocab-done-btn primary", "返回词汇通");
+      hub.addEventListener("click", () => setScreen("hub"));
+      const acts = el("div", "vocab-done-actions");
+      acts.appendChild(hub);
+      box.appendChild(acts);
+      UI.main.appendChild(box);
+    },
+
+    stop() {
+      this.running = false;
+      clearInterval(this.tickT);
+      this.tickT = null;
+      this.holes.forEach((h) => {
+        clearTimeout(h.tUp);
+        clearTimeout(h.tDown);
+      });
+    },
+  };
+
+  // =======================================================================
   //  导出
   // =======================================================================
   function exportProgress() {
@@ -1282,7 +1644,7 @@
       UI.main.innerHTML = '<div class="vocab-loading">词库加载失败，请检查 wordlist.txt。</div>';
       return;
     }
-    await Promise.all([loadCurriculum(), loadProgress()]);
+    await Promise.all([loadCurriculum(), loadProgress(), loadCategories()]);
     setScreen("hub");
   }
 
@@ -1296,6 +1658,8 @@
     Listen.clearTimer();
     Similar.clearTimer();
     Zh2en.clearTimer();
+    Rain.stop();
+    Mole.stop();
     // 离开前把待保存的进度立即刷到服务器。
     if (saveTimer) {
       clearTimeout(saveTimer);

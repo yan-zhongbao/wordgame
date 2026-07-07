@@ -330,6 +330,10 @@
   // ---- main loop ----
   function tick(ts) {
     if (!state.running) return;
+    if (state.endAt && Date.now() >= state.endAt) {
+      finish(true);
+      return;
+    }
     const dt = Math.min(0.05, (ts - state.lastTs) / 1000 || 0);
     state.lastTs = ts;
     const { w } = areaSize();
@@ -355,11 +359,12 @@
     state.raf = requestAnimationFrame(tick);
   }
 
-  function finish() {
+  function finish(timeUp) {
     state.running = false;
     cancelAnimationFrame(state.raf);
     // 金币已在每次射箭/命中时实时结算，这里只展示成绩。
-    resultBody.innerHTML = `你射中了 <b>${state.score}</b> 个单词<br />当前金币 <b>${readCoins()}</b> 🪙`;
+    const head = timeUp ? "⏰ 时间到！玩了 10 分钟，休息一下～<br />" : "";
+    resultBody.innerHTML = `${head}你射中了 <b>${state.score}</b> 个单词<br />当前金币 <b>${readCoins()}</b> 🪙`;
     resultEl.classList.remove("hidden");
   }
 
@@ -397,6 +402,7 @@
     leftEl.textContent = String(state.pool.length);
     renderCoins();
     state.running = true;
+    state.endAt = Date.now() + 10 * 60 * 1000; // 单次 10 分钟上限
     state.lastTs = performance.now();
     provideTarget();
     for (let i = 0; i < DISTRACTORS; i += 1) spawnNextWord();

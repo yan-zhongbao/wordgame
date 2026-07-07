@@ -292,6 +292,46 @@ const DirectPass = {
   },
 };
 
+// 单次游戏 10 分钟上限：进入游戏视图开始计时，到点强制退回主页。
+const GameLimit = {
+  LIMIT: 10 * 60 * 1000,
+  GAMES: new Set(["td", "snake", "wordsearch"]),
+  timer: null,
+  view: null,
+  onShow(view) {
+    this.clear();
+    if (this.GAMES.has(view)) {
+      this.view = view;
+      this.timer = setTimeout(() => this.fire(), this.LIMIT);
+    } else {
+      this.view = null;
+    }
+  },
+  clear() {
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+  },
+  fire() {
+    const v = this.view;
+    this.clear();
+    this.view = null;
+    const app = getViewApp(v);
+    if (app && typeof app.pause === "function") {
+      try {
+        app.pause();
+      } catch (err) {
+        /* ignore */
+      }
+    }
+    AppNav.show("home");
+    if (typeof showInfoModal === "function") {
+      showInfoModal("时间到", "玩了 10 分钟啦，休息一下眼睛，等会儿再来～");
+    }
+  },
+};
+
 const AppNav = {
   current: "home",
 
@@ -324,6 +364,7 @@ const AppNav = {
     this.current = view;
     this.setStyle(view);
     document.body.dataset.view = view;
+    GameLimit.onShow(view);
     if (view === "practice") {
       if (
         options.customItems &&
