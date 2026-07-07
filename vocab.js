@@ -1359,7 +1359,9 @@
     area: null,
     spawnT: null,
     tickT: null,
-    rotateT: null,
+    raf: null,
+    lastTs: 0,
+    balls: [],
     endAt: 0,
     score: 0,
     streak: 0,
@@ -1387,13 +1389,15 @@
       }
       this.score = 0;
       this.streak = 0;
-      this.active = new Set();
+      this.balls = [];
       this.endAt = Date.now() + SESSION_LIMIT_MS;
       this.running = true;
       this.render();
       this.pickTarget();
-      this.spawnT = setInterval(() => this.spawn(), 700);
+      this.spawnT = setInterval(() => this.spawn(), 800);
       this.tickT = setInterval(() => this.onTick(), 500);
+      this.lastTs = performance.now();
+      this.raf = requestAnimationFrame((t) => this.loop(t));
     },
 
     // 切换到下一组（不清屏）：目标词洗成一副牌、每词只放一次；干扰词另起一副。
@@ -1416,11 +1420,21 @@
       if (this._taskEl) this._taskEl.textContent = `点掉所有：${label}`;
     },
 
+    onScreen(key) {
+      return this.balls.some((b) => b.key === key);
+    },
+    targetOnScreenCount() {
+      return this.balls.filter((b) => this.targetSet.has(b.key)).length;
+    },
+    anyTargetOnScreen() {
+      return this.balls.some((b) => this.targetSet.has(b.key));
+    },
+
     // 目标词：牌堆发完就为空（本组结束的信号），不重洗。
     drawTarget() {
       while (this.targetBag.length) {
         const en = this.targetBag.pop();
-        if (!this.active.has(keyOf(en))) return en;
+        if (!this.onScreen(keyOf(en))) return en;
       }
       return null;
     },
@@ -1431,21 +1445,9 @@
       for (let i = 0; i <= pool.length; i += 1) {
         if (!this.otherBag.length) this.otherBag = shuffle(pool.slice());
         const en = this.otherBag.pop();
-        if (!this.active.has(keyOf(en))) return en;
+        if (!this.onScreen(keyOf(en))) return en;
       }
       return null;
-    },
-    // 当前分类还有目标词在屏幕上吗？
-    anyTargetOnScreen() {
-      for (const k of this.active) if (this.targetSet.has(k)) return true;
-      return false;
-    },
-
-    removeItem(item) {
-      if (item._removed) return;
-      item._removed = true;
-      this.active.delete(item._key);
-      item.remove();
     },
 
     render() {
@@ -1480,19 +1482,21 @@
 
     spawn() {
       if (!this.running || !this.area) return;
-      // 本组目标词全部放完、且都已飘出屏幕 → 切下一组（不清屏，无缝过渡）。
+      // 本组目标词全部放完、且都飘出屏幕 → 切下一组（不清屏，无缝过渡）。
       if (!this.targetBag.length && !this.anyTargetOnScreen()) {
         this.pickTarget();
       }
-      // 目标词没发完时偏向发目标词；发完则继续放干扰词等最后几个飘走。
+      if (this.balls.length >= 14) return; // 总量上限，避免过挤
+      // 目标词还没发完、且屏内正确词 < 5 时才发目标词；否则发干扰词。
       let en = null;
-      if (this.targetBag.length && Math.random() < 0.55) en = this.drawTarget();
+      if (this.targetBag.length && this.targetOnScreenCount() < 5 && Math.random() < 0.55) {
+        en = this.drawTarget();
+      }
       if (!en) en = this.drawOther();
       if (!en) return;
       const key = keyOf(en);
-      this.active.add(key);
-      const item = el("button", "vocab-rain-word", en);
-      item._key = key;
+
+      const item = el("button", "vocab-rain-ball", en);
       const isPhrase = /\s/.test(en.trim());
       try {
         item._audio = new Audio(`audio/${isPhrase ? "phrase" : "en"}/${slugify(en)}.mp3`);
@@ -1500,49 +1504,96 @@
       } catch (err) {
         /* ignore */
       }
-      item.style.animationDuration = `${3000 + Math.random() * 4200}ms`; // 3–7.2s，速度差更明显
-      item.addEventListener("animationend", () => this.removeItem(item));
-      item.addEventListener("click", () => this.hit(item));
       this.area.appendChild(item);
-      // 先加入 DOM 量出真实宽度，再夹住 left，保证整词不超出右边界。
       const areaW = this.area.clientWidth || 320;
-      const wordW = item.offsetWidth || 70;
-      const maxLeft = Math.max(0, areaW - wordW - 6);
-      item.style.left = `${Math.random() * maxLeft}px`;
+      const areaH = this.area.clientHeight || 420;
+      const w = item.offsetWidth || 64;
+      const h = item.offsetHeight || 64;
+      const x = Math.random() * Math.max(0, areaW - w);
+      const vy = areaH / (4.5 + Math.random() * 3.5); // 4.5–8 秒落到底，慢一点更好点
+      const ball = { el: item, key, x, y: -h, vy, w, h };
+      item.addEventListener("click", () => this.hit(ball));
+      item.style.transform = `translate(${x}px, ${-h}px)`;
+      this.balls.push(ball);
     },
 
-    hit(item) {
-      if (!this.running || item._done) return;
-      item._done = true;
-      const correct = this.targetSet.has(item._key); // 按当前分类实时判定
-      const r = item.getBoundingClientRect();
+    // 逐帧下落 + 碰撞测速平均。
+    loop(ts) {
+      if (!this.running) return;
+      const dt = Math.min(0.05, (ts - this.lastTs) / 1000 || 0);
+      this.lastTs = ts;
+      const areaH = this.area ? this.area.clientHeight || 420 : 420;
+      for (const b of this.balls) b.y += b.vy * dt;
+      // 两球边框相撞 → 取速度平均，叠着一起往下走。
+      for (let i = 0; i < this.balls.length; i += 1) {
+        for (let j = i + 1; j < this.balls.length; j += 1) {
+          const a = this.balls[i];
+          const c = this.balls[j];
+          const acx = a.x + a.w / 2;
+          const acy = a.y + a.h / 2;
+          const ccx = c.x + c.w / 2;
+          const ccy = c.y + c.h / 2;
+          if (
+            Math.abs(acx - ccx) * 2 < a.w + c.w &&
+            Math.abs(acy - ccy) * 2 < a.h + c.h
+          ) {
+            const avg = (a.vy + c.vy) / 2;
+            a.vy = avg;
+            c.vy = avg;
+          }
+        }
+      }
+      for (const b of [...this.balls]) {
+        if (b.y > areaH) {
+          this.removeBall(b);
+          continue;
+        }
+        b.el.style.transform = `translate(${b.x}px, ${b.y}px)`;
+      }
+      this.raf = requestAnimationFrame((t) => this.loop(t));
+    },
+
+    removeBall(ball) {
+      if (ball._removed) return;
+      ball._removed = true;
+      const i = this.balls.indexOf(ball);
+      if (i >= 0) this.balls.splice(i, 1);
+      if (ball.el) ball.el.remove();
+    },
+
+    hit(ball) {
+      if (!this.running || ball._done) return;
+      ball._done = true;
+      const correct = this.targetSet.has(ball.key); // 按当前分类实时判定
+      const r = ball.el.getBoundingClientRect();
       const cx = r.left + r.width / 2;
       const cy = r.top;
       if (correct) {
         this.score += 1;
         this.streak += 1;
         addGlobalCoins(1);
-        this.readItem(item); // 读出点到的单词
+        this.readBall(ball); // 读出点到的单词
         SFX.play("coin");
         floatText(cx, cy, "+1", "plus");
-        item.classList.add("hit-right");
+        ball.el.classList.add("hit-right");
       } else {
         this.streak = 0;
         addGlobalCoins(-2); // 点错扣 2 金币（不会低于 0）
         SFX.play("fail");
         floatText(cx, cy, "-2金币", "minus");
-        item.classList.add("hit-wrong");
+        ball.el.classList.add("hit-wrong");
       }
-      setTimeout(() => this.removeItem(item), 220);
+      ball.vy = 0; // 命中后停住，短暂显示反馈
+      setTimeout(() => this.removeBall(ball), 200);
       this.renderStats();
     },
 
-    readItem(item) {
-      const en = item.textContent;
+    readBall(ball) {
+      const en = ball.el.textContent;
       try {
-        if (item._audio) {
-          item._audio.currentTime = 0;
-          item._audio.play().catch(() => speak(en));
+        if (ball.el._audio) {
+          ball.el._audio.currentTime = 0;
+          ball.el._audio.play().catch(() => speak(en));
         } else {
           speak(en);
         }
@@ -1577,8 +1628,9 @@
       this.running = false;
       clearInterval(this.spawnT);
       clearInterval(this.tickT);
-      clearInterval(this.rotateT);
-      this.spawnT = this.tickT = this.rotateT = null;
+      if (this.raf) cancelAnimationFrame(this.raf);
+      this.spawnT = this.tickT = this.raf = null;
+      this.balls = [];
       if (this.area) this.area.innerHTML = "";
     },
   };

@@ -934,3 +934,45 @@
     transform: translate(-50%, -170%) scale(1);
   }
 }
+
+/* ---- 单词雨圆球（JS 物理下落，transform 定位） ---- */
+.vocab-rain-ball {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  min-width: 64px;
+  height: 64px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
+  font-size: 21px;
+  font-weight: 800;
+  color: #2f2417;
+  background: radial-gradient(circle at 35% 28%, #ffffff, #ffe0b8 65%, #f0a44b);
+  box-shadow: 0 5px 12px rgba(60, 40, 20, 0.25);
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: lowercase;
+}
+
+.vocab-rain-ball.hit-right {
+  background: radial-gradient(circle at 35% 28%, #fff, #b7ecc9 65%, #1f9d55);
+  color: #15713c;
+}
+
+.vocab-rain-ball.hit-wrong {
+  background: radial-gradient(circle at 35% 28%, #fff, #f6c2c2 65%, #d9534f);
+  color: #fff;
+}
+
+@media (min-width: 760px) {
+  .vocab-rain-ball {
+    min-width: 74px;
+    height: 74px;
+    font-size: 23px;
+  }
+}
