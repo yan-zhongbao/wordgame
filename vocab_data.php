@@ -47,13 +47,8 @@ if ($user !== '') {
 if ($method === 'GET') {
     if (is_file($progFile)) {
         readfile($progFile);
-    } elseif ($user === '' && is_file($seedFile)) {
-        // 旧单文件首次访问：用导出的种子做初始进度。
-        $seed = file_get_contents($seedFile);
-        @file_put_contents($progFile, $seed, LOCK_EX);
-        echo $seed;
     } else {
-        // 新用户：返回空进度（由前端把本地数据上传上来）。
+        // 用户文件不存在 → 返回空进度（前端负责迁移旧数据或加载 seed）。
         echo json_encode(['v' => 2, 'goal' => 5, 'coins' => 0, 'words' => new stdClass()], JSON_UNESCAPED_UNICODE);
     }
     exit;
