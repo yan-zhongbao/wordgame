@@ -1263,6 +1263,16 @@
   font-size: 12px;
   color: #7a5a20;
 }
+.vocab-checkin-mil-chip.base {
+  background: #e8f5e9;
+  border: 1.5px solid #81c784;
+}
+.vocab-checkin-mil-chip.base b {
+  color: #2e7d32;
+}
+.vocab-checkin-mil-chip.base span {
+  color: #388e3c;
+}
 .vocab-checkin-mil-chip.done {
   background: #ffe5a0;
   opacity: 1;

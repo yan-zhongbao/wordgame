@@ -79,12 +79,12 @@
   const DAILY_TARGET = 100; // 每天收藏单词上限（超出不计入打卡）
   // 连续打卡里程碑：streak → { coins, cards, label }
   const STREAK_REWARDS = {
-    2: { coins: 50,  cards: 0, label: "连续2天 +50金币" },
-    3: { coins: 0,   cards: 1, label: "连续3天 🎴×1" },
-    4: { coins: 200, cards: 0, label: "连续4天 +200金币" },
-    5: { coins: 0,   cards: 2, label: "连续5天 🎴×2" },
-    6: { coins: 400, cards: 0, label: "连续6天 +400金币" },
-    7: { coins: 0,   cards: 4, label: "连续7天 🎴×4" },
+    2: { coins: 50,  cards: 0, label: "连续2天 额外+50金币" },
+    3: { coins: 0,   cards: 1, label: "连续3天 额外🎴×1" },
+    4: { coins: 200, cards: 0, label: "连续4天 额外+200金币" },
+    5: { coins: 0,   cards: 2, label: "连续5天 额外🎴×2" },
+    6: { coins: 400, cards: 0, label: "连续6天 额外+400金币" },
+    7: { coins: 0,   cards: 4, label: "连续7天 额外🎴×4" },
   };
   let screen = "hub"; // hub | mark | match
   let serverOk = false; // PHP 是否可用
@@ -1106,16 +1106,21 @@
 
     // 里程碑奖励一览（始终显示，让孩子有目标感）
     const milWrap = el("div", "vocab-checkin-milestones");
-    milWrap.appendChild(el("div", "vocab-checkin-mil-title", "连续打卡奖励（每周一重置）："));
+    milWrap.appendChild(el("div", "vocab-checkin-mil-title", "打卡奖励（每周一重置）："));
+    // 基础行：每天必得
+    const baseChip = el("div", "vocab-checkin-mil-chip base" + (streak >= 1 ? " done" : ""));
+    baseChip.appendChild(el("b", null, "每天"));
+    baseChip.appendChild(el("span", null, "100💰"));
     const milRow = el("div", "vocab-checkin-mil-row");
+    milRow.appendChild(baseChip);
+    // 连续天数额外奖励
     [
-      [1, "100💰"],
-      [2, "+50💰"],
-      [3, "🎴×1"],
-      [4, "+200💰"],
-      [5, "🎴×2"],
-      [6, "+400💰"],
-      [7, "🎴×4"],
+      [2, "额外+50💰"],
+      [3, "额外🎴×1"],
+      [4, "额外+200💰"],
+      [5, "额外🎴×2"],
+      [6, "额外+400💰"],
+      [7, "额外🎴×4"],
     ].forEach(([day, reward]) => {
       const chip = el("div", "vocab-checkin-mil-chip" + (streak >= day ? " done" : ""));
       chip.appendChild(el("b", null, day + "天"));
