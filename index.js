@@ -1245,6 +1245,9 @@ async function init() {
   updateCoinUI();
   setupSemesterSelector();
   setupCustomPanel();
+  // 页面加载时静默初始化词汇通用户/服务器连接，让 practice/exam 的正确答案也
+  // 能同步金币和每日打卡，无需先手动打开小学词汇通。
+  if (window.VocabSync) setTimeout(() => window.VocabSync.init(), 800);
   loadVersionTag();
   // 单独入口：index.html#vocab 直接进入小学词汇通（书签直达）。
   if (!vocabDeepLinkDone && location.hash.replace(/^#/, "") === "vocab") {

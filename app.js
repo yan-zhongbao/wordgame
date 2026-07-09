@@ -298,6 +298,13 @@ function addCoins(amount) {
   coinBalance += amount;
   updateCoinUI();
 }
+// 将答对的单词/短语计入每日打卡（短语拆词）。
+function markCheckin(en) {
+  if (!window.VocabCheckin) return;
+  String(en || "").trim().split(/\s+/).forEach(function(w) {
+    if (w.length >= 2) window.VocabCheckin.markWord(w);
+  });
+}
 
 function speakEnglish(text) {
   if (!("speechSynthesis" in window)) {
@@ -2498,6 +2505,7 @@ const Engine = {
       if (!this.state.noReward) {
         addCoins(COIN_REWARD);
       }
+      markCheckin(item.en);
       if (this.state.examFix) {
         this.state.fixCleared = (this.state.fixCleared || 0) + 1;
         updateFixBanner();
@@ -2604,6 +2612,7 @@ const Engine = {
         if (!this.state.noReward) {
           addCoins(COIN_REWARD);
         }
+        markCheckin(task.item.en);
         if (this.state.examFix) {
           this.state.fixCleared = (this.state.fixCleared || 0) + 1;
           updateFixBanner();

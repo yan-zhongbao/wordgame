@@ -477,7 +477,25 @@
     }
   }
 
-  // 加载进度：服务器 → 本地 → seed 文件。
+  // 读取旧版单文件 vocab_progress.json（不带 user 参数）。
+  // 用于新用户首次登录时，自动迁移旧数据，避免进度丢失。
+  async function serverLoadLegacy() {
+    try {
+      const res = await fetch(API_URL, { cache: "no-store" });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const words = normalizeWords(data.words || {});
+      if (!Object.keys(words).length) return null;
+      return {
+        words,
+        coins: Math.max(0, parseInt(data.coins, 10) || 0),
+      };
+    } catch (err) {
+      return null;
+    }
+  }
+
+  // 加载进度：服务器用户文件 → 旧版单文件迁移（词数更多时优先）→ 本地 → seed。
   // useSeed=false 时（如新建/切换用户）不落回 seed，新用户从空白开始。
   async function loadProgress(useSeed) {
     const remote = await serverLoad();
@@ -490,10 +508,22 @@
       return;
     }
     const local = readLocal();
-    if (local && Object.keys(local).length) {
+    const localCount = local ? Object.keys(local).length : 0;
+    // 用户文件为空时，尝试从旧版单文件迁移（词数多的胜出，避免 seed 数据覆盖真实进度）。
+    if (user && serverOk) {
+      const legacy = await serverLoadLegacy();
+      const legacyCount = legacy ? Object.keys(legacy.words).length : 0;
+      if (legacyCount > localCount) {
+        prog = legacy.words;
+        setCoins(Math.max(getCoins(), legacy.coins));
+        Checkin.load(null);
+        save(); // 写入用户文件 + 本地，完成一次性迁移
+        return;
+      }
+    }
+    if (localCount) {
       prog = local;
-      Checkin.load(null); // 从 localStorage 初始化打卡状态
-      // 云端为空但本地有 → 把本地推上去（新用户首次同步）。
+      Checkin.load(null);
       if (serverOk) syncSoon();
       return;
     }
@@ -507,7 +537,7 @@
       if (res.ok) {
         const data = await res.json();
         prog = normalizeWords(data.words);
-        save(); // 写回本地/服务器
+        save();
         return;
       }
     } catch (err) {
@@ -2520,5 +2550,25 @@
     UI.export.addEventListener("click", exportProgress);
   }
 
+  // 页面加载时静默初始化：读取用户名 + 拉取服务器进度，让 practice/exam
+  // 中的正确答案也能即时同步到服务器（不需要先打开词汇通界面）。
+  async function initSync() {
+    if (!user) user = loadUser();
+    if (!user) return; // 还没取名，无法同步
+    Checkin.load(null); // 从 localStorage 恢复打卡状态
+    const remote = await serverLoad(); // 同时设置 serverOk
+    if (remote && Object.keys(remote.words).length) {
+      prog = remote.words;
+      // 金币：本地与云端取最大（两端都可能有新增）
+      const remoteCoins = remote.coins;
+      const localCoins = getCoins();
+      if (remoteCoins > localCoins) setCoins(remoteCoins);
+      Checkin._mergeRemote(remote.checkin);
+      writeLocal();
+    }
+  }
+
   window.VocabApp = { start, pause };
+  window.VocabCheckin = Checkin; // 供 app.js / exam.js 计入每日打卡
+  window.VocabSync = { init: initSync }; // 供 index.js 页面加载时调用
 })();

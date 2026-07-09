@@ -131,6 +131,13 @@
       /* ignore */
     }
   }
+  // 将答对的单词计入每日打卡。短语拆成单词分别记录（e.g. "hot dog" → "hot"+"dog"）。
+  function markCheckin(en) {
+    if (!window.VocabCheckin) return;
+    String(en || "").trim().split(/\s+/).forEach(function(w) {
+      if (w.length >= 2) window.VocabCheckin.markWord(w);
+    });
+  }
 
   function sampleValues(pool, n, excludeKey, mapFn) {
     const seen = new Set();
@@ -370,6 +377,7 @@
         const target = Array.from(optBox.children).find((c) =>
           c.classList.contains("right")
         );
+        if (correct) markCheckin(item.en);
         conclude(wrap, correct, correct ? 1 : 0, 1, correct ? [] : [item], target);
       });
       optBox.appendChild(bt);
@@ -452,6 +460,7 @@
       if (!allRight) {
         wrap.appendChild(el("div", "exam-answer", `正确答案：${word}`));
       }
+      if (allRight) markCheckin(item.en);
       conclude(wrap, allRight, allRight ? 1 : 0, 1, allRight ? [] : [item], row);
     }
 
@@ -529,6 +538,7 @@
           }
         }
         wrap.appendChild(el("div", "exam-answer", `正确单词：${word}`));
+        if (correct) markCheckin(item.en);
         conclude(wrap, correct, correct ? 1 : 0, 1, correct ? [] : [item], tile);
       });
       row.appendChild(tile);
@@ -577,6 +587,7 @@
       if (!correct) {
         wrap.appendChild(el("div", "exam-answer", `正确单词：${word}`));
       }
+      if (correct) markCheckin(item.en);
       conclude(wrap, correct, correct ? 1 : 0, 1, correct ? [] : [item], tiles[pos]);
     }
 
@@ -756,6 +767,8 @@
       });
       draw();
       wrap.appendChild(el("div", "exam-answer", `连对 ${correctCount}/${n} 组`));
+      // 连线全对时，把所有配对成功的单词计入打卡。
+      if (correctCount === n) items.forEach((it) => markCheckin(it.en));
       conclude(wrap, correctCount === n, correctCount, n, wrongItems, board);
     });
     wrap.appendChild(submit);
