@@ -3,3 +3,4 @@ assets/td/*.tmp.png
 assets/td/*-source-*.png
 vocab_progress.json
 vocab_progress.json.tmp
+vocab_users/

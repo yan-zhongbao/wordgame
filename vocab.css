@@ -976,3 +976,387 @@
     font-size: 23px;
   }
 }
+
+/* ---- 云同步按钮（hub 头部） ---- */
+.vocab-sync-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #6a4a1c;
+  background: #ffe7c2;
+  box-shadow: 0 3px 8px rgba(60, 40, 20, 0.15);
+  cursor: pointer;
+  max-width: 60vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vocab-sync-btn:active {
+  transform: translateY(1px);
+}
+
+/* ---- 弹窗（取名 / 同步菜单） ---- */
+.vocab-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(40, 26, 12, 0.5);
+  animation: vocabFadeIn 0.15s ease-out;
+}
+@keyframes vocabFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.vocab-modal {
+  width: min(420px, 100%);
+  background: #fffdf9;
+  border-radius: 18px;
+  padding: 22px 22px 18px;
+  box-shadow: 0 18px 40px rgba(40, 26, 12, 0.3);
+  box-sizing: border-box;
+}
+.vocab-modal-title {
+  margin: 0 0 8px;
+  font-size: 21px;
+  font-weight: 800;
+  color: #3a2a16;
+}
+.vocab-modal-desc {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #7a6a52;
+}
+.vocab-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.vocab-modal-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #6a4a1c;
+  background: #f1e6d8;
+  cursor: pointer;
+}
+.vocab-modal-btn.primary {
+  color: #fff;
+  background: #f39a3a;
+}
+.vocab-modal-btn:active {
+  transform: translateY(1px);
+}
+
+.vocab-name-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 2px solid #eaddc8;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 18px;
+  color: #3a2a16;
+  background: #fff;
+  outline: none;
+}
+.vocab-name-input:focus {
+  border-color: #f3b93a;
+}
+
+.vocab-sync-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.vocab-sync-who {
+  font-size: 16px;
+  font-weight: 800;
+  color: #3a2a16;
+  padding: 4px 2px 6px;
+}
+.vocab-sync-row {
+  border: none;
+  border-radius: 12px;
+  padding: 13px 16px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: left;
+  color: #3a2a16;
+  background: #fff5e6;
+  cursor: pointer;
+}
+.vocab-sync-row:active {
+  transform: translateY(1px);
+  background: #ffedd2;
+}
+.vocab-sync-status {
+  min-height: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #7a6a52;
+  padding: 2px 2px 0;
+}
+.vocab-sync-status.ok {
+  color: #1f9d55;
+}
+.vocab-sync-status.err {
+  color: #d9534f;
+}
+
+/* ---- 每日打卡面板 ---- */
+.vocab-checkin-panel {
+  background: linear-gradient(135deg, #fffbf0 0%, #fff4d9 100%);
+  border: 1.5px solid #f5d98a;
+  border-radius: 16px;
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.vocab-checkin-hdr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.vocab-checkin-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #3a2a16;
+}
+.vocab-checkin-streak-badge {
+  font-size: 14px;
+  font-weight: 800;
+  color: #c05000;
+  background: #ffe2bb;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+.vocab-checkin-cards-badge {
+  font-size: 14px;
+  font-weight: 800;
+  color: #5a3a99;
+  background: #ede0ff;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+/* 进度条行 */
+.vocab-checkin-prog-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.vocab-checkin-bar {
+  flex: 1;
+  height: 12px;
+  background: #f0e4c4;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.vocab-checkin-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f5b942, #f37a1f);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+.vocab-checkin-prog-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #7a5a20;
+  white-space: nowrap;
+}
+
+/* 打卡按钮 */
+.vocab-checkin-btn {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  padding: 11px 24px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #f5b942 0%, #f07d1e 100%);
+  box-shadow: 0 4px 12px rgba(240, 125, 30, 0.4);
+  cursor: pointer;
+  animation: checkinPulse 1.6s ease-in-out infinite;
+}
+@keyframes checkinPulse {
+  0%, 100% { box-shadow: 0 4px 12px rgba(240, 125, 30, 0.4); }
+  50% { box-shadow: 0 4px 22px rgba(240, 125, 30, 0.7); transform: scale(1.03); }
+}
+.vocab-checkin-btn:active {
+  animation: none;
+  transform: translateY(1px);
+}
+
+/* 游戏卡兑换行 */
+.vocab-checkin-card-row {
+  font-size: 14px;
+  font-weight: 600;
+  color: #5a3a99;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.vocab-checkin-redeem-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  background: #7c51cc;
+  cursor: pointer;
+}
+.vocab-checkin-redeem-btn:active {
+  transform: translateY(1px);
+}
+
+/* 里程碑奖励表 */
+.vocab-checkin-milestones {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.vocab-checkin-mil-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #9a7a40;
+}
+.vocab-checkin-mil-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.vocab-checkin-mil-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  background: #f5e9c8;
+  border-radius: 10px;
+  padding: 5px 10px;
+  opacity: 0.7;
+  min-width: 48px;
+}
+.vocab-checkin-mil-chip b {
+  font-size: 13px;
+  color: #5a3a10;
+}
+.vocab-checkin-mil-chip span {
+  font-size: 12px;
+  color: #7a5a20;
+}
+.vocab-checkin-mil-chip.done {
+  background: #ffe5a0;
+  opacity: 1;
+  box-shadow: 0 1px 4px rgba(240,160,0,0.25);
+}
+.vocab-checkin-mil-chip.done b,
+.vocab-checkin-mil-chip.done span {
+  color: #7a4800;
+}
+
+/* ---- 达到100词时的 toast 提示 ---- */
+.vocab-checkin-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  animation: checkinToastIn 0.3s cubic-bezier(.17,.67,.3,1.3) forwards;
+}
+@keyframes checkinToastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.95); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0)     scale(1);    }
+}
+.vocab-checkin-toast-inner {
+  background: linear-gradient(135deg, #fff8e0, #ffe89a);
+  border: 2px solid #f5b942;
+  border-radius: 20px;
+  padding: 18px 22px 14px;
+  box-shadow: 0 8px 32px rgba(60, 40, 20, 0.22);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 240px;
+  max-width: 88vw;
+  text-align: center;
+}
+.vocab-checkin-toast-big {
+  font-size: 36px;
+  line-height: 1;
+}
+.vocab-checkin-toast-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #3a2a00;
+}
+.vocab-checkin-toast-sub {
+  font-size: 14px;
+  color: #7a5a10;
+}
+.vocab-checkin-toast-btn {
+  margin-top: 4px;
+  border: none;
+  border-radius: 999px;
+  padding: 9px 20px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #f5b942, #f07d1e);
+  cursor: pointer;
+}
+
+/* ---- 打卡结果弹窗内容 ---- */
+.vocab-checkin-result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vocab-checkin-result-streak {
+  font-size: 18px;
+  font-weight: 800;
+  color: #c05000;
+}
+.vocab-checkin-result-line {
+  font-size: 15px;
+  font-weight: 700;
+  color: #3a2a16;
+}
+.vocab-checkin-result-line.bonus {
+  color: #7c51cc;
+}
+.vocab-checkin-result-total {
+  font-size: 17px;
+  font-weight: 800;
+  color: #b85a00;
+  margin-top: 4px;
+}
+.vocab-checkin-result-cards {
+  font-size: 15px;
+  font-weight: 700;
+  color: #5a3a99;
+  margin-top: 2px;
+}
+.vocab-checkin-result-hint {
+  font-size: 12px;
+  color: #9a8060;
+}

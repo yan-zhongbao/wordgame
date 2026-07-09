@@ -23,7 +23,6 @@ all year round|全年
 alone|单独，独自
 along|向前
 also|除此之外，还
-Amy|埃米
 ancient|古代的
 and|然后，接着；和
 angry|发怒的，生气的，气愤的
@@ -79,7 +78,6 @@ behaviour|行为，举止
 behind|在…… 后面
 believe|相信
 below|在…… 的下面
-Ben|本
 best|最好的
 better|（健康状况）好转的；（疼痛、伤势等）减轻的
 beyond|往更远处
@@ -94,8 +92,6 @@ blackboard|黑板
 block|一块
 blow|吹，刮
 blue|蓝色（的）
-Bobby|博比
-Bobo|博博
 body|身体
 book|书
 bookmark|书签
@@ -175,7 +171,6 @@ cloudy|多云的，阴天的
 club|俱乐部
 coat|外套
 cock-a-doodle-doo|（公鸡啼叫的）喔喔声
-Cody|科迪
 coin|硬币
 cold|冷的，寒冷的
 collection|收集，采集
@@ -218,7 +213,6 @@ dancer|舞蹈演员
 dark|昏暗的；黑暗的
 date|日期
 daughter|女儿
-David|戴维
 day|一天
 dead|死的，去世的
 deal with|对付，应付，处理
@@ -390,7 +384,6 @@ glue|黏合，粘贴
 go|走，去
 gold|金，黄金
 golden|金色的，金黄色的
-Goldilocks|金发姑娘
 good|好的
 goodbye|再见
 grade|年级
@@ -498,7 +491,6 @@ internet|因特网
 invention|发明（物）
 it|它
 its|它的
-Jane|简
 January|一月
 jewel|珠宝首饰
 job|任务，事情
@@ -553,13 +545,10 @@ loud|响亮地；大声的，喧闹的
 loudly|大声地
 love|爱，关爱
 lovely|美好的；令人愉快的；可爱的
-Luca|卢卡
 luck|好运，幸运
 lucky|幸运的
-Lucky|幸运
 lunch|午餐
 lunchtime|午餐时间
-m fine|我很好
 magic|魔术，戏法
 magical|神奇的；有魔力的
 make|制作
@@ -568,7 +557,6 @@ mantis|螳螂
 many|许多；大量
 map|地图
 March|三月
-Martin|马丁
 mask|面具
 matchstick|火柴杆，火柴棍
 matter|事情，问题
@@ -579,10 +567,8 @@ meat|肉
 meet|认识，结识
 memory|回忆
 message|消息
-Mia|米娅
 miaow|咪，喵（猫叫声）
 middle|中间
-Mike|迈克
 milk|奶，牛奶
 million|百万
 minute|分钟
@@ -614,8 +600,6 @@ my|我的
 myself|我自己
 mystery|悬疑（推理）故事
 name|名字
-Names Harbin|哈尔滨
-Names Yoyo|友友
 nation|民族
 National Day|国庆节
 natural|自然的，天然的
@@ -655,7 +639,6 @@ oh|噢
 oilcloth|油布
 OK|行，可以
 old|年老的；相识很久的
-Olivia|奥利维娅
 on|在……上面
 once|过去，曾经
 one|一
@@ -790,15 +773,12 @@ ruler|尺子，直尺
 run|跑
 run after|追逐，追赶
 runny|流鼻涕的
-s own|独立地
 sad|不愉快的，伤心的，难过的
 safe|安全的，没有危险的；平安无事的
 safety|安全
 salad|沙拉
-Sam|萨姆
 same|完全相同的，一模一样的
 sandwich|三明治，夹心面包
-Sarah|萨拉
 satellite|人造卫星
 Saturday|星期六
 save|储蓄，存（钱）
@@ -853,7 +833,6 @@ sleep|睡，睡觉
 sloth|树懒
 slowly|缓慢地，慢慢地
 small|小的
-Smart|斯马特
 smell|闻到，嗅到
 smile|微笑
 snake|蛇
@@ -895,7 +874,6 @@ stay|停留，逗留，留下
 steal|偷，窃取
 stem|（植物的）茎，梗，柄
 step|步；一步（的距离）
-sth|照看（照料）；看某人；因为；照看（照料）某人
 stick|木棍，拐杖
 still|还，仍然
 stone|石头
@@ -938,7 +916,6 @@ take off|脱下，脱掉（衣物）
 talent|天资，天赋，才能
 talk|讨论，商谈
 tall|高的，高大的
-Tara|塔拉
 taste|有……的味道
 taxi|出租车，计程车
 tea|茶；茶叶
@@ -949,8 +926,6 @@ team|队
 tear|飞跑，狂奔
 tell|告诉，告知
 ten|十
-Terry Fox|特里
-Terry Fox Run|希望马拉松
 text|原文
 than|比
 thank|感谢，向……表示谢意
@@ -988,7 +963,6 @@ today|今天
 toe|脚趾
 together|一起，一块儿
 toilet|厕所，洗手间，卫生间
-Tom|汤姆
 tomato|番茄，西红柿
 tomorrow|（在）明天
 too|也
@@ -1066,7 +1040,6 @@ Wednesday|星期三
 week|星期，周
 weekend|周末
 welcome|欢迎
-Welcome play|玩，玩耍
 well|嗯；嗯，这个；健康的
 west|西，西方
 West|西方，西方世界

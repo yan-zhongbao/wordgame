@@ -32,8 +32,9 @@
   const PAGE_SIZE = 10; // 标记模式每页词数
   const MATCH_SIZE = 6; // 连线每屏对数
   const GOAL = 5; // 连续答对 5 轮 = 真正认识
-  const LS_KEY = "wg-vocab-progress"; // 本地镜像键
+  const LS_KEY = "wg-vocab-progress"; // 本地镜像键（当前用户）
   const OLD_KEY = "wg-vocab-counts"; // 旧版键，弃用
+  const USER_KEY = "wg-vocab-user"; // 当前用户 { id, name }
   const API_URL = "vocab_data.php";
   const WORDLIST_URL = "wordlist.txt";
   const SEED_URL = "vocab_seed.json";
@@ -74,8 +75,20 @@
   const grade3Set = new Set(GRADE3);
   let categories = {}; // { 分类label: [en...] }（单词雨用）
   const SESSION_LIMIT_MS = 10 * 60 * 1000; // 游戏单次 10 分钟上限
+  const CHECKIN_KEY = "wg-vocab-checkin"; // 每日打卡状态
+  const DAILY_TARGET = 100; // 每天收藏单词上限（超出不计入打卡）
+  // 连续打卡里程碑：streak → { coins, cards, label }
+  const STREAK_REWARDS = {
+    2: { coins: 50,  cards: 0, label: "连续2天 +50金币" },
+    3: { coins: 0,   cards: 1, label: "连续3天 🎴×1" },
+    4: { coins: 200, cards: 0, label: "连续4天 +200金币" },
+    5: { coins: 0,   cards: 2, label: "连续5天 🎴×2" },
+    6: { coins: 400, cards: 0, label: "连续6天 +400金币" },
+    7: { coins: 0,   cards: 4, label: "连续7天 🎴×4" },
+  };
   let screen = "hub"; // hub | mark | match
   let serverOk = false; // PHP 是否可用
+  let user = null; // 当前用户 { id, name }；null=未设置（首次进入需取名）
 
   // ---- helpers ----
   function el(tag, className, text) {
@@ -178,14 +191,8 @@
     }
   }
   function addGlobalCoins(amount) {
-    try {
-      const k = "wg-td-coins";
-      const cur = parseInt(localStorage.getItem(k) || "0", 10) || 0;
-      localStorage.setItem(k, String(Math.max(0, cur + amount)));
-      if (typeof window.refreshCoins === "function") window.refreshCoins();
-    } catch (err) {
-      /* ignore */
-    }
+    setCoins(getCoins() + amount);
+    syncSoon(); // 金币变化也同步到云
   }
 
   // 音效：复用 TD 的音频。coin=得分、fail=爆炸/失败。
@@ -230,6 +237,96 @@
     }
   }
 
+  // ---- 用户（多人云同步） ----
+  // 名字 → 安全 id（同名 = 同一份云数据，可跨设备）。
+  function slugId(name) {
+    const base = String(name || "")
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9_一-龥-]/g, "");
+    // 含中文时按需保留：用 encodeURIComponent 交给服务器过滤（服务器只留 a-z0-9_-），
+    // 所以这里把非 ascii 转成拼音式不现实，改为对整串做一个稳定 hash 兜底。
+    const ascii = base.replace(/[^a-z0-9_-]/g, "");
+    if (ascii.length >= 2) return ascii.slice(0, 40);
+    // 纯中文名等 → 用 hash 生成稳定 id。
+    let h = 0;
+    for (let i = 0; i < base.length; i += 1) {
+      h = (h * 31 + base.charCodeAt(i)) >>> 0;
+    }
+    return "u" + h.toString(36);
+  }
+  function loadUser() {
+    try {
+      const raw = localStorage.getItem(USER_KEY);
+      if (!raw) return null;
+      const u = JSON.parse(raw);
+      if (u && u.id && u.name) return { id: String(u.id), name: String(u.name) };
+    } catch (err) {
+      /* ignore */
+    }
+    return null;
+  }
+  function setUser(name) {
+    const nm = String(name || "").trim();
+    if (!nm) return null;
+    user = { id: slugId(nm), name: nm };
+    try {
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+    } catch (err) {
+      /* ignore */
+    }
+    return user;
+  }
+  function apiUrl() {
+    return user && user.id
+      ? API_URL + "?user=" + encodeURIComponent(user.id)
+      : API_URL;
+  }
+  // 金币读写（复用全局 wg-td-coins，其它游戏也读这个键）。
+  const COINS_LS = "wg-td-coins";
+  function getCoins() {
+    return parseInt(localStorage.getItem(COINS_LS) || "0", 10) || 0;
+  }
+  function setCoins(n) {
+    try {
+      localStorage.setItem(COINS_LS, String(Math.max(0, parseInt(n, 10) || 0)));
+      if (typeof window.refreshCoins === "function") window.refreshCoins();
+    } catch (err) {
+      /* ignore */
+    }
+  }
+
+  // ---- 轻量弹窗（取名 / 同步菜单），自带遮罩，风格照抄 exam ----
+  function vocabModal(opts) {
+    const overlay = el("div", "vocab-modal-overlay");
+    const box = el("div", "vocab-modal");
+    if (opts.title) box.appendChild(el("h3", "vocab-modal-title", opts.title));
+    if (opts.desc) box.appendChild(el("p", "vocab-modal-desc", opts.desc));
+    if (opts.body) box.appendChild(opts.body);
+    const actions = el("div", "vocab-modal-actions");
+    const close = () => overlay.remove();
+    (opts.actions || []).forEach((a) => {
+      const btn = el("button", "vocab-modal-btn" + (a.primary ? " primary" : ""), a.text);
+      btn.type = "button";
+      btn.addEventListener("click", () => {
+        if (a.onClick) a.onClick(close);
+        else close();
+      });
+      actions.appendChild(btn);
+    });
+    box.appendChild(actions);
+    overlay.appendChild(box);
+    if (opts.dismissable !== false) {
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) close();
+      });
+    }
+    (ROOT === document ? document.body : ROOT).appendChild(overlay);
+    if (opts.onOpen) opts.onOpen(box, close);
+    return close;
+  }
+
   // ---- 进度存储（PHP 优先，localStorage 镜像） ----
   function normalizeWords(words) {
     const out = {};
@@ -265,13 +362,19 @@
       /* ignore */
     }
   }
+  // 返回 { words, coins, name } 或 null。
   async function serverLoad() {
     try {
-      const res = await fetch(API_URL, { cache: "no-store" });
+      const res = await fetch(apiUrl(), { cache: "no-store" });
       if (!res.ok) return null;
       const data = await res.json();
       serverOk = true;
-      return normalizeWords(data.words);
+      return {
+        words: normalizeWords(data.words),
+        coins: Math.max(0, parseInt(data.coins, 10) || 0),
+        name: data.name || "",
+        checkin: data.checkin || null,
+      };
     } catch (err) {
       serverOk = false;
       return null;
@@ -281,21 +384,32 @@
   async function serverSave() {
     if (!serverOk) return;
     try {
-      await fetch(API_URL, {
+      await fetch(apiUrl(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ v: 2, goal: GOAL, words: prog }),
+        body: JSON.stringify({
+          v: 2,
+          goal: GOAL,
+          name: user ? user.name : "",
+          coins: getCoins(),
+          words: prog,
+          checkin: Checkin.toJSON(),
+        }),
         cache: "no-store",
       });
     } catch (err) {
       serverOk = false;
     }
   }
+  // 去抖触发一次服务器保存（金币变化也会调用）。
+  function syncSoon() {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(serverSave, 600);
+  }
   // 保存：本地立即写，服务器去抖后台写。
   function save() {
     writeLocal();
-    if (saveTimer) clearTimeout(saveTimer);
-    saveTimer = setTimeout(serverSave, 600);
+    syncSoon();
   }
 
   function progOf(en) {
@@ -363,17 +477,29 @@
     }
   }
 
-  // 首次加载进度：服务器 → 本地 → seed 文件。
-  async function loadProgress() {
-    let words = await serverLoad();
-    if (words && Object.keys(words).length) {
-      prog = words;
+  // 加载进度：服务器 → 本地 → seed 文件。
+  // useSeed=false 时（如新建/切换用户）不落回 seed，新用户从空白开始。
+  async function loadProgress(useSeed) {
+    const remote = await serverLoad();
+    if (remote && Object.keys(remote.words).length) {
+      // 云端有该用户的数据 → 以云端为准（进度 + 金币 + 打卡）。
+      prog = remote.words;
+      setCoins(remote.coins);
+      Checkin.load(remote.checkin);
       writeLocal();
       return;
     }
-    words = readLocal();
-    if (words && Object.keys(words).length) {
-      prog = words;
+    const local = readLocal();
+    if (local && Object.keys(local).length) {
+      prog = local;
+      Checkin.load(null); // 从 localStorage 初始化打卡状态
+      // 云端为空但本地有 → 把本地推上去（新用户首次同步）。
+      if (serverOk) syncSoon();
+      return;
+    }
+    if (useSeed === false) {
+      prog = {};
+      if (serverOk) syncSoon();
       return;
     }
     try {
@@ -534,6 +660,170 @@
   }
 
   // =======================================================================
+  //  每日打卡 & 连续签到奖励
+  // =======================================================================
+  const Checkin = {
+    _st: null, // { today, words:Set, checked, streak, lastCheckin, cards }
+
+    _today() { return new Date().toISOString().slice(0, 10); },
+    _yesterday() {
+      const d = new Date(); d.setDate(d.getDate() - 1);
+      return d.toISOString().slice(0, 10);
+    },
+
+    // 从 localStorage 初始化（可选 remote 用于合并云端数据）。
+    load(remote) {
+      let st = { today: this._today(), words: new Set(), checked: false, streak: 0, lastCheckin: "", cards: 0 };
+      try {
+        const raw = localStorage.getItem(CHECKIN_KEY);
+        if (raw) {
+          const s = JSON.parse(raw);
+          st = {
+            today: s.today || this._today(),
+            words: new Set(Array.isArray(s.words) ? s.words : []),
+            checked: !!s.checked,
+            streak: Math.max(0, parseInt(s.streak, 10) || 0),
+            lastCheckin: s.lastCheckin || "",
+            cards: Math.max(0, parseInt(s.cards, 10) || 0),
+          };
+        }
+      } catch (e) { /* ignore */ }
+      this._st = st;
+      if (remote) this._mergeRemote(remote);
+      this._checkDay();
+    },
+
+    // 日期切换时重置今日词集（保留 streak/cards）。
+    _checkDay() {
+      if (!this._st) return;
+      if (this._st.today !== this._today()) {
+        this._st.words = new Set();
+        this._st.checked = false;
+        this._st.today = this._today();
+      }
+    },
+
+    // 将云端数据合并到本地（取大原则，防止回滚）。
+    _mergeRemote(data) {
+      if (!data || !this._st) return;
+      const s = this._st;
+      s.streak = Math.max(s.streak, parseInt(data.streak, 10) || 0);
+      s.cards = Math.max(s.cards, parseInt(data.cards, 10) || 0);
+      if ((data.lastCheckin || "") > (s.lastCheckin || "")) s.lastCheckin = data.lastCheckin;
+      if (data.today === this._today() && Array.isArray(data.words)) {
+        data.words.forEach(w => s.words.add(keyOf(w)));
+        if (data.checked) s.checked = true;
+      }
+      this._write();
+    },
+
+    _st_get() {
+      if (!this._st) this.load(null);
+      this._checkDay();
+      return this._st;
+    },
+
+    _write() {
+      if (!this._st) return;
+      try {
+        localStorage.setItem(CHECKIN_KEY, JSON.stringify({
+          today: this._st.today,
+          words: [...this._st.words],
+          checked: this._st.checked,
+          streak: this._st.streak,
+          lastCheckin: this._st.lastCheckin,
+          cards: this._st.cards,
+        }));
+      } catch (e) { /* ignore */ }
+      syncSoon(); // 打卡状态也纳入云同步
+    },
+
+    count() { return this._st_get().words.size; },
+    isReady() { const s = this._st_get(); return s.words.size >= DAILY_TARGET && !s.checked; },
+    isCheckedToday() { return this._st_get().checked; },
+    getCards() { return this._st_get().cards; },
+    getStreak() { return this._st_get().streak; },
+
+    // 每次答对调用，返回 true=当天新增。超过 100/已收录则忽略。
+    markWord(en) {
+      const s = this._st_get();
+      if (s.words.size >= DAILY_TARGET) return false;
+      const k = keyOf(en);
+      if (s.words.has(k)) return false;
+      s.words.add(k);
+      this._write();
+      if (s.words.size === DAILY_TARGET) setTimeout(() => this._notify100(), 80);
+      return true;
+    },
+
+    // 达到 100 个单词时弹出提示。
+    _notify100() {
+      const toast = document.createElement("div");
+      toast.className = "vocab-checkin-toast";
+      toast.innerHTML =
+        '<div class="vocab-checkin-toast-inner">' +
+          '<div class="vocab-checkin-toast-big">🎉</div>' +
+          '<div class="vocab-checkin-toast-title">今天收藏了 100 个单词！</div>' +
+          '<div class="vocab-checkin-toast-sub">去主页打卡，领取奖励吧！</div>' +
+          '<button class="vocab-checkin-toast-btn" type="button">去打卡 →</button>' +
+        '</div>';
+      toast.querySelector(".vocab-checkin-toast-btn").addEventListener("click", () => {
+        toast.remove();
+        setScreen("hub");
+      });
+      document.body.appendChild(toast);
+      const tid = setTimeout(() => { try { toast.remove(); } catch(e) {} }, 8000);
+      toast.querySelector(".vocab-checkin-toast-btn").addEventListener("click", () => clearTimeout(tid));
+    },
+
+    // 按下打卡按钮：计算并兑现奖励，返回 {coinsEarned, cardsEarned, bonuses, streak, totalCards} 或 null。
+    doCheckin() {
+      const s = this._st_get();
+      if (s.words.size < DAILY_TARGET || s.checked) return null;
+      const isConsec = s.lastCheckin === this._yesterday();
+      // 每周一重置：周一打卡永远从第 1 天重新开始，形成 Mon-Sun 的完整周挑战。
+      const isMonday = new Date().getDay() === 1;
+      const newStreak = (isMonday || !isConsec) ? 1 : s.streak + 1;
+      let coinsEarned = 100, cardsEarned = 0;
+      const bonuses = [];
+      const mil = STREAK_REWARDS[newStreak];
+      if (mil) {
+        coinsEarned += mil.coins;
+        cardsEarned += mil.cards;
+        bonuses.push(mil.label);
+      }
+      s.streak = newStreak;
+      s.lastCheckin = this._today();
+      s.checked = true;
+      s.cards += cardsEarned;
+      this._write();
+      addGlobalCoins(coinsEarned);
+      return { coinsEarned, cardsEarned, bonuses, streak: newStreak, totalCards: s.cards };
+    },
+
+    // 家长帮孩子兑换一张游戏卡（15 分钟游戏时间）。
+    redeemCard() {
+      const s = this._st_get();
+      if (s.cards <= 0) return false;
+      s.cards -= 1;
+      this._write();
+      return true;
+    },
+
+    // 云同步序列化。
+    toJSON() {
+      const s = this._st_get();
+      return { today: s.today, words: [...s.words], checked: s.checked, streak: s.streak, lastCheckin: s.lastCheckin, cards: s.cards };
+    },
+
+    // 切换用户时清空。
+    reset() {
+      this._st = null;
+      try { localStorage.removeItem(CHECKIN_KEY); } catch (e) { /* ignore */ }
+    },
+  };
+
+  // =======================================================================
   //  金币 & 游戏解锁
   // =======================================================================
   const COIN_KEY = "wg-td-coins";
@@ -547,13 +837,13 @@
   ];
 
   function coinBalance() {
-    return parseInt(localStorage.getItem(COIN_KEY) || "0", 10) || 0;
+    return getCoins();
   }
   function spendCoins(n) {
     const c = coinBalance();
     if (c < n) return false;
-    localStorage.setItem(COIN_KEY, String(c - n));
-    if (typeof window.refreshCoins === "function") window.refreshCoins();
+    setCoins(c - n);
+    syncSoon(); // 花费也同步到云
     return true;
   }
   function todayStr() {
@@ -634,6 +924,14 @@
   function renderHub() {
     const total = allWords.length;
     const coins = coinBalance();
+    // 头部：云同步按钮（显示当前用户名）。
+    UI.headerExtra.innerHTML = "";
+    const syncBtn = el("button", "vocab-sync-btn", "☁️ " + (user ? user.name : "同步"));
+    syncBtn.type = "button";
+    syncBtn.title = "数据同步 / 切换用户";
+    syncBtn.addEventListener("click", openSyncMenu);
+    UI.headerExtra.appendChild(syncBtn);
+
     const box = el("div", "vocab-hub");
 
     const summary = el("div", "vocab-hub-summary");
@@ -643,6 +941,9 @@
     summary.appendChild(hubStat("待分词", untouchedCount()));
     summary.appendChild(hubStat("💰 金币", coins));
     box.appendChild(summary);
+
+    // 每日打卡面板
+    renderCheckin(box);
 
     const cards = el("div", "vocab-hub-cards");
     // 所有词都分过（没有待分词的词）后，隐藏"快速分词"入口。
@@ -712,6 +1013,114 @@
       `<div class="vocab-hub-card-title">${title}</div>`;
     card.addEventListener("click", onClick);
     return card;
+  }
+
+  // 每日打卡面板（嵌入 hub）。
+  function renderCheckin(box) {
+    const count = Checkin.count();
+    const streak = Checkin.getStreak();
+    const cards = Checkin.getCards();
+    const ready = Checkin.isReady();
+    const checked = Checkin.isCheckedToday();
+
+    const panel = el("div", "vocab-checkin-panel");
+
+    // 标题行
+    const hdr = el("div", "vocab-checkin-hdr");
+    const title = el("span", "vocab-checkin-title", "📅 每日打卡");
+    hdr.appendChild(title);
+    if (streak > 0) {
+      hdr.appendChild(el("span", "vocab-checkin-streak-badge", "🔥 连续 " + streak + " 天"));
+    }
+    if (cards > 0) {
+      hdr.appendChild(el("span", "vocab-checkin-cards-badge", "🎴 " + cards + " 张"));
+    }
+    panel.appendChild(hdr);
+
+    // 进度条
+    const pct = Math.min(100, Math.round(count / DAILY_TARGET * 100));
+    const progRow = el("div", "vocab-checkin-prog-row");
+    const bar = el("div", "vocab-checkin-bar");
+    const fill = el("div", "vocab-checkin-bar-fill");
+    fill.style.width = pct + "%";
+    bar.appendChild(fill);
+    progRow.appendChild(bar);
+    const lbl = el("span", "vocab-checkin-prog-label", checked ? "✅ 今日已打卡" : count + " / " + DAILY_TARGET + " 个单词");
+    progRow.appendChild(lbl);
+    panel.appendChild(progRow);
+
+    // 打卡按钮
+    if (ready) {
+      const btn = el("button", "vocab-checkin-btn", "🏆 打卡领奖 +100金币");
+      btn.type = "button";
+      btn.addEventListener("click", () => {
+        const result = Checkin.doCheckin();
+        if (!result) return;
+        setScreen("hub"); // 刷新 hub
+        showCheckinResult(result);
+      });
+      panel.appendChild(btn);
+    }
+
+    // 游戏卡兑换
+    if (cards > 0) {
+      const cardRow = el("div", "vocab-checkin-card-row");
+      cardRow.innerHTML =
+        `🎴 你有 <b>${cards}</b> 张游戏卡，每张换 15 分钟平板游戏时间 ` +
+        `<button class="vocab-checkin-redeem-btn" type="button">向家长兑换</button>`;
+      cardRow.querySelector(".vocab-checkin-redeem-btn").addEventListener("click", () => {
+        if (Checkin.redeemCard()) setScreen("hub");
+      });
+      panel.appendChild(cardRow);
+    }
+
+    // 里程碑奖励一览（始终显示，让孩子有目标感）
+    const milWrap = el("div", "vocab-checkin-milestones");
+    milWrap.appendChild(el("div", "vocab-checkin-mil-title", "连续打卡奖励（每周一重置）："));
+    const milRow = el("div", "vocab-checkin-mil-row");
+    [
+      [1, "100💰"],
+      [2, "+50💰"],
+      [3, "🎴×1"],
+      [4, "+200💰"],
+      [5, "🎴×2"],
+      [6, "+400💰"],
+      [7, "🎴×4"],
+    ].forEach(([day, reward]) => {
+      const chip = el("div", "vocab-checkin-mil-chip" + (streak >= day ? " done" : ""));
+      chip.appendChild(el("b", null, day + "天"));
+      chip.appendChild(el("span", null, reward));
+      milRow.appendChild(chip);
+    });
+    milWrap.appendChild(milRow);
+    panel.appendChild(milWrap);
+
+    box.appendChild(panel);
+  }
+
+  // 打卡结果弹窗。
+  function showCheckinResult(result) {
+    const body = el("div", "vocab-checkin-result");
+    body.appendChild(el("div", "vocab-checkin-result-streak",
+      "🔥 连续打卡第 " + result.streak + " 天！"));
+    body.appendChild(el("div", "vocab-checkin-result-line",
+      "🏆 基础奖励：+100 金币"));
+    result.bonuses.forEach(b => body.appendChild(el("div", "vocab-checkin-result-line bonus", b)));
+    const total = el("div", "vocab-checkin-result-total");
+    total.innerHTML = "💰 本次共获得 <b>+" + result.coinsEarned + "</b> 金币";
+    body.appendChild(total);
+    if (result.cardsEarned > 0) {
+      const c = el("div", "vocab-checkin-result-cards");
+      c.innerHTML = "🎴 新增 <b>" + result.cardsEarned + "</b> 张游戏卡！共 <b>" + result.totalCards + "</b> 张";
+      body.appendChild(c);
+      body.appendChild(el("div", "vocab-checkin-result-hint",
+        "（每张游戏卡可向家长兑换 15 分钟平板游戏时间）"));
+    }
+    vocabModal({
+      title: "🎉 打卡成功！",
+      body,
+      actions: [{ text: "太棒了！", primary: true }],
+    });
   }
 
   // =======================================================================
@@ -914,6 +1323,7 @@
         const nlv = Math.min(GOAL, p.lv + 1);
         setProg(word.en, { lv: nlv, f: false });
         addGlobalCoins(1); // 答对 1 词 = 1 金币
+        Checkin.markWord(word.en);
       } else {
         setProg(word.en, { f: true });
       }
@@ -1152,6 +1562,7 @@
         const p = progOf(word.en);
         setProg(word.en, { mc: p.mc + 1 });
         addGlobalCoins(1); // 连对 1 词 = 1 金币
+        Checkin.markWord(word.en);
         playWord(word.en); // 对 → 读单词
         this.drawLine(left.node, node);
         this.selectedLeft = null;
@@ -1317,6 +1728,7 @@
           this.correct += 1;
           this.streak += 1;
           addGlobalCoins(1); // 答对 1 词 = 1 金币
+          Checkin.markWord(w.en);
           const p = progOf(w.en);
           setProg(w.en, { mc: p.mc + 1 }); // 熟练度信号，影响排序
         } else {
@@ -1572,6 +1984,7 @@
         this.score += 1;
         this.streak += 1;
         addGlobalCoins(1);
+        Checkin.markWord(ball.key);
         this.readBall(ball); // 读出点到的单词
         SFX.play("coin");
         floatText(cx, cy, "+1", "plus");
@@ -1785,6 +2198,7 @@
         this.score += 1;
         this.streak += 1;
         addGlobalCoins(1); // 打对 1 词 = 1 金币
+        Checkin.markWord(this.target.en);
         const p = progOf(this.target.en);
         setProg(this.target.en, { mc: p.mc + 1 });
         SFX.play("coin");
@@ -1890,6 +2304,157 @@
     }
   }
 
+  // ---- 用户 / 云同步 UI ----
+  // 取名弹窗。opts: { title, desc, initial, okText, allowCancel, onDone(name) }
+  function askName(opts) {
+    opts = opts || {};
+    const body = el("div", "vocab-name-body");
+    const input = el("input", "vocab-name-input");
+    input.type = "text";
+    input.placeholder = "输入名字，如：小明";
+    input.maxLength = 20;
+    if (opts.initial) input.value = opts.initial;
+    const submit = (close) => {
+      const nm = input.value.trim();
+      if (!nm) {
+        input.focus();
+        return;
+      }
+      close();
+      if (opts.onDone) opts.onDone(nm);
+    };
+    body.appendChild(input);
+    const actions = [];
+    if (opts.allowCancel) actions.push({ text: "取消" });
+    actions.push({ text: opts.okText || "开始", primary: true, onClick: submit });
+    vocabModal({
+      title: opts.title || "欢迎！请输入名字",
+      desc: opts.desc || "用名字保存进度与金币，换设备输入同样的名字即可继续。",
+      body,
+      actions,
+      dismissable: !!opts.allowCancel,
+      onOpen: (box, close) => {
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") submit(close);
+        });
+        setTimeout(() => input.focus(), 50);
+      },
+    });
+  }
+
+  // 手动上传：用本地数据强制覆盖云端。
+  async function pushToCloud() {
+    try {
+      const res = await fetch(apiUrl(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          v: 2,
+          goal: GOAL,
+          name: user ? user.name : "",
+          coins: getCoins(),
+          words: prog,
+          checkin: Checkin.toJSON(),
+        }),
+        cache: "no-store",
+      });
+      if (!res.ok) return false;
+      serverOk = true;
+      return true;
+    } catch (err) {
+      serverOk = false;
+      return false;
+    }
+  }
+  // 手动下载：用云端数据覆盖本地。返回 'ok' | 'empty' | 'error'。
+  async function pullFromCloud() {
+    const remote = await serverLoad();
+    if (!remote) return "error";
+    if (!Object.keys(remote.words).length) return "empty";
+    prog = remote.words;
+    setCoins(remote.coins);
+    writeLocal();
+    return "ok";
+  }
+  // 切换/新建用户：先把当前用户刷到云，再以新名字重载。
+  async function switchUser(nm) {
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+    }
+    await serverSave(); // 保存上一个用户
+    setUser(nm);
+    UI.main.innerHTML = '<div class="vocab-loading">正在切换用户…</div>';
+    try {
+      localStorage.removeItem(LS_KEY); // 清掉上个用户的本地镜像
+    } catch (err) {
+      /* ignore */
+    }
+    Checkin.reset(); // 清掉上个用户的打卡状态
+    prog = {};
+    setCoins(0);
+    await loadProgress(false); // 新用户不落 seed
+    setScreen("hub");
+  }
+
+  function openSyncMenu() {
+    const body = el("div", "vocab-sync-body");
+    const who = el("div", "vocab-sync-who");
+    who.textContent = "👤 " + (user ? user.name : "未登录") + (serverOk ? "  ☁️已连接" : "  离线");
+    body.appendChild(who);
+    const status = el("div", "vocab-sync-status");
+    const setStatus = (t, ok) => {
+      status.textContent = t;
+      status.className = "vocab-sync-status " + (ok === true ? "ok" : ok === false ? "err" : "");
+    };
+    const row = (label, cb) => {
+      const b = el("button", "vocab-sync-row", label);
+      b.type = "button";
+      b.addEventListener("click", cb);
+      body.appendChild(b);
+    };
+    row("⬆️  上传到云（本地覆盖云端）", async () => {
+      setStatus("上传中…");
+      const ok = await pushToCloud();
+      setStatus(ok ? "✅ 已上传到云端" : "❌ 上传失败（检查网络 / PHP）", ok);
+    });
+    row("⬇️  从云下载（云端覆盖本地）", async () => {
+      setStatus("下载中…");
+      const r = await pullFromCloud();
+      if (r === "ok") {
+        setStatus("✅ 已从云端下载", true);
+        setScreen("hub");
+      } else if (r === "empty") {
+        setStatus("云端暂无该用户的数据", false);
+      } else {
+        setStatus("❌ 下载失败（检查网络 / PHP）", false);
+      }
+    });
+    body.appendChild(status);
+    const close = vocabModal({
+      title: "☁️ 数据同步",
+      body,
+      actions: [
+        {
+          text: "🔄 切换 / 改名",
+          onClick: (c) => {
+            c();
+            askName({
+              title: "切换用户",
+              desc: "输入名字以切换到该用户的进度（换设备输入同名即可继续）。",
+              initial: user ? user.name : "",
+              okText: "切换",
+              allowCancel: true,
+              onDone: (nm) => switchUser(nm),
+            });
+          },
+        },
+        { text: "关闭", primary: true },
+      ],
+    });
+    return close;
+  }
+
   // ---- 公开接口 ----
   async function start() {
     UI.main.innerHTML = '<div class="vocab-loading">正在加载词库与进度…</div>';
@@ -1900,8 +2465,22 @@
       UI.main.innerHTML = '<div class="vocab-loading">词库加载失败，请检查 wordlist.txt。</div>';
       return;
     }
-    await Promise.all([loadCurriculum(), loadProgress(), loadCategories()]);
+    await Promise.all([loadCurriculum(), loadCategories()]);
     SFX.preload();
+    user = loadUser();
+    if (!user) {
+      // 首次进入：先让孩子取名，再按名字加载/同步进度。
+      askName({
+        onDone: async (nm) => {
+          setUser(nm);
+          UI.main.innerHTML = '<div class="vocab-loading">正在加载进度…</div>';
+          await loadProgress(true); // 首个用户：无数据时可用 seed 兜底
+          setScreen("hub");
+        },
+      });
+      return;
+    }
+    await loadProgress(true);
     setScreen("hub");
   }
 

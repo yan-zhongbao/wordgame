@@ -1,14 +1,16 @@
 <?php
 /**
- * 小学词汇通 —— 进度同步后端。
+ * 小学词汇通 —— 进度同步后端（多用户）。
  *
- * GET  : 返回服务器上的进度 JSON（首次不存在时用 vocab_seed.json 初始化）。
- * POST : 用请求体(JSON)覆盖保存进度到 vocab_progress.json（原子写）。
+ * GET  ?user=<id> : 返回该用户的进度 JSON（不存在则返回空进度）。
+ *                    不带 user 时走旧的单文件 vocab_progress.json（首次用 seed 初始化）。
+ * POST ?user=<id> : 用请求体(JSON)覆盖保存该用户的数据（原子写）。
  *
- * 进度结构：{ v:2, goal:5, words:{ "cat":{lv,f,mc}, ... }, updatedAt }
+ * 数据结构：{ v:2, goal:5, name, coins, words:{ "cat":{lv,f,mc}, ... }, updatedAt }
  *
- * 部署要求：本文件所在目录需对 PHP 可写（用于生成 vocab_progress.json）。
- * 单用户场景，无鉴权；如需限制可在下方设置 $TOKEN 并在前端带上 ?token=。
+ * 每个用户一个文件：vocab_users/<id>.json （<id> 已做安全过滤）。
+ * 部署要求：本文件所在目录需对 PHP 可写（用于生成 vocab_users/ 及 json）。
+ * 如需鉴权，填 $TOKEN 并让前端带 ?token=。
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -22,20 +24,37 @@ if ($TOKEN !== '' && (($_GET['token'] ?? '') !== $TOKEN)) {
 }
 
 $dir = __DIR__;
-$progFile = $dir . '/vocab_progress.json';
 $seedFile = $dir . '/vocab_seed.json';
+$legacyFile = $dir . '/vocab_progress.json';
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+// 把 user 归一成安全的文件名片段（只留小写字母/数字/下划线/连字符）。
+$rawUser = strtolower(trim($_GET['user'] ?? ''));
+$user = preg_replace('/[^a-z0-9_-]/', '', $rawUser);
+$user = substr($user, 0, 64);
+
+// 目标文件：带 user → vocab_users/<id>.json；否则 → 旧单文件。
+$usersDir = $dir . '/vocab_users';
+if ($user !== '') {
+    if (!is_dir($usersDir)) {
+        @mkdir($usersDir, 0775, true);
+    }
+    $progFile = $usersDir . '/' . $user . '.json';
+} else {
+    $progFile = $legacyFile;
+}
 
 if ($method === 'GET') {
     if (is_file($progFile)) {
         readfile($progFile);
-    } elseif (is_file($seedFile)) {
-        // 首次访问：用导出的 300 词标记做初始进度。
+    } elseif ($user === '' && is_file($seedFile)) {
+        // 旧单文件首次访问：用导出的种子做初始进度。
         $seed = file_get_contents($seedFile);
         @file_put_contents($progFile, $seed, LOCK_EX);
         echo $seed;
     } else {
-        echo json_encode(['v' => 2, 'goal' => 5, 'words' => new stdClass()], JSON_UNESCAPED_UNICODE);
+        // 新用户：返回空进度（由前端把本地数据上传上来）。
+        echo json_encode(['v' => 2, 'goal' => 5, 'coins' => 0, 'words' => new stdClass()], JSON_UNESCAPED_UNICODE);
     }
     exit;
 }
@@ -48,8 +67,17 @@ if ($method === 'POST') {
         echo json_encode(['ok' => false, 'error' => 'invalid payload']);
         exit;
     }
-    $data['updatedAt'] = gmdate('c');
-    $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    // 只保留已知字段，避免写入任意数据。
+    $out = [
+        'v' => 2,
+        'goal' => isset($data['goal']) ? (int) $data['goal'] : 5,
+        'name' => isset($data['name']) ? (string) $data['name'] : '',
+        'coins' => isset($data['coins']) ? max(0, (int) $data['coins']) : 0,
+        'words' => $data['words'],
+        'checkin' => isset($data['checkin']) && is_array($data['checkin']) ? $data['checkin'] : null,
+        'updatedAt' => gmdate('c'),
+    ];
+    $json = json_encode($out, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     $tmp = $progFile . '.tmp';
     if (@file_put_contents($tmp, $json, LOCK_EX) === false) {
         http_response_code(500);
@@ -57,7 +85,7 @@ if ($method === 'POST') {
         exit;
     }
     @rename($tmp, $progFile);
-    echo json_encode(['ok' => true, 'count' => count($data['words'])]);
+    echo json_encode(['ok' => true, 'count' => count($out['words'])]);
     exit;
 }
 
