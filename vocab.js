@@ -693,21 +693,30 @@
   //  每日打卡 & 连续签到奖励
   // =======================================================================
   const Checkin = {
-    _st: null, // { today, words:Set, checked, streak, lastCheckin, cards }
+    _st: null, // { today, words:Set, checked, streak, lastCheckin, cards, weekWords:Set, weekStart }
 
     _today() { return new Date().toISOString().slice(0, 10); },
     _yesterday() {
       const d = new Date(); d.setDate(d.getDate() - 1);
       return d.toISOString().slice(0, 10);
     },
+    // 返回本周一的日期（YYYY-MM-DD），用于周重置判断。
+    _thisMonday() {
+      const d = new Date();
+      const diff = d.getDay() === 0 ? 6 : d.getDay() - 1;
+      d.setDate(d.getDate() - diff);
+      return d.toISOString().slice(0, 10);
+    },
 
     // 从 localStorage 初始化（可选 remote 用于合并云端数据）。
     load(remote) {
-      let st = { today: this._today(), words: new Set(), checked: false, streak: 0, lastCheckin: "", cards: 0 };
+      const monday = this._thisMonday();
+      let st = { today: this._today(), words: new Set(), checked: false, streak: 0, lastCheckin: "", cards: 0, weekWords: new Set(), weekStart: monday };
       try {
         const raw = localStorage.getItem(CHECKIN_KEY);
         if (raw) {
           const s = JSON.parse(raw);
+          const sameWeek = s.weekStart === monday;
           st = {
             today: s.today || this._today(),
             words: new Set(Array.isArray(s.words) ? s.words : []),
@@ -715,6 +724,8 @@
             streak: Math.max(0, parseInt(s.streak, 10) || 0),
             lastCheckin: s.lastCheckin || "",
             cards: Math.max(0, parseInt(s.cards, 10) || 0),
+            weekWords: new Set(sameWeek && Array.isArray(s.weekWords) ? s.weekWords : []),
+            weekStart: monday,
           };
         }
       } catch (e) { /* ignore */ }
@@ -723,9 +734,14 @@
       this._checkDay();
     },
 
-    // 日期切换时重置今日词集（保留 streak/cards）。
+    // 日期切换时重置今日词集；新的一周（周一）时重置周词集。
     _checkDay() {
       if (!this._st) return;
+      const monday = this._thisMonday();
+      if (this._st.weekStart !== monday) {
+        this._st.weekStart = monday;
+        this._st.weekWords = new Set();
+      }
       if (this._st.today !== this._today()) {
         this._st.words = new Set();
         this._st.checked = false;
@@ -743,6 +759,10 @@
       if (data.today === this._today() && Array.isArray(data.words)) {
         data.words.forEach(w => s.words.add(keyOf(w)));
         if (data.checked) s.checked = true;
+      }
+      // 合并本周词集（取并集，防止多设备回滚）
+      if (data.weekStart === this._thisMonday() && Array.isArray(data.weekWords)) {
+        data.weekWords.forEach(w => s.weekWords.add(keyOf(w)));
       }
       this._write();
     },
@@ -763,6 +783,8 @@
           streak: this._st.streak,
           lastCheckin: this._st.lastCheckin,
           cards: this._st.cards,
+          weekWords: [...this._st.weekWords],
+          weekStart: this._st.weekStart,
         }));
       } catch (e) { /* ignore */ }
       syncSoon(); // 打卡状态也纳入云同步
@@ -773,14 +795,16 @@
     isCheckedToday() { return this._st_get().checked; },
     getCards() { return this._st_get().cards; },
     getStreak() { return this._st_get().streak; },
+    getWeekWords() { return this._st_get().weekWords; },
 
-    // 每次答对调用，返回 true=当天新增。超过 100/已收录则忽略。
+    // 每次答对调用，返回 true=当天新增。超过 100/已收录/本周已见则忽略。
     markWord(en) {
       const s = this._st_get();
       if (s.words.size >= DAILY_TARGET) return false;
       const k = keyOf(en);
-      if (s.words.has(k)) return false;
+      if (s.words.has(k) || s.weekWords.has(k)) return false; // 今天或本周已计入
       s.words.add(k);
+      s.weekWords.add(k);
       this._write();
       if (s.words.size === DAILY_TARGET) setTimeout(() => this._notify100(), 80);
       return true;
@@ -843,7 +867,7 @@
     // 云同步序列化。
     toJSON() {
       const s = this._st_get();
-      return { today: s.today, words: [...s.words], checked: s.checked, streak: s.streak, lastCheckin: s.lastCheckin, cards: s.cards };
+      return { today: s.today, words: [...s.words], checked: s.checked, streak: s.streak, lastCheckin: s.lastCheckin, cards: s.cards, weekWords: [...s.weekWords], weekStart: s.weekStart };
     },
 
     // 切换用户时清空。
@@ -963,6 +987,11 @@
     UI.headerExtra.appendChild(syncBtn);
 
     const box = el("div", "vocab-hub");
+
+    if (user && user.name) {
+      const greeting = el("div", "vocab-hub-greeting", "👋 你好，" + user.name + "！");
+      box.appendChild(greeting);
+    }
 
     const summary = el("div", "vocab-hub-summary");
     summary.appendChild(hubStat("总词", total));
@@ -1799,8 +1828,17 @@
   const Zh2en = makeChoose({ prompt: "zh", distractors: "mixed" });
 
   // =======================================================================
-  //  单词雨（掉落 + 分类任务，10 分钟倒计时）
+  //  单词雨（掉落 + 找出英文单词，10 分钟倒计时）
   // =======================================================================
+  const RAIN_BG = [
+    "linear-gradient(180deg,#fff0f0 0%,#ffd6d6 100%)",
+    "linear-gradient(180deg,#fff0f8 0%,#ffd6ef 100%)",
+    "linear-gradient(180deg,#f0f4ff 0%,#d6e4ff 100%)",
+    "linear-gradient(180deg,#f0fff4 0%,#c8f5d8 100%)",
+    "linear-gradient(180deg,#fffde7 0%,#fff0a0 100%)",
+    "linear-gradient(180deg,#fff3e0 0%,#ffd6a0 100%)",
+    "linear-gradient(180deg,#e0f7fa 0%,#b2ecf4 100%)",
+  ];
   const Rain = {
     running: false,
     area: null,
@@ -1813,19 +1851,16 @@
     score: 0,
     streak: 0,
     target: null,
-    targetSet: null,
-    otherPool: [],
-    usable: [],
+    pool: [],
+    ptr: 0,
+    bgIdx: 0,
 
     enter() {
-      this.usable = Object.keys(categories).filter(
-        (k) => (categories[k] || []).length >= 4
-      );
-      if (!this.usable.length) {
-        UI.headerExtra.innerHTML = "";
+      this.buildPool();
+      if (!this.pool.length) {
         UI.main.innerHTML = "";
         const box = el("div", "vocab-done");
-        box.appendChild(el("div", "vocab-done-title", "分类数据未加载"));
+        box.appendChild(el("div", "vocab-done-title", "词表未加载"));
         const hub = el("button", "vocab-done-btn primary", "返回词汇通");
         hub.addEventListener("click", () => setScreen("hub"));
         const acts = el("div", "vocab-done-actions");
@@ -1834,72 +1869,202 @@
         UI.main.appendChild(box);
         return;
       }
+      this.ptr = 0;
       this.score = 0;
       this.streak = 0;
       this.balls = [];
+      this.bgIdx = Math.floor(Math.random() * RAIN_BG.length);
       this.endAt = Date.now() + SESSION_LIMIT_MS;
       this.running = true;
       this.render();
-      this.pickTarget();
-      this.spawnT = setInterval(() => this.spawn(), 800);
+      this.nextTarget();
+      this.spawnT = setInterval(() => this.spawn(), 700);
       this.tickT = setInterval(() => this.onTick(), 500);
       this.lastTs = performance.now();
       this.raf = requestAnimationFrame((t) => this.loop(t));
     },
 
-    // 切换到下一组（不清屏）：目标词洗成一副牌、每词只放一次；干扰词另起一副。
-    pickTarget() {
-      const choices = this.usable.filter((k) => k !== this.target);
-      const src = choices.length ? choices : this.usable;
-      const label = src[Math.floor(Math.random() * src.length)];
-      this.target = label;
-      this.targetSet = new Set((categories[label] || []).map(keyOf));
-      const other = [];
-      for (const [k, arr] of Object.entries(categories)) {
-        if (k === label) continue;
-        arr.forEach((en) => {
-          if (!this.targetSet.has(keyOf(en))) other.push(en);
-        });
+    buildPool() {
+      if (!allWords || !allWords.length) return;
+      const weekSeen = Checkin.getWeekWords();
+      const unseen = [], seen = [];
+      for (const w of allWords) {
+        (weekSeen.has(keyOf(w.en)) ? seen : unseen).push(w);
       }
-      this.otherPool = other;
-      this.targetBag = shuffle((categories[label] || []).slice());
-      this.otherBag = [];
-      if (this._taskEl) this._taskEl.textContent = `点掉所有：${label}`;
+      shuffle(unseen);
+      shuffle(seen);
+      this.pool = [...unseen, ...seen];
     },
 
-    onScreen(key) {
-      return this.balls.some((b) => b.key === key);
-    },
-    targetOnScreenCount() {
-      return this.balls.filter((b) => this.targetSet.has(b.key)).length;
-    },
-    anyTargetOnScreen() {
-      return this.balls.some((b) => this.targetSet.has(b.key));
+    nextTarget() {
+      for (const b of [...this.balls]) this.removeBall(b);
+      this.balls = [];
+      if (this.area) this.area.innerHTML = "";
+      if (!this.pool.length) return;
+      const word = this.pool[this.ptr];
+      this.ptr += 1;
+      if (this.ptr >= this.pool.length) {
+        this.ptr = 0;
+        this.buildPool();
+      }
+      this.target = word;
+      if (this._taskEl) {
+        this._taskEl.innerHTML =
+          `<span class="rain-find-hint">找出</span><span class="rain-find-zh">${word.zh}</span>`;
+      }
+      // Cycle background color
+      this.bgIdx = (this.bgIdx + 1) % RAIN_BG.length;
+      if (this.area) {
+        this.area.style.background = RAIN_BG[this.bgIdx];
+        // Splash: Chinese word blooms from center and fades
+        const splash = el("div", "rain-splash", word.zh);
+        this.area.appendChild(splash);
+        setTimeout(() => splash.remove(), 900);
+      }
+      this.spawn();
     },
 
-    // 目标词：牌堆发完就为空（本组结束的信号），不重洗。
-    drawTarget() {
-      while (this.targetBag.length) {
-        const en = this.targetBag.pop();
-        if (!this.onScreen(keyOf(en))) return en;
+    _spawnBall(en) {
+      const key = keyOf(en);
+      const item = el("button", "vocab-rain-ball", en);
+      const isPhrase = /\s/.test(en.trim());
+      try {
+        item._audio = new Audio(
+          `audio/${isPhrase ? "phrase" : "en"}/${slugify(en)}.mp3`
+        );
+        item._audio.preload = "auto";
+      } catch (err) {
+        /* ignore */
       }
-      return null;
+      this.area.appendChild(item);
+      const areaW = this.area.clientWidth || 320;
+      const areaH = this.area.clientHeight || 420;
+      const w = item.offsetWidth || 72;
+      const h = item.offsetHeight || 36;
+      const x = Math.random() * Math.max(0, areaW - w);
+      const vy = areaH / (5 + Math.random() * 3);
+      const isTarget = key === keyOf(this.target ? this.target.en : "");
+      const ball = { el: item, key, x, y: -h, vy, w, h, isTarget };
+      item.addEventListener("click", () => this.hit(ball));
+      item.style.transform = `translate(${x}px, ${-h}px)`;
+      this.balls.push(ball);
+      return ball;
     },
-    // 干扰词：持续供应，发完重洗；跳过屏幕上已有的词。
-    drawOther() {
-      const pool = this.otherPool;
-      if (!pool.length) return null;
-      for (let i = 0; i <= pool.length; i += 1) {
-        if (!this.otherBag.length) this.otherBag = shuffle(pool.slice());
-        const en = this.otherBag.pop();
-        if (!this.onScreen(keyOf(en))) return en;
+
+    spawn() {
+      if (!this.running || !this.area || !this.target) return;
+      if (this.balls.length >= 8) return;
+      const targetKey = keyOf(this.target.en);
+      const onScreenKeys = new Set(this.balls.map((b) => b.key));
+      if (!onScreenKeys.has(targetKey)) {
+        this._spawnBall(this.target.en);
+        return;
       }
-      return null;
+      const total = allWords.length;
+      for (let tries = 0; tries < total; tries += 1) {
+        const w = allWords[Math.floor(Math.random() * total)];
+        const k = keyOf(w.en);
+        if (k === targetKey || onScreenKeys.has(k)) continue;
+        this._spawnBall(w.en);
+        return;
+      }
+    },
+
+    loop(ts) {
+      if (!this.running) return;
+      const dt = Math.min(0.05, (ts - this.lastTs) / 1000 || 0);
+      this.lastTs = ts;
+      const areaH = this.area ? this.area.clientHeight || 420 : 420;
+      const areaW = this.area ? this.area.clientWidth || 320 : 320;
+      for (const b of this.balls) b.y += b.vy * dt;
+      for (let i = 0; i < this.balls.length; i += 1) {
+        for (let j = i + 1; j < this.balls.length; j += 1) {
+          const a = this.balls[i];
+          const c = this.balls[j];
+          if (
+            Math.abs((a.x + a.w / 2) - (c.x + c.w / 2)) * 2 < a.w + c.w &&
+            Math.abs((a.y + a.h / 2) - (c.y + c.h / 2)) * 2 < a.h + c.h
+          ) {
+            const avg = (a.vy + c.vy) / 2;
+            a.vy = avg;
+            c.vy = avg;
+          }
+        }
+      }
+      for (const b of [...this.balls]) {
+        if (b.y > areaH) {
+          if (b.isTarget && !b._done) {
+            b.y = -b.h;
+            b.x = Math.random() * Math.max(0, areaW - b.w);
+            b.el.style.transform = `translate(${b.x}px, ${b.y}px)`;
+          } else {
+            this.removeBall(b);
+          }
+          continue;
+        }
+        b.el.style.transform = `translate(${b.x}px, ${b.y}px)`;
+      }
+      this.raf = requestAnimationFrame((t) => this.loop(t));
+    },
+
+    removeBall(ball) {
+      if (ball._removed) return;
+      ball._removed = true;
+      const i = this.balls.indexOf(ball);
+      if (i >= 0) this.balls.splice(i, 1);
+      if (ball.el) ball.el.remove();
+    },
+
+    hit(ball) {
+      if (!this.running || ball._done || !this.target) return;
+      ball._done = true;
+      const correct = ball.key === keyOf(this.target.en);
+      const r = ball.el.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top;
+      if (correct) {
+        this.score += 1;
+        this.streak += 1;
+        addGlobalCoins(1);
+        Checkin.markWord(ball.key);
+        this.readBall(ball);
+        SFX.play("coin");
+        floatText(cx, cy, "+1", "plus");
+        ball.el.classList.add("hit-right");
+        ball.vy = 0;
+        setTimeout(() => {
+          this.removeBall(ball);
+          if (this.running) this.nextTarget();
+        }, 400);
+      } else {
+        this.streak = 0;
+        addGlobalCoins(-2);
+        SFX.play("fail");
+        floatText(cx, cy, "-2金币", "minus");
+        ball.el.classList.add("hit-wrong");
+        setTimeout(() => this.removeBall(ball), 200);
+      }
+      this.renderStats();
+    },
+
+    readBall(ball) {
+      const en = ball.el.textContent;
+      try {
+        if (ball.el._audio) {
+          ball.el._audio.currentTime = 0;
+          ball.el._audio.play().catch(() => speak(en));
+        } else {
+          speak(en);
+        }
+      } catch (err) {
+        speak(en);
+      }
     },
 
     render() {
       UI.main.innerHTML = "";
-      const task = el("div", "vocab-rain-task", "准备…");
+      const task = el("div", "vocab-rain-task");
+      task.innerHTML = `<span class="rain-find-hint">准备中…</span>`;
       this._taskEl = task;
       UI.main.appendChild(task);
       const area = el("div", "vocab-rain-area");
@@ -1927,129 +2092,6 @@
       UI.headerExtra.appendChild(stats);
     },
 
-    spawn() {
-      if (!this.running || !this.area) return;
-      // 本组目标词全部放完、且都飘出屏幕 → 切下一组（不清屏，无缝过渡）。
-      if (!this.targetBag.length && !this.anyTargetOnScreen()) {
-        this.pickTarget();
-      }
-      if (this.balls.length >= 14) return; // 总量上限，避免过挤
-      // 目标词还没发完、且屏内正确词 < 5 时才发目标词；否则发干扰词。
-      let en = null;
-      if (this.targetBag.length && this.targetOnScreenCount() < 5 && Math.random() < 0.55) {
-        en = this.drawTarget();
-      }
-      if (!en) en = this.drawOther();
-      if (!en) return;
-      const key = keyOf(en);
-
-      const item = el("button", "vocab-rain-ball", en);
-      const isPhrase = /\s/.test(en.trim());
-      try {
-        item._audio = new Audio(`audio/${isPhrase ? "phrase" : "en"}/${slugify(en)}.mp3`);
-        item._audio.preload = "auto"; // 提前缓存，点击即读
-      } catch (err) {
-        /* ignore */
-      }
-      this.area.appendChild(item);
-      const areaW = this.area.clientWidth || 320;
-      const areaH = this.area.clientHeight || 420;
-      const w = item.offsetWidth || 64;
-      const h = item.offsetHeight || 64;
-      const x = Math.random() * Math.max(0, areaW - w);
-      const vy = areaH / (4.5 + Math.random() * 3.5); // 4.5–8 秒落到底，慢一点更好点
-      const ball = { el: item, key, x, y: -h, vy, w, h };
-      item.addEventListener("click", () => this.hit(ball));
-      item.style.transform = `translate(${x}px, ${-h}px)`;
-      this.balls.push(ball);
-    },
-
-    // 逐帧下落 + 碰撞测速平均。
-    loop(ts) {
-      if (!this.running) return;
-      const dt = Math.min(0.05, (ts - this.lastTs) / 1000 || 0);
-      this.lastTs = ts;
-      const areaH = this.area ? this.area.clientHeight || 420 : 420;
-      for (const b of this.balls) b.y += b.vy * dt;
-      // 两球边框相撞 → 取速度平均，叠着一起往下走。
-      for (let i = 0; i < this.balls.length; i += 1) {
-        for (let j = i + 1; j < this.balls.length; j += 1) {
-          const a = this.balls[i];
-          const c = this.balls[j];
-          const acx = a.x + a.w / 2;
-          const acy = a.y + a.h / 2;
-          const ccx = c.x + c.w / 2;
-          const ccy = c.y + c.h / 2;
-          if (
-            Math.abs(acx - ccx) * 2 < a.w + c.w &&
-            Math.abs(acy - ccy) * 2 < a.h + c.h
-          ) {
-            const avg = (a.vy + c.vy) / 2;
-            a.vy = avg;
-            c.vy = avg;
-          }
-        }
-      }
-      for (const b of [...this.balls]) {
-        if (b.y > areaH) {
-          this.removeBall(b);
-          continue;
-        }
-        b.el.style.transform = `translate(${b.x}px, ${b.y}px)`;
-      }
-      this.raf = requestAnimationFrame((t) => this.loop(t));
-    },
-
-    removeBall(ball) {
-      if (ball._removed) return;
-      ball._removed = true;
-      const i = this.balls.indexOf(ball);
-      if (i >= 0) this.balls.splice(i, 1);
-      if (ball.el) ball.el.remove();
-    },
-
-    hit(ball) {
-      if (!this.running || ball._done) return;
-      ball._done = true;
-      const correct = this.targetSet.has(ball.key); // 按当前分类实时判定
-      const r = ball.el.getBoundingClientRect();
-      const cx = r.left + r.width / 2;
-      const cy = r.top;
-      if (correct) {
-        this.score += 1;
-        this.streak += 1;
-        addGlobalCoins(1);
-        Checkin.markWord(ball.key);
-        this.readBall(ball); // 读出点到的单词
-        SFX.play("coin");
-        floatText(cx, cy, "+1", "plus");
-        ball.el.classList.add("hit-right");
-      } else {
-        this.streak = 0;
-        addGlobalCoins(-2); // 点错扣 2 金币（不会低于 0）
-        SFX.play("fail");
-        floatText(cx, cy, "-2金币", "minus");
-        ball.el.classList.add("hit-wrong");
-      }
-      ball.vy = 0; // 命中后停住，短暂显示反馈
-      setTimeout(() => this.removeBall(ball), 200);
-      this.renderStats();
-    },
-
-    readBall(ball) {
-      const en = ball.el.textContent;
-      try {
-        if (ball.el._audio) {
-          ball.el._audio.currentTime = 0;
-          ball.el._audio.play().catch(() => speak(en));
-        } else {
-          speak(en);
-        }
-      } catch (err) {
-        speak(en);
-      }
-    },
-
     onTick() {
       if (Date.now() >= this.endAt) {
         this.end();
@@ -2063,7 +2105,9 @@
       UI.main.innerHTML = "";
       const box = el("div", "vocab-done");
       box.appendChild(el("div", "vocab-done-title", "⏰ 时间到！"));
-      box.appendChild(el("div", "vocab-done-tip", `本次得分 ${this.score}，玩了 10 分钟，休息一下～`));
+      box.appendChild(
+        el("div", "vocab-done-tip", `本次得分 ${this.score}，玩了 10 分钟，休息一下～`)
+      );
       const hub = el("button", "vocab-done-btn primary", "返回词汇通");
       hub.addEventListener("click", () => setScreen("hub"));
       const acts = el("div", "vocab-done-actions");
@@ -2122,8 +2166,13 @@
     },
 
     buildPool() {
+      const weekSeen = Checkin.getWeekWords(); // 本周已在打卡中出现过的词
       const cand = allWords.filter((w) => progOf(w.en).lv < GOAL);
       cand.sort((a, b) => {
+        // 本周未见过的词优先（排前面）
+        const seenA = weekSeen.has(keyOf(a.en)) ? 1 : 0;
+        const seenB = weekSeen.has(keyOf(b.en)) ? 1 : 0;
+        if (seenA !== seenB) return seenA - seenB;
         const pa = progOf(a.en);
         const pb = progOf(b.en);
         const fa = pa.f ? 0 : 1;
@@ -2163,8 +2212,21 @@
       for (let i = 0; i < HOLE_COUNT; i += 1) {
         const hole = el("div", "vocab-mole-hole");
         const mole = el("button", "vocab-mole");
+        // 帽子（显示单词）
+        const hat = el("div", "mole-hat");
         const label = el("span", "vocab-mole-label");
-        mole.appendChild(label);
+        hat.appendChild(label);
+        mole.appendChild(hat);
+        // 脸（眼睛 + 鼻子 + 耳朵）
+        const face = el("div", "mole-face");
+        face.appendChild(el("div", "mole-ear mole-ear-l"));
+        face.appendChild(el("div", "mole-ear mole-ear-r"));
+        const eyes = el("div", "mole-eyes");
+        eyes.appendChild(el("span", "mole-eye"));
+        eyes.appendChild(el("span", "mole-eye"));
+        face.appendChild(eyes);
+        face.appendChild(el("div", "mole-nose"));
+        mole.appendChild(face);
         hole.appendChild(mole);
         grid.appendChild(hole);
         const h = { el: mole, labelEl: label, word: "", up: false, tUp: null, tDown: null };

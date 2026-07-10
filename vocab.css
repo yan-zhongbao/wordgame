@@ -383,6 +383,13 @@
   gap: 20px;
 }
 
+.vocab-hub-greeting {
+  font-size: 17px;
+  font-weight: 600;
+  color: #5a3a10;
+  padding: 2px 0 8px;
+}
+
 .vocab-hub-summary {
   display: flex;
   flex-wrap: wrap;
@@ -694,14 +701,25 @@
 
 /* ---- 单词雨 ---- */
 .vocab-rain-task {
-  font-size: 17px;
-  font-weight: 800;
-  color: #b25a1f;
   text-align: center;
-  padding: 6px 10px;
+  padding: 6px 10px 8px;
   border-radius: 12px;
   background: linear-gradient(135deg, #fff1e0, #ffe1c4);
   margin-bottom: 10px;
+  line-height: 1.2;
+}
+.rain-find-hint {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #a07048;
+  letter-spacing: 0.05em;
+}
+.rain-find-zh {
+  display: block;
+  font-size: 28px;
+  font-weight: 800;
+  color: #c0392b;
 }
 
 .vocab-rain-area {
@@ -712,6 +730,27 @@
   overflow: hidden;
   border-radius: 14px;
   background: linear-gradient(180deg, #f3f8ff 0%, #eef4ec 100%);
+  transition: background 0.5s ease;
+}
+
+@keyframes rainSplash {
+  0%   { opacity: 0.95; transform: translate(-50%, -50%) scale(0.35); }
+  35%  { opacity: 0.9;  transform: translate(-50%, -50%) scale(1.05); }
+  100% { opacity: 0;    transform: translate(-50%, -50%) scale(1.5); }
+}
+.rain-splash {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.35);
+  font-size: 56px;
+  font-weight: 900;
+  color: #c0392b;
+  text-shadow: 0 2px 16px rgba(192, 57, 43, 0.25);
+  pointer-events: none;
+  z-index: 10;
+  white-space: nowrap;
+  animation: rainSplash 0.9s ease-out forwards;
 }
 
 .vocab-rain-word {
@@ -772,43 +811,142 @@
 
 .vocab-mole-hole {
   position: relative;
-  height: 96px;
+  height: 114px;
   border-radius: 50% 50% 14px 14px;
   background: radial-gradient(ellipse at 50% 90%, #d8c4a6 0%, #c2a985 70%);
   overflow: hidden;
   box-shadow: inset 0 -6px 10px rgba(0, 0, 0, 0.15);
 }
 
+/* 卡通老鼠：帽子在上，脸在下，从洞里钻出来 */
 .vocab-mole {
   position: absolute;
-  left: 6px;
-  right: 6px;
-  bottom: -100%;
-  height: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -130%;
+  width: 80px;
   border: none;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #f0a44b, #e86f3a);
-  color: #fff;
-  font-size: 17px;
-  font-weight: 800;
+  background: none;
   cursor: pointer;
   transition: bottom 0.22s ease;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  text-transform: lowercase;
+  padding: 0;
+  gap: 0;
 }
 
 .vocab-mole.up {
-  bottom: 8px;
+  bottom: 2px;
 }
 
-.vocab-mole.bonk-right {
-  background: linear-gradient(135deg, #4bd08a, #1f9d55);
+/* 帽子（深色小礼帽，单词写在上面）*/
+.mole-hat {
+  background: linear-gradient(to bottom, #5a3820, #3a2010);
+  border-radius: 5px 5px 0 0;
+  width: 76px;
+  padding: 5px 4px 3px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+/* 帽檐 */
+.mole-hat::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: -5px;
+  right: -5px;
+  height: 6px;
+  background: #3a2010;
+  border-radius: 2px;
+  z-index: 2;
 }
 
-.vocab-mole.bonk-wrong {
-  background: linear-gradient(135deg, #f08a8a, #d9534f);
+.vocab-mole-label {
+  color: #ffe090;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70px;
+}
+
+/* 老鼠脸（棕色椭圆）*/
+.mole-face {
+  width: 68px;
+  height: 58px;
+  background: radial-gradient(ellipse at 38% 35%, #d4a87a, #b8905a);
+  border-radius: 50% 50% 48% 48% / 44% 44% 56% 56%;
+  position: relative;
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* 耳朵 */
+.mole-ear {
+  position: absolute;
+  top: -10px;
+  width: 19px;
+  height: 19px;
+  background: #c47850;
+  border-radius: 50%;
+}
+.mole-ear::after {
+  content: '';
+  position: absolute;
+  top: 4px; left: 4px;
+  width: 11px; height: 11px;
+  background: #eba090;
+  border-radius: 50%;
+}
+.mole-ear-l { left: 3px; }
+.mole-ear-r { right: 3px; }
+
+/* 眼睛 */
+.mole-eyes {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+}
+.mole-eye {
+  width: 8px; height: 8px;
+  background: #1a1008;
+  border-radius: 50%;
+  display: block;
+  position: relative;
+}
+.mole-eye::after {
+  content: '';
+  position: absolute;
+  top: 1px; left: 2px;
+  width: 3px; height: 3px;
+  background: rgba(255,255,255,0.75);
+  border-radius: 50%;
+}
+
+/* 鼻子 */
+.mole-nose {
+  width: 14px; height: 9px;
+  background: radial-gradient(ellipse, #f0b0b0, #d07070);
+  border-radius: 50%;
+  margin-top: 2px;
+}
+
+/* 打对：脸变绿 */
+.vocab-mole.bonk-right .mole-face {
+  background: radial-gradient(ellipse at 38% 35%, #90e890, #38b838);
+}
+/* 打错：脸变红 */
+.vocab-mole.bonk-wrong .mole-face {
+  background: radial-gradient(ellipse at 38% 35%, #f09090, #d04040);
 }
 
 @media (max-width: 560px) {
@@ -820,11 +958,21 @@
     font-size: 24px;
   }
   .vocab-mole-hole {
-    height: 80px;
+    height: 96px;
+  }
+  .mole-face {
+    width: 58px;
+    height: 50px;
+  }
+  .mole-hat {
+    width: 64px;
+    padding: 4px 3px 2px;
   }
   .vocab-mole {
-    height: 66px;
-    font-size: 15px;
+    width: 68px;
+  }
+  .vocab-mole-label {
+    font-size: 11px;
   }
 }
 
@@ -869,11 +1017,21 @@
     gap: 20px;
   }
   .vocab-mole-hole {
-    height: 120px;
+    height: 134px;
+  }
+  .mole-face {
+    width: 80px;
+    height: 68px;
+  }
+  .mole-hat {
+    width: 88px;
   }
   .vocab-mole {
-    height: 100px;
-    font-size: 20px;
+    width: 92px;
+  }
+  .vocab-mole-label {
+    font-size: 14px;
+    max-width: 82px;
   }
   /* 单词雨：更高的下落区 */
   .vocab-rain-area {
