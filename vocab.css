@@ -826,7 +826,9 @@
   bottom: -130%;
   width: 80px;
   border: none;
-  background: none;
+  background: transparent !important;
+  -webkit-appearance: none;
+  appearance: none;
   cursor: pointer;
   transition: bottom 0.22s ease;
   display: flex;
@@ -834,10 +836,33 @@
   align-items: center;
   padding: 0;
   gap: 0;
+  outline: none;
 }
 
 .vocab-mole.up {
   bottom: 2px;
+}
+
+/* 打对：帽子被砸扁，然后弹回 */
+@keyframes mole-bonk {
+  0%   { transform: translateX(-50%) scaleY(1); }
+  20%  { transform: translateX(-50%) scaleY(0.72) translateY(6px); }
+  55%  { transform: translateX(-50%) scaleY(1.08); }
+  100% { transform: translateX(-50%) scaleY(1); }
+}
+/* 打错：左右抖动 */
+@keyframes mole-shake {
+  0%   { transform: translateX(-50%); }
+  20%  { transform: translateX(calc(-50% - 8px)); }
+  45%  { transform: translateX(calc(-50% + 8px)); }
+  70%  { transform: translateX(calc(-50% - 4px)); }
+  100% { transform: translateX(-50%); }
+}
+.vocab-mole.bonk-right {
+  animation: mole-bonk 0.35s ease;
+}
+.vocab-mole.bonk-wrong {
+  animation: mole-shake 0.4s ease;
 }
 
 /* 帽子（深色小礼帽，单词写在上面）*/

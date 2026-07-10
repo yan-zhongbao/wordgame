@@ -197,7 +197,14 @@
 
   // 音效：复用 TD 的音频。coin=得分、fail=爆炸/失败。
   const SFX = {
-    files: { coin: "audio/td/coin.wav", fail: "audio/td/explode.wav" },
+    files: {
+      coin: "audio/td/coin.wav",
+      fail: "audio/td/explode.wav",
+      bonk: "audio/td/hit1.wav",
+      bonk2: "audio/td/hit2.wav",
+      bonk3: "audio/td/hit3.wav",
+      error: "audio/td/error.wav",
+    },
     preload() {
       for (const k in this.files) {
         try {
@@ -2298,7 +2305,8 @@
         Checkin.markWord(this.target.en);
         const p = progOf(this.target.en);
         setProg(this.target.en, { mc: p.mc + 1 });
-        SFX.play("coin");
+        const bonkKeys = ["bonk", "bonk2", "bonk3"];
+        SFX.play(bonkKeys[Math.floor(Math.random() * bonkKeys.length)]);
         const rr = h.el.getBoundingClientRect();
         floatText(rr.left + rr.width / 2, rr.top, "+1", "plus");
         h.el.classList.add("bonk-right");
@@ -2325,11 +2333,11 @@
       } else {
         this.streak = 0;
         addGlobalCoins(-2); // 打错扣 2 金币
-        SFX.play("fail");
+        SFX.play("error");
         const rw = h.el.getBoundingClientRect();
         floatText(rw.left + rw.width / 2, rw.top, "-2金币", "minus");
         h.el.classList.add("bonk-wrong");
-        setTimeout(() => h.el.classList.remove("bonk-wrong"), 300);
+        setTimeout(() => h.el.classList.remove("bonk-wrong"), 400);
         this.renderStats();
       }
     },
