@@ -1861,6 +1861,10 @@
     pool: [],
     ptr: 0,
     bgIdx: 0,
+    typeBag: [],
+    catBag: [],
+    catWordBag: [],
+    curCat: null,
 
     enter() {
       this.buildPool();
@@ -1880,6 +1884,10 @@
       this.score = 0;
       this.streak = 0;
       this.balls = [];
+      this.typeBag = [];
+      this.catBag = [];
+      this.catWordBag = [];
+      this.curCat = null;
       this.bgIdx = Math.floor(Math.random() * RAIN_BG.length);
       this.endAt = Date.now() + SESSION_LIMIT_MS;
       this.running = true;
@@ -1903,27 +1911,69 @@
       this.pool = [...unseen, ...seen];
     },
 
-    nextTarget() {
-      for (const b of [...this.balls]) this.removeBall(b);
-      this.balls = [];
-      if (this.area) this.area.innerHTML = "";
-      if (!this.pool.length) return;
-      const word = this.pool[this.ptr];
-      this.ptr += 1;
-      if (this.ptr >= this.pool.length) {
-        this.ptr = 0;
-        this.buildPool();
+    // 袋式轮换：每轮 [单词, 单词, 分类] 打乱后依次消耗
+    _nextType() {
+      if (!this.typeBag.length) this.typeBag = shuffle(["word", "word", "cat"]);
+      return this.typeBag.pop();
+    },
+
+    // 从分类词库里取下一个词，分类用完换下一个分类
+    _pickCatWord() {
+      while (!this.catWordBag.length) {
+        if (!this.catBag.length) {
+          const cats = Object.keys(categories || {}).filter(
+            (k) => (categories[k] || []).length >= 3
+          );
+          if (!cats.length) return null;
+          this.catBag = shuffle(cats);
+        }
+        this.curCat = this.catBag.pop();
+        const words = (categories[this.curCat] || [])
+          .map((en) => allWords && allWords.find((w) => keyOf(w.en) === keyOf(en)))
+          .filter(Boolean);
+        this.catWordBag = shuffle(words);
       }
+      return this.catWordBag.pop();
+    },
+
+    nextTarget(clearScreen = true) {
+      if (clearScreen) {
+        for (const b of [...this.balls]) this.removeBall(b);
+        this.balls = [];
+        if (this.area) this.area.innerHTML = "";
+      }
+      if (!this.pool.length) return;
+
+      // Decide round type: "word" or "cat" (1:2 ratio via bag)
+      const type = this._nextType();
+      let word = null;
+      let isCat = false;
+      if (type === "cat") {
+        word = this._pickCatWord();
+        isCat = !!word;
+      }
+      if (!word) {
+        word = this.pool[this.ptr];
+        this.ptr += 1;
+        if (this.ptr >= this.pool.length) {
+          this.ptr = 0;
+          this.buildPool();
+        }
+      }
+
       this.target = word;
+      const newKey = keyOf(word.en);
+      for (const b of this.balls) b.isTarget = b.key === newKey;
+
       if (this._taskEl) {
-        this._taskEl.innerHTML =
-          `<span class="rain-find-hint">找出</span><span class="rain-find-zh">${word.zh}</span>`;
+        this._taskEl.innerHTML = isCat
+          ? `<span class="rain-find-cat">${this.curCat}</span><span class="rain-find-hint">找出</span><span class="rain-find-zh">${word.zh}</span>`
+          : `<span class="rain-find-hint">找出</span><span class="rain-find-zh">${word.zh}</span>`;
       }
       // Cycle background color
       this.bgIdx = (this.bgIdx + 1) % RAIN_BG.length;
       if (this.area) {
         this.area.style.background = RAIN_BG[this.bgIdx];
-        // Splash: Chinese word blooms from center and fades
         const splash = el("div", "rain-splash", word.zh);
         this.area.appendChild(splash);
         setTimeout(() => splash.remove(), 900);
@@ -1935,14 +1985,6 @@
       const key = keyOf(en);
       const item = el("button", "vocab-rain-ball", en);
       const isPhrase = /\s/.test(en.trim());
-      try {
-        item._audio = new Audio(
-          `audio/${isPhrase ? "phrase" : "en"}/${slugify(en)}.mp3`
-        );
-        item._audio.preload = "auto";
-      } catch (err) {
-        /* ignore */
-      }
       this.area.appendChild(item);
       const areaW = this.area.clientWidth || 320;
       const areaH = this.area.clientHeight || 420;
@@ -1951,6 +1993,17 @@
       const x = Math.random() * Math.max(0, areaW - w);
       const vy = areaH / (5 + Math.random() * 3);
       const isTarget = key === keyOf(this.target ? this.target.en : "");
+      // 只给目标词预加载音频；干扰词点不中不需要读音
+      if (isTarget) {
+        try {
+          item._audio = new Audio(
+            `audio/${isPhrase ? "phrase" : "en"}/${slugify(en)}.mp3`
+          );
+          item._audio.preload = "auto";
+        } catch (err) {
+          /* ignore */
+        }
+      }
       const ball = { el: item, key, x, y: -h, vy, w, h, isTarget };
       item.addEventListener("click", () => this.hit(ball));
       item.style.transform = `translate(${x}px, ${-h}px)`;
@@ -1984,19 +2037,24 @@
       const areaH = this.area ? this.area.clientHeight || 420 : 420;
       const areaW = this.area ? this.area.clientWidth || 320 : 320;
       for (const b of this.balls) b.y += b.vy * dt;
+      // 水平推开重叠的球，避免遮挡
       for (let i = 0; i < this.balls.length; i += 1) {
         for (let j = i + 1; j < this.balls.length; j += 1) {
           const a = this.balls[i];
           const c = this.balls[j];
-          if (
-            Math.abs((a.x + a.w / 2) - (c.x + c.w / 2)) * 2 < a.w + c.w &&
-            Math.abs((a.y + a.h / 2) - (c.y + c.h / 2)) * 2 < a.h + c.h
-          ) {
-            const avg = (a.vy + c.vy) / 2;
-            a.vy = avg;
-            c.vy = avg;
+          const acx = a.x + a.w / 2, acy = a.y + a.h / 2;
+          const ccx = c.x + c.w / 2, ccy = c.y + c.h / 2;
+          const xOver = (a.w + c.w) / 2 - Math.abs(acx - ccx);
+          const yOver = (a.h + c.h) / 2 - Math.abs(acy - ccy);
+          if (xOver > 0 && yOver > 0) {
+            const push = xOver / 2 + 1;
+            if (acx <= ccx) { a.x -= push; c.x += push; }
+            else             { a.x += push; c.x -= push; }
           }
         }
+      }
+      for (const b of this.balls) {
+        b.x = Math.max(0, Math.min(areaW - b.w, b.x));
       }
       for (const b of [...this.balls]) {
         if (b.y > areaH) {
@@ -2041,7 +2099,7 @@
         ball.vy = 0;
         setTimeout(() => {
           this.removeBall(ball);
-          if (this.running) this.nextTarget();
+          if (this.running) this.nextTarget(false);
         }, 400);
       } else {
         this.streak = 0;
