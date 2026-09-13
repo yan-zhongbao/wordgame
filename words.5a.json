@@ -1,0 +1,1192 @@
+[
+  {
+    "day": 1,
+    "en": "noodles",
+    "zh": "面条",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "milk",
+    "zh": "牛奶",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "vegetables",
+    "zh": "蔬菜",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "beef",
+    "zh": "牛肉",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "fish",
+    "zh": "鱼肉",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "cake",
+    "zh": "蛋糕",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "chips",
+    "zh": "薯条",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "chocolate",
+    "zh": "巧克力",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "candy",
+    "zh": "糖果",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "cola",
+    "zh": "可乐",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 1,
+    "en": "group",
+    "zh": "群体",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "salad",
+    "zh": "沙拉",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "soup",
+    "zh": "汤",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "plate",
+    "zh": "盘子",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "potato",
+    "zh": "土豆",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "choose",
+    "zh": "选择",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "meat",
+    "zh": "肉",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "fruit",
+    "zh": "水果",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "breakfast",
+    "zh": "早餐",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "lunch",
+    "zh": "午餐",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 2,
+    "en": "dinner",
+    "zh": "晚餐",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "stomach",
+    "zh": "胃",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "enough",
+    "zh": "足够的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "bread",
+    "zh": "面包",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "biscuit",
+    "zh": "饼干",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "heavy",
+    "zh": "沉重的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "sleepy",
+    "zh": "困倦的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "change",
+    "zh": "改变,变化",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "healthy",
+    "zh": "健康的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "problem",
+    "zh": "问题,困难",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 3,
+    "en": "always",
+    "zh": "总是",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "remember",
+    "zh": "记住,记得",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "whoa",
+    "zh": "哇,哎呀",
+    "pos": "int.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "oat",
+    "zh": "燕麦",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "juice",
+    "zh": "果汁",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "nut",
+    "zh": "坚果",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "slow",
+    "zh": "慢的,迟缓的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "teaspoon",
+    "zh": "茶匙,小勺",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "sugar",
+    "zh": "糖,白砂糖",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "bottle",
+    "zh": "瓶子",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "snack",
+    "zh": "零食,小吃",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 4,
+    "en": "oil",
+    "zh": "油",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "meal",
+    "zh": "餐食",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "plan",
+    "zh": "计划,规划",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "brain",
+    "zh": "大脑,头脑",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "bone",
+    "zh": "骨头,骨骼",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "muscle",
+    "zh": "肌肉",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "skin",
+    "zh": "皮肤",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "heart",
+    "zh": "心脏",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "lungs",
+    "zh": "肺",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "tooth",
+    "zh": "牙齿",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 5,
+    "en": "teeth",
+    "zh": "牙齿",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 6,
+    "en": "food groups",
+    "zh": "食物类别",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "so much",
+    "zh": "这么多(后接不可数名词)",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "too much",
+    "zh": "太多(修饰不可数名词)",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "noodles in soup",
+    "zh": "汤面",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "a long time",
+    "zh": "很长一段时间,许久",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "after dinner",
+    "zh": "晚餐之后",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "have to",
+    "zh": "不得不",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "stay healthy",
+    "zh": "保持健康",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "make some changes",
+    "zh": "做出一些改变",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "a bar of",
+    "zh": "一条…,一块…",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "a bag of",
+    "zh": "一袋…",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "a bottle of",
+    "zh": "一瓶…",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "a little of",
+    "zh": "一点,少许…",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "a list of",
+    "zh": "一份… 的清单",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 6,
+    "en": "a few",
+    "zh": "少量,少许",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 7,
+    "en": "old T-shirts",
+    "zh": "旧 T 恤",
+    "pos": "",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "can",
+    "zh": "罐头",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "plastic",
+    "zh": "塑料制的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "waste",
+    "zh": "废料,废弃物",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "old toys",
+    "zh": "旧玩具",
+    "pos": "",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "green life",
+    "zh": "绿色生活",
+    "pos": "",
+    "kind": "word"
+  },
+  {
+    "day": 7,
+    "en": "milk carton",
+    "zh": "牛奶盒",
+    "pos": "",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "throw",
+    "zh": "扔",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "useful",
+    "zh": "有用的,有益的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "Yours",
+    "zh": "你真挚的（用于书信结尾）",
+    "pos": "",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "wait",
+    "zh": "等待",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "No problem.",
+    "zh": "没问题",
+    "pos": "",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "better",
+    "zh": "更好的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 8,
+    "en": "thing",
+    "zh": "事情,事物",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "recycle",
+    "zh": "回收利用",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "metal",
+    "zh": "金属",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "each",
+    "zh": "每个,各",
+    "pos": "pron.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "over",
+    "zh": "大于,超出",
+    "pos": "prep.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "newspaper",
+    "zh": "报纸",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "step",
+    "zh": "步骤",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "flat",
+    "zh": "平的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 9,
+    "en": "beginning",
+    "zh": "开始,开端",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "seat",
+    "zh": "座位",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "land",
+    "zh": "陆地",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "shop",
+    "zh": "商店",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "bad",
+    "zh": "坏的,不好的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "important",
+    "zh": "重要的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 10,
+    "en": "bring",
+    "zh": "带来",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "April",
+    "zh": "四月",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "earth",
+    "zh": "地球",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "greener",
+    "zh": "更加环保的,更绿色的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "own",
+    "zh": "自己的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "rubbish",
+    "zh": "垃圾",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "poster",
+    "zh": "海报,小报",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "difference",
+    "zh": "不同",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "brush",
+    "zh": "刷",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 11,
+    "en": "action",
+    "zh": "行动,举动",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 12,
+    "en": "food waste",
+    "zh": "食物垃圾",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "metal waste",
+    "zh": "金属废弃物",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "paper waste",
+    "zh": "废纸垃圾",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "plastic waste",
+    "zh": "塑料垃圾",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "cut down",
+    "zh": "减少,削减",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "throw away",
+    "zh": "扔掉,丢弃",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "make use of",
+    "zh": "利用,充分使用",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "milk box",
+    "zh": "牛奶盒",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "lunch box",
+    "zh": "饭盒,午餐盒",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "water bottle",
+    "zh": "水杯,水瓶",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "turn into",
+    "zh": "转化成,变成",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "turn off",
+    "zh": "关掉(灯光)",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "every year",
+    "zh": "每年",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "every day",
+    "zh": "每天",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "take off",
+    "zh": "拿掉,移去",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "Earth Day",
+    "zh": "世界地球日",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "clean up",
+    "zh": "清扫,收拾干净",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "pick up rubbish",
+    "zh": "捡拾垃圾",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 12,
+    "en": "look after",
+    "zh": "照顾",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 13,
+    "en": "future",
+    "zh": "将来,未来",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "drive",
+    "zh": "开车,驾驶",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "pet",
+    "zh": "宠物",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "space",
+    "zh": "太空",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "danger",
+    "zh": "危险",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "glass",
+    "zh": "玻璃",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "celebrate",
+    "zh": "庆祝",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "hundred",
+    "zh": "一百",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "pie",
+    "zh": "馅饼,派",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "fries",
+    "zh": "炸薯条",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "bright",
+    "zh": "光明的；明亮的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "shape",
+    "zh": "形状；外形",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "pill",
+    "zh": "药丸,药片",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "grow food in space",
+    "zh": "在太空种植食物",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "do the chores",
+    "zh": "做家务",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "take care of",
+    "zh": "照顾",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "keep an eye on",
+    "zh": "照看",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "help you out",
+    "zh": "帮助你摆脱困境",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "do the dishes",
+    "zh": "洗碗",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "worry about",
+    "zh": "担心",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "start by",
+    "zh": "以…… 开始",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "look into the future",
+    "zh": "展望未来",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "live on Mars",
+    "zh": "住在火星上",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "drive a flying car",
+    "zh": "驾驶一辆飞行汽车",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "go to the moon",
+    "zh": "去月球",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 15,
+    "en": "have a pet robot dog",
+    "zh": "养一只宠物机器狗",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 16,
+    "en": "mooncake",
+    "zh": "月饼",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "September",
+    "zh": "九月",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "zookeeper",
+    "zh": "动物饲养员",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "candle",
+    "zh": "蜡烛",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "merry",
+    "zh": "快乐的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "celebration",
+    "zh": "庆祝；庆祝活动",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "bell",
+    "zh": "钟,铃",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "put up",
+    "zh": "张贴,挂",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "celebrate festivals",
+    "zh": "庆祝节日",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "the Dragon Boat Festival",
+    "zh": "端午节",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "the Lantern Festival",
+    "zh": "元宵节",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "the Spring Festival",
+    "zh": "春节",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "the Mid-Autumn Festival",
+    "zh": "中秋节",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "make mooncakes",
+    "zh": "做月饼",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "make different lanterns",
+    "zh": "制作不同的灯笼",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "at night",
+    "zh": "在晚上",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "look to the future",
+    "zh": "展望未来",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "watch the lion dance",
+    "zh": "观看舞狮",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "read a story",
+    "zh": "读一个故事",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "dance to the music",
+    "zh": "随着音乐跳舞",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "have a music show",
+    "zh": "举办一场音乐表演",
+    "pos": "",
+    "kind": "phrase"
+  }
+]

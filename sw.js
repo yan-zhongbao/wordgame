@@ -1,6 +1,6 @@
-const CACHE_NAME = "wordgame-v153";
+const CACHE_NAME = "wordgame-v154";
 const AUDIO_CACHE = "wordgame-audio";
-const WORDS_FILES = ["words.json", "words.4b.json"];
+const WORDS_FILES = ["words.json", "words.4b.json", "words.5a.json"];
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -11,6 +11,7 @@ const CORE_ASSETS = [
   "./app.js",
   "./words.json",
   "./words.4b.json",
+  "./words.5a.json",
   "./manifest.json",
   "./clear.html",
   "./snake.html",
