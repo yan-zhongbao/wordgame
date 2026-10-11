@@ -21,7 +21,7 @@ WORD_WITH_PARENS_RE = re.compile(
     r"^([A-Za-z][A-Za-z0-9 .,'’!?/-]*?)\s*\(([^)]*)\)\s*(.*)$"
 )
 EN_ZH_RE = re.compile(r"^([A-Za-z][A-Za-z0-9 .,'’!?/-]*?)\s+([\u3400-\u9fff].*)$")
-POS_RE = re.compile(r"^([a-z]+\.|prep\.|pron\.|conj\.|adv\.|adj\.|v\.|n\.)\s*(.+)$", re.I)
+POS_RE = re.compile(r"^(n&v\.|[a-z]+\.|prep\.|pron\.|conj\.|adv\.|adj\.|v\.|n\.)\s*(.+)$", re.I)
 
 
 def normalize_text(text):

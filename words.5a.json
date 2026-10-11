@@ -862,328 +862,979 @@
   },
   {
     "day": 13,
-    "en": "future",
-    "zh": "将来,未来",
+    "en": "friendship",
+    "zh": "友谊,朋友关系",
     "pos": "n.",
     "kind": "word"
   },
   {
     "day": 13,
-    "en": "drive",
-    "zh": "开车,驾驶",
+    "en": "care",
+    "zh": "关心",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "together",
+    "zh": "一起",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 13,
+    "en": "share",
+    "zh": "分享",
     "pos": "v.",
     "kind": "word"
   },
   {
-    "day": 13,
-    "en": "pet",
-    "zh": "宠物",
-    "pos": "n.",
-    "kind": "word"
-  },
-  {
-    "day": 13,
-    "en": "space",
-    "zh": "太空",
-    "pos": "n.",
-    "kind": "word"
-  },
-  {
-    "day": 13,
-    "en": "danger",
-    "zh": "危险",
-    "pos": "n.",
-    "kind": "word"
-  },
-  {
-    "day": 13,
-    "en": "glass",
-    "zh": "玻璃",
-    "pos": "n.",
+    "day": 14,
+    "en": "make",
+    "zh": "使...",
+    "pos": "v.",
     "kind": "word"
   },
   {
     "day": 14,
+    "en": "unhappy",
+    "zh": "伤心的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "join",
+    "zh": "加入；参加",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "miss",
+    "zh": "想念",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "both",
+    "zh": "两个都",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "same",
+    "zh": "一样的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "different",
+    "zh": "不同的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "funny",
+    "zh": "有趣的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 14,
+    "en": "musical",
+    "zh": "擅长音乐的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "worried",
+    "zh": "担忧的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "difference",
+    "zh": "差别；差异",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "er",
+    "zh": "嗯；哦",
+    "pos": "interj.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "rabbit",
+    "zh": "兔",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "key",
+    "zh": "关键",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "parent",
+    "zh": "父,母",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "tip",
+    "zh": "窍门,忠告,建议",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 15,
+    "en": "similar",
+    "zh": "相似的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "try",
+    "zh": "尝试",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "plan",
+    "zh": "计划",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 16,
+    "en": "openly",
+    "zh": "坦诚地",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "rule",
+    "zh": "规则",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
     "en": "celebrate",
     "zh": "庆祝",
     "pos": "v.",
     "kind": "word"
   },
   {
-    "day": 14,
+    "day": 17,
+    "en": "country",
+    "zh": "国家",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "culture",
+    "zh": "文化",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "gift",
+    "zh": "礼物",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 17,
+    "en": "wish",
+    "zh": "祝愿",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 18,
+    "en": "keep friendship strong",
+    "zh": "保持深厚的友谊",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "be happy for each other",
+    "zh": "为彼此感到高兴",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "help each other",
+    "zh": "互相帮助",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "take care of each other",
+    "zh": "互相照顾",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "do happy things together",
+    "zh": "一起做开心的事情",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "share things",
+    "zh": "分享物品",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "listen to each other",
+    "zh": "互相倾听",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "want to do sth",
+    "zh": "想要做某事",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "ask sb to do sth",
+    "zh": "请某人做某事",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "walk away",
+    "zh": "走开",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "next to",
+    "zh": "挨着",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "make friends with ...",
+    "zh": "与...交朋友",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "have fun",
+    "zh": "玩得高兴",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "enjoy doing sth",
+    "zh": "喜欢做某事",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "talk to",
+    "zh": "和……谈话",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "look worried",
+    "zh": "看起来担心",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "share with each other",
+    "zh": "互相分享",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "best friends",
+    "zh": "最好的朋友",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "get in the way",
+    "zh": "阻碍",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "stay at home",
+    "zh": "待在家里",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "go out",
+    "zh": "出去",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "try something new",
+    "zh": "尝试新事物",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "angry with each other",
+    "zh": "互相生气",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "ask...for help",
+    "zh": "向……寻求帮助",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "read books",
+    "zh": "看书",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "watch films",
+    "zh": "看电影",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "play games",
+    "zh": "玩游戏",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "it's important to do sth",
+    "zh": "做...很重要",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "between...and...",
+    "zh": "在……和……之间",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "be different from",
+    "zh": "与……不同",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "the United Nations International Day of Friendship",
+    "zh": "联合国国际友谊日",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "around the world",
+    "zh": "全世界",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 18,
+    "en": "eat out",
+    "zh": "外出就餐",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 19,
+    "en": "goal",
+    "zh": "目标",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "drink",
+    "zh": "喝",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "exercise",
+    "zh": "运动,锻炼",
+    "pos": "n&v.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "healthily",
+    "zh": "健康地",
+    "pos": "adv.",
+    "kind": "word"
+  },
+  {
+    "day": 19,
+    "en": "survey",
+    "zh": "调查",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "top",
+    "zh": "最上面的,顶部的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "test",
+    "zh": "测试",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "October",
+    "zh": "十月",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "November",
+    "zh": "十一月",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "match",
+    "zh": "比赛",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 20,
+    "en": "late",
+    "zh": "迟到的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 21,
+    "en": "before",
+    "zh": "在...之前",
+    "pos": "prep.",
+    "kind": "word"
+  },
+  {
+    "day": 21,
+    "en": "sell",
+    "zh": "卖,出售",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 21,
+    "en": "buy",
+    "zh": "买",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 21,
+    "en": "medicine",
+    "zh": "药",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 21,
+    "en": "hurry",
+    "zh": "匆忙,急忙",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 22,
+    "en": "classroom",
+    "zh": "教室",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 22,
+    "en": "afraid",
+    "zh": "害怕的",
+    "pos": "adj.",
+    "kind": "word"
+  },
+  {
+    "day": 22,
+    "en": "record",
+    "zh": "记录",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 22,
+    "en": "metre",
+    "zh": "米",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 23,
+    "en": "do better in school",
+    "zh": "在学校表现更好",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 23,
+    "en": "eat and drink healthily",
+    "zh": "健康饮食",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 23,
+    "en": "read more",
+    "zh": "多读书",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 23,
+    "en": "make new friends",
+    "zh": "交新朋友",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 23,
+    "en": "learn something new",
+    "zh": "学习新东西",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 23,
+    "en": "be clean and tidy",
+    "zh": "保持干净整洁",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 23,
+    "en": "exercise more",
+    "zh": "多锻炼",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 23,
+    "en": "work hard",
+    "zh": "努力",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 23,
+    "en": "be late for school",
+    "zh": "上学迟到",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 23,
+    "en": "set the world record",
+    "zh": "创造世界纪录",
+    "pos": "",
+    "kind": "phrase"
+  },
+  {
+    "day": 24,
+    "en": "future",
+    "zh": "将来,未来",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 24,
+    "en": "drive",
+    "zh": "开车,驾驶",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 24,
+    "en": "pet",
+    "zh": "宠物",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 24,
+    "en": "space",
+    "zh": "太空",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 24,
+    "en": "danger",
+    "zh": "危险",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 24,
+    "en": "glass",
+    "zh": "玻璃",
+    "pos": "n.",
+    "kind": "word"
+  },
+  {
+    "day": 25,
+    "en": "celebrate",
+    "zh": "庆祝",
+    "pos": "v.",
+    "kind": "word"
+  },
+  {
+    "day": 25,
     "en": "hundred",
     "zh": "一百",
     "pos": "n.",
     "kind": "word"
   },
   {
-    "day": 14,
+    "day": 25,
     "en": "pie",
     "zh": "馅饼,派",
     "pos": "n.",
     "kind": "word"
   },
   {
-    "day": 14,
+    "day": 25,
     "en": "fries",
     "zh": "炸薯条",
     "pos": "n.",
     "kind": "word"
   },
   {
-    "day": 14,
+    "day": 25,
     "en": "bright",
     "zh": "光明的；明亮的",
     "pos": "adj.",
     "kind": "word"
   },
   {
-    "day": 14,
+    "day": 25,
     "en": "shape",
     "zh": "形状；外形",
     "pos": "n.",
     "kind": "word"
   },
   {
-    "day": 14,
+    "day": 25,
     "en": "pill",
     "zh": "药丸,药片",
     "pos": "n.",
     "kind": "word"
   },
   {
-    "day": 15,
+    "day": 26,
     "en": "grow food in space",
     "zh": "在太空种植食物",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 15,
+    "day": 26,
     "en": "do the chores",
     "zh": "做家务",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 15,
+    "day": 26,
     "en": "take care of",
     "zh": "照顾",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 15,
+    "day": 26,
     "en": "keep an eye on",
     "zh": "照看",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 15,
+    "day": 26,
     "en": "help you out",
     "zh": "帮助你摆脱困境",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 15,
+    "day": 26,
     "en": "do the dishes",
     "zh": "洗碗",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 15,
+    "day": 26,
     "en": "worry about",
     "zh": "担心",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 15,
+    "day": 26,
     "en": "start by",
     "zh": "以…… 开始",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 15,
+    "day": 26,
     "en": "look into the future",
     "zh": "展望未来",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 15,
+    "day": 26,
     "en": "live on Mars",
     "zh": "住在火星上",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 15,
+    "day": 26,
     "en": "drive a flying car",
     "zh": "驾驶一辆飞行汽车",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 15,
+    "day": 26,
     "en": "go to the moon",
     "zh": "去月球",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 15,
+    "day": 26,
     "en": "have a pet robot dog",
     "zh": "养一只宠物机器狗",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 16,
+    "day": 27,
     "en": "mooncake",
     "zh": "月饼",
     "pos": "n.",
     "kind": "word"
   },
   {
-    "day": 16,
+    "day": 27,
     "en": "September",
     "zh": "九月",
     "pos": "n.",
     "kind": "word"
   },
   {
-    "day": 16,
+    "day": 27,
     "en": "zookeeper",
     "zh": "动物饲养员",
     "pos": "n.",
     "kind": "word"
   },
   {
-    "day": 16,
+    "day": 27,
     "en": "candle",
     "zh": "蜡烛",
     "pos": "n.",
     "kind": "word"
   },
   {
-    "day": 17,
+    "day": 28,
     "en": "merry",
     "zh": "快乐的",
     "pos": "adj.",
     "kind": "word"
   },
   {
-    "day": 17,
+    "day": 28,
     "en": "celebration",
     "zh": "庆祝；庆祝活动",
     "pos": "n.",
     "kind": "word"
   },
   {
-    "day": 17,
+    "day": 28,
     "en": "bell",
     "zh": "钟,铃",
     "pos": "n.",
     "kind": "word"
   },
   {
-    "day": 18,
+    "day": 29,
     "en": "put up",
     "zh": "张贴,挂",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 18,
+    "day": 29,
     "en": "celebrate festivals",
     "zh": "庆祝节日",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 18,
+    "day": 29,
     "en": "the Dragon Boat Festival",
     "zh": "端午节",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 18,
+    "day": 29,
     "en": "the Lantern Festival",
     "zh": "元宵节",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 18,
+    "day": 29,
     "en": "the Spring Festival",
     "zh": "春节",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 18,
+    "day": 29,
     "en": "the Mid-Autumn Festival",
     "zh": "中秋节",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 18,
+    "day": 29,
     "en": "make mooncakes",
     "zh": "做月饼",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 18,
+    "day": 29,
     "en": "make different lanterns",
     "zh": "制作不同的灯笼",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 18,
+    "day": 29,
     "en": "at night",
     "zh": "在晚上",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 18,
+    "day": 29,
     "en": "look to the future",
     "zh": "展望未来",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 18,
+    "day": 29,
     "en": "watch the lion dance",
     "zh": "观看舞狮",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 18,
+    "day": 29,
     "en": "read a story",
     "zh": "读一个故事",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 18,
+    "day": 29,
     "en": "dance to the music",
     "zh": "随着音乐跳舞",
     "pos": "",
     "kind": "phrase"
   },
   {
-    "day": 18,
+    "day": 29,
     "en": "have a music show",
     "zh": "举办一场音乐表演",
     "pos": "",
